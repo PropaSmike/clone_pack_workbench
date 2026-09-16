@@ -1,0 +1,102 @@
+# Camera animations each vanilla fighter owns, from data.arc 13.0.4.
+# camera/fighter/<name>/cNN/ - identical across all 8 costumes.
+# A clone that routes path type 39 serves these from ITS OWN directory;
+# anything it does not ship falls back to the base fighter per animation
+# (camera_animation_base_fallback). See CAMERA_UNSHARE.md.
+#
+# fighter	count	animations (comma-separated)
+bayonetta	5	d04final.nuanmb,d04finalvisualscene01.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+brave	5	d04finalstart.nuanmb,d04visualscene01.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+buddy	8	d04final.nuanmb,d04visualscene01.nuanmb,d04visualscene02.nuanmb,d04visualscene03.nuanmb,d04visualscene04.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+captain	10	d04finalairstart.nuanmb,d04finalairstart02.nuanmb,d04finalstart.nuanmb,d04finalstart02.nuanmb,d04visualscene01.nuanmb,d04visualscene02.nuanmb,d04visualscene03.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+chrom	5	d04finalattack.nuanmb,d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+cloud	9	d04finalattack.nuanmb,d04finalattack_far.nuanmb,d04finalattackl.nuanmb,d04finalattackl_far.nuanmb,d04finalstart.nuanmb,d04finalstart02.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+daisy	4	d04final.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+dedede	8	d04finalstart.nuanmb,d04finalvisualscene.nuanmb,d04finalvisualscene01.nuanmb,d04finalvisualscene02.nuanmb,d04finalvisualscene03.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+demon	11	d03speciallwcatch.nuanmb,d04finalstart.nuanmb,d04visualscene01.nuanmb,e01throwb.nuanmb,e01throwcommand.nuanmb,e01throwf.nuanmb,e01throwhi.nuanmb,e01throwlw.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+diddy	4	d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+dolly	9	d04finalstart.nuanmb,d04visualscene01.nuanmb,d04visualscene02.nuanmb,d04visualscene03.nuanmb,d04visualscene04.nuanmb,d04visualscene05.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+donkey	4	d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+duckhunt	5	d04finalstart.nuanmb,d04finalvisualscene01.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+edge	5	d04finalstart.nuanmb,d04visualscene01.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+eflame	6	d04finalstart.nuanmb,d04visualscene01.nuanmb,d04visualscene02.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+elight	8	d04finalstart.nuanmb,d04visualscene01.nuanmb,d04visualscene02.nuanmb,d04visualscene03.nuanmb,d04visualscene04.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+falco	6	d04finallockon.nuanmb,d04finallockon02.nuanmb,d04finalvisualscene.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+fox	5	d04finallockon.nuanmb,d04finalvisualscene.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+gamewatch	4	d04finalairstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+ganon	4	d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+gaogaen	7	d04finalstart.nuanmb,d04visualscene01.nuanmb,d04visualscene02.nuanmb,d04visualscene03.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+gekkouga	4	d04finalchange.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+ike	4	d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+inkling	5	d04final.nuanmb,d04finalair.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+jack	10	d04finalstart.nuanmb,d04finalstart02.nuanmb,d04finalvisualscene.nuanmb,d04finalvisualscene02.nuanmb,j02win1.nuanmb,j02win1loop.nuanmb,j02win2.nuanmb,j02win2loop.nuanmb,j02win3.nuanmb,j02win3loop.nuanmb
+kamui	7	d04final.nuanmb,d04finalvisualscene01.nuanmb,d04finalvisualscene02.nuanmb,d04finalvisualscene03.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+ken	5	d04final.nuanmb,d04final2.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+kirby	4	d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+koopa	5	d04finalairstart.nuanmb,d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+koopajr	4	d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+krool	8	d04finalstart.nuanmb,d04visualscene01.nuanmb,d04visualscene02.nuanmb,d04visualscene03.nuanmb,d04visualscene04.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+link	4	d04final.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+littlemac	5	d04finalhit.nuanmb,d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+lucario	4	d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+lucas	4	d04final.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+lucina	5	d04finalstart.nuanmb,d04finalstart02.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+luigi	5	d04finalstart.nuanmb,d04finalstart02.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+mario	5	d04final.nuanmb,d04finalcutin.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+mariod	4	d04final.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+marth	5	d04finalstart.nuanmb,d04finalstart02.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+master	8	d04finalstart.nuanmb,d04finalstart02.nuanmb,d04visualscene01.nuanmb,d04visualscene02.nuanmb,d04visualscene03.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+metaknight	7	d04finalfinishl.nuanmb,d04finalfinishr.nuanmb,d04finalstartl.nuanmb,d04finalstartr.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+mewtwo	5	d04final.nuanmb,d04finalair.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+miifighter	4	d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+miigunner	5	d04finalstart.nuanmb,d04finalstart02.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+miiswordsman	5	d04finalstart.nuanmb,d04finalstart02.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+murabito	5	d04finalmoneyr.nuanmb,d04finalr.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+ness	4	d04final.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+packun	4	d04final.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+pacman	4	d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+palutena	4	d04final.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+peach	4	d04final.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+pfushigisou	4	d04final.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+pichu	4	d04final.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+pickel	5	d04final.nuanmb,d04visualscene01.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+pikachu	4	d04final.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+pikmin	4	d04finalstartr.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+pit	5	d04finalstartl.nuanmb,d04finalstartr.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+pitb	4	d04final.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+plizardon	4	d04final.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+popo	4	d04final2.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+ptrainer	3	j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+purin	4	d04finalstartr.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+pzenigame	4	d04final.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+reflet	4	d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+richter	8	d04finalstart.nuanmb,d04finalstart02.nuanmb,d04visualscene01.nuanmb,d04visualscene02.nuanmb,d04visualscene03.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+ridley	9	d04finalstart.nuanmb,d04visualscene01.nuanmb,d04visualscene02.nuanmb,d04visualscene03.nuanmb,d04visualscene04.nuanmb,d04visualscene05.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+robot	4	d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+rockman	6	d04final.nuanmb,d04finalvisualscene01.nuanmb,d04finalvisualscene02.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+rosetta	5	d04final.nuanmb,d04final02.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+roy	5	d04finalstart.nuanmb,d04finalstart02.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+ryu	5	d04final.nuanmb,d04final2.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+samus	4	d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+samusd	4	d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+sheik	4	d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+shizue	4	d04finalr.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+shulk	6	d04final.nuanmb,d04finalvisualsceneattack.nuanmb,d04finalvisualsceneentry.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+simon	8	d04finalstart.nuanmb,d04finalstart02.nuanmb,d04visualscene01.nuanmb,d04visualscene02.nuanmb,d04visualscene03.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+snake	5	d04finalstart.nuanmb,d04finalstart02.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+sonic	4	d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+szerosuit	4	d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+tantan	8	d04final.nuanmb,d04final02.nuanmb,d04visualscene01.nuanmb,d04visualscene02.nuanmb,d04visualscene03.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+toonlink	6	d04finalone.nuanmb,d04finalstart.nuanmb,d04finalstart02.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+trail	8	d04final.nuanmb,d04visualscene01.nuanmb,d04visualscene02.nuanmb,d04visualscene03.nuanmb,d04visualscene04.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+wario	5	d04finalstart.nuanmb,d04visualscene.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+wiifit	4	d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+wolf	8	d04finalairlockon.nuanmb,d04finalairlockon02.nuanmb,d04finallockon.nuanmb,d04finallockon02.nuanmb,d04finalvisualscene.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+yoshi	5	d04finalstart.nuanmb,d04visualscene.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+younglink	5	d04finalstart.nuanmb,d04finalstart02.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+zelda	4	d04finalstart.nuanmb,j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb
+#
+# pseudo-fighters (not clonable, listed for completeness)
+#camera_shake	1	j02wincamshake.nuanmb
+#nocontest	7	fitnocontestcamera2.nuanmb,fitnocontestcamera3.nuanmb,fitnocontestcamera4.nuanmb,fitnocontestcamera5.nuanmb,fitnocontestcamera6.nuanmb,fitnocontestcamera7.nuanmb,fitnocontestcamera8.nuanmb
+#team	7	j02win1.nuanmb,j02win2.nuanmb,j02win3.nuanmb,j02win4.nuanmb,j02win5.nuanmb,j02win6.nuanmb,j02win7.nuanmb

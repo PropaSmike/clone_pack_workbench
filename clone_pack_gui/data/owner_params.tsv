@@ -1,0 +1,3759 @@
+kind	offset	type	field	parent	default
+0	0x00b0	f32	dummy	param_private	0
+0	0x00e8	u32	shape_type	map_collision_fireball	
+0	0x00ec	f32	center_y	map_collision_fireball	0
+0	0x00f0	f32	radius	map_collision_fireball	1
+0	0x0188	u32	shape_type	map_collision_pumpwater	
+0	0x018c	f32	up	map_collision_pumpwater	2
+0	0x0190	f32	down	map_collision_pumpwater	-2
+0	0x0194	f32	half_width	map_collision_pumpwater	2
+1	0x00b0	f32	walk_accel_mul_mul	param_lifting_walk	1.10000002
+1	0x00b4	f32	walk_accel_add_mul	param_lifting_walk	
+1	0x00b8	f32	walk_speed_max_mul	param_lifting_walk	
+1	0x0138	f32	final_fix_pos_offset_x	param_private	45
+1	0x013c	f32	final_fix_pos_offset_y	param_private	5
+1	0x0140	f32	final_wall_leave_speed	param_private	0
+1	0x0144	f32	final_hit_space	param_private	7
+1	0x0148	f32	final_target_move_frame	param_private	12
+1	0x014c	i32	unk_10bb3928c1	param_private	13
+2	0x00e0	u32	shape_type	map_collision_swordbeam	
+2	0x00e4	f32	up	map_collision_swordbeam	1
+2	0x00e8	f32	down	map_collision_swordbeam	-1
+2	0x00ec	f32	half_width	map_collision_swordbeam	5
+2	0x0138	u32	shape_type	map_collision_bowarrow	
+2	0x013c	f32	up	map_collision_bowarrow	0.100000001
+2	0x0140	f32	down	map_collision_bowarrow	-0.100000001
+2	0x0144	f32	half_width	map_collision_bowarrow	
+2	0x01c0	f32	final_catch_size	param_private	7
+2	0x01c4	f32	final_chatch_dist	param_private	150
+2	0x01c8	f32	linkbomb_bound_speed_x_mul	param_private	
+2	0x01cc	f32	final_dash_speed	param_private	10
+2	0x01d0	i32	final_finale_end_frame	param_private	15
+2	0x01d4	f32	final_raise_speed	param_private	0.0500000007
+2	0x01d8	f32	air_lw_blank_time	param_private	30
+2	0x01dc	i32	air_lw_max_hit	param_private	2
+2	0x01e0	f32	wait_shield_scale_x	param_private	3.54999995
+2	0x01e4	f32	wait_shield_scale_y	param_private	4
+2	0x01e8	f32	wait_shield_scale_z	param_private	1
+2	0x01ec	f32	unk_1affc51cec	param_private	1.13
+2	0x01f0	f32	shield_guard_degree	param_private	90
+2	0x0210	u32	shape_type	map_collision_ancientbowarrow	
+2	0x0214	f32	up	map_collision_ancientbowarrow	
+2	0x0218	f32	down	map_collision_ancientbowarrow	
+2	0x021c	f32	half_width	map_collision_ancientbowarrow	
+3	0x0158	u32	shape_type	map_collision_cshot	
+3	0x015c	f32	up	map_collision_cshot	2
+3	0x0160	f32	down	map_collision_cshot	-2
+3	0x0164	f32	half_width	map_collision_cshot	2
+3	0x01b0	u32	shape_type	map_collision_missile	
+3	0x01b4	f32	up	map_collision_missile	2.4000001
+3	0x01b8	f32	down	map_collision_missile	-2.4000001
+3	0x01bc	f32	half_width	map_collision_missile	
+3	0x01c0	u32	shape_type	map_collision_supermissile	
+3	0x01c4	f32	up	map_collision_supermissile	
+3	0x01c8	f32	down	map_collision_supermissile	
+3	0x01cc	f32	half_width	map_collision_supermissile	
+3	0x0218	u32	shape_type	map_collision_bomb	
+3	0x021c	f32	up	map_collision_bomb	2.5
+3	0x0220	f32	down	map_collision_bomb	-2.5
+3	0x0224	f32	half_width	map_collision_bomb	2.5
+3	0x0228	f32	final_a_vy0	param_private	0.5
+3	0x022c	f32	final_a_ay	param_private	0.00999999978
+3	0x0230	f32	final_a_vy_max	param_private	0.159999996
+3	0x0234	f32	final_laser_ang_spd	param_private	0.129999995
+3	0x0238	f32	final_laser_ang_max	param_private	10
+3	0x023c	f32	final_laser_spd	param_private	
+3	0x0240	i32	final_laser_time	param_private	150
+3	0x0244	f32	final_laser_initial_distance	param_private	450
+3	0x0248	f32	final_laser_max_distance	param_private	
+3	0x024c	i32	final_ground_effect_interval_frame	param_private	20
+3	0x0250	f32	final_ground_effect_margin_length	param_private	3
+3	0x0254	f32	final_ground_effect_max_distance	param_private	30
+3	0x0258	f32	final_ground_effect_offset_y	param_private	1.5
+3	0x0260	hash40	gbeam_map_coll_joint	param_private	0
+3	0x0268	f32	gbeam_map_coll_offset_x	param_private	5
+3	0x026c	f32	gbeam_map_coll_offset_y	param_private	0
+3	0x0270	f32	gbeam_map_coll_offset_z	param_private	0
+3	0x02a8	u32	shape_type	map_collision_laser	
+3	0x02ac	f32	up	map_collision_laser	2
+3	0x02b0	f32	down	map_collision_laser	-2
+3	0x02b4	f32	half_width	map_collision_laser	2
+3	0x02b8	u32	shape_type	map_collision_laser2	
+3	0x02bc	f32	up	map_collision_laser2	2
+3	0x02c0	f32	down	map_collision_laser2	-2
+3	0x02c4	f32	half_width	map_collision_laser2	2
+4	0x0158	u32	shape_type	map_collision_cshot	
+4	0x015c	f32	up	map_collision_cshot	2
+4	0x0160	f32	down	map_collision_cshot	-2
+4	0x0164	f32	half_width	map_collision_cshot	2
+4	0x01b0	u32	shape_type	map_collision_missile	
+4	0x01b4	f32	up	map_collision_missile	2.4000001
+4	0x01b8	f32	down	map_collision_missile	-2.4000001
+4	0x01bc	f32	half_width	map_collision_missile	
+4	0x01c0	u32	shape_type	map_collision_supermissile	
+4	0x01c4	f32	up	map_collision_supermissile	
+4	0x01c8	f32	down	map_collision_supermissile	
+4	0x01cc	f32	half_width	map_collision_supermissile	
+4	0x0218	u32	shape_type	map_collision_bomb	
+4	0x021c	f32	up	map_collision_bomb	2.5
+4	0x0220	f32	down	map_collision_bomb	-2.5
+4	0x0224	f32	half_width	map_collision_bomb	2.5
+4	0x0228	f32	final_a_vy0	param_private	0.5
+4	0x022c	f32	final_a_ay	param_private	0.00999999978
+4	0x0230	f32	final_a_vy_max	param_private	0.159999996
+4	0x0234	f32	final_laser_ang_spd	param_private	0.129999995
+4	0x0238	f32	final_laser_ang_max	param_private	10
+4	0x023c	f32	final_laser_spd	param_private	
+4	0x0240	i32	final_laser_time	param_private	150
+4	0x0244	f32	final_laser_initial_distance	param_private	450
+4	0x0248	f32	final_laser_max_distance	param_private	
+4	0x024c	i32	final_ground_effect_interval_frame	param_private	20
+4	0x0250	f32	final_ground_effect_margin_length	param_private	3
+4	0x0254	f32	final_ground_effect_max_distance	param_private	30
+4	0x0258	f32	final_ground_effect_offset_y	param_private	1.5
+4	0x0260	hash40	gbeam_map_coll_joint	param_private	0
+4	0x0268	f32	gbeam_map_coll_offset_x	param_private	5
+4	0x026c	f32	gbeam_map_coll_offset_y	param_private	0
+4	0x0270	f32	gbeam_map_coll_offset_z	param_private	0
+4	0x02a8	u32	shape_type	map_collision_laser	
+4	0x02ac	f32	up	map_collision_laser	2
+4	0x02b0	f32	down	map_collision_laser	-2
+4	0x02b4	f32	half_width	map_collision_laser	2
+4	0x02b8	u32	shape_type	map_collision_laser2	
+4	0x02bc	f32	up	map_collision_laser2	2
+4	0x02c0	f32	down	map_collision_laser2	-2
+4	0x02c4	f32	half_width	map_collision_laser2	2
+5	0x00b0	i32	turn_count	jump_aerial	12
+5	0x00b4	f32	turn_cont_value	jump_aerial	0.300000012
+5	0x00b8	f32	damage_reaction_sub	jump_aerial	120
+5	0x00bc	f32	damage_reaction_min	jump_aerial	60
+5	0x00c0	i32	start_frame	catch_skip_data	16
+5	0x00c4	i32	end_frame	catch_skip_data	26
+5	0x00e0	i32	start_frame	catch_dash_data	10
+5	0x00e4	i32	end_frame	catch_dash_data	21
+5	0x0100	i32	start_frame	catch_turn_data	9
+5	0x0104	i32	end_frame	catch_turn_data	19
+5	0x0198	i32	burst_frame	special_hi_data	20
+5	0x019c	u32	shape_type	map_collision_tamago	
+5	0x01a0	f32	up	map_collision_tamago	4
+5	0x01a4	f32	down	map_collision_tamago	-4
+5	0x01a8	f32	half_width	map_collision_tamago	4
+5	0x01e0	u32	shape_type	map_collision_star	
+5	0x01e4	f32	up	map_collision_star	4
+5	0x01e8	f32	down	map_collision_star	-4
+5	0x01ec	f32	half_width	map_collision_star	4
+5	0x01f0	f32	dash_speed_x	param_final	8
+5	0x01f4	i32	dash_frame	param_final	10
+5	0x01f8	i32	disable_cliff_stop_frame	param_final	4
+5	0x01fc	f32	dash_end_brake_x	param_final	0.0900000036
+5	0x0200	i32	hit_slow_mag	param_final	3
+5	0x0204	i32	final_ready_frame	param_final	15
+5	0x0208	i32	add_damage_start_frame	param_final	170
+5	0x020c	i32	add_damage_frame	param_final	70
+5	0x0210	f32	add_damage	param_final	30
+5	0x0214	f32	final_smash_degree_min	param_final	35
+5	0x0218	f32	final_smash_degree_max	param_final	55
+5	0x021c	f32	yoshimob_scale	param_final	1
+5	0x0220	f32	target_offset_x1	param_final	0
+5	0x0224	f32	target_offset_y1	param_final	0
+5	0x0228	f32	target_offset_z1	param_final	0
+5	0x022c	f32	target_offset_x2	param_final	0
+5	0x0230	f32	target_offset_y2	param_final	0
+5	0x0234	f32	target_offset_z2	param_final	0
+5	0x0238	f32	target_offset_x3	param_final	0
+5	0x023c	f32	target_offset_y3	param_final	0
+5	0x0240	f32	target_offset_z3	param_final	0
+5	0x0244	i32	max_hit_num	param_final	3
+6	0x0128	u32	shape_type	map_collision_rosettaticomissile	
+6	0x012c	f32	up	map_collision_rosettaticomissile	2
+6	0x0130	f32	down	map_collision_rosettaticomissile	-2
+6	0x0134	f32	half_width	map_collision_rosettaticomissile	2
+6	0x01b0	u32	shape_type	map_collision_finalcuttershot	
+6	0x01b4	f32	up	map_collision_finalcuttershot	0.5
+6	0x01b8	f32	down	map_collision_finalcuttershot	-0.5
+6	0x01bc	f32	half_width	map_collision_finalcuttershot	0.5
+6	0x01f0	f32	final_offset_x	param_private	15
+6	0x01f4	f32	final_offset_y	param_private	0
+6	0x01f8	f32	final_speed	param_private	1
+6	0x01fc	f32	final_pos_interval_x	param_private	3
+6	0x0200	i32	rosettaticomissile_interval_frame	param_private	80
+6	0x0204	i32	throw_hi_stop_frame	param_private	8
+6	0x0208	f32	clear_dance_offset_x	param_private	30
+6	0x020c	f32	clear_dance_offset_z	param_private	-10
+7	0x00f8	u32	shape_type	map_collision_blaster_bullet	
+7	0x00fc	f32	up	map_collision_blaster_bullet	1
+7	0x0100	f32	down	map_collision_blaster_bullet	-1
+7	0x0104	f32	half_width	map_collision_blaster_bullet	10
+7	0x0198	f32	final_start_vector	param_private	70
+7	0x019c	f32	final_start_speed	param_private	4
+7	0x01a0	f32	final_ready_speed_y	param_private	6
+7	0x01a4	f32	final_vector_min	param_private	40
+7	0x01a8	f32	final_vector_max	param_private	45
+7	0x01ac	i32	final_ready_screen_effect_frame	param_private	69
+7	0x01b0	i32	final_ready_frame	param_private	70
+7	0x01b4	f32	final_camera_ofs_x	param_private	0
+7	0x01b8	f32	final_camera_ofs_y	param_private	0
+7	0x01bc	i32	final_zoom_in_frame	param_private	10
+7	0x01c0	f32	final_zoom_in_rate	param_private	2
+7	0x01c4	f32	final_reticle_offset_x	param_private	23
+7	0x01c8	f32	final_reticle_offset_y	param_private	14
+7	0x01cc	i32	final_hit_slow_mag	param_private	8
+7	0x01d0	f32	final_target_scale	param_private	8
+7	0x01d4	f32	final_target_offset_x_2	param_private	100
+7	0x01d8	f32	final_target_offset_y_2	param_private	
+7	0x01dc	f32	final_target_offset_z_2	param_private	
+7	0x01e0	f32	final_target_offset_x_3	param_private	-100
+7	0x01e4	f32	final_target_offset_y_3	param_private	
+7	0x01e8	f32	final_target_offset_z_3	param_private	
+8	0x0110	u32	shape_type	map_collision_dengekidama	
+8	0x0114	f32	up	map_collision_dengekidama	2
+8	0x0118	f32	down	map_collision_dengekidama	-2
+8	0x011c	f32	half_width	map_collision_dengekidama	2
+8	0x0120	u32	shape_type	map_collision_dengeki	
+8	0x0124	f32	up	map_collision_dengeki	0.100000001
+8	0x0128	f32	down	map_collision_dengeki	-0.100000001
+8	0x012c	f32	half_width	map_collision_dengeki	
+8	0x01a8	f32	final_dash_speed	param_private	8
+8	0x01ac	i32	special_hi_guide_after_frame	param_private	3
+8	0x01b0	i32	final_dash_cliff_no_stop_frame	param_private	6
+8	0x01b4	f32	final_dash_end_brake_x	param_private	0.0900000036
+8	0x01b8	f32	unk_21ec862be4	param_private	2
+8	0x01bc	f32	final_ground_offset_y	param_private	20
+8	0x01c0	f32	final_camera_dist	param_private	150
+8	0x01c4	f32	final_base_fov	param_private	30
+8	0x01c8	f32	final_min_fov	param_private	5
+8	0x01cc	f32	final_min_fov_mul	param_private	6
+8	0x01d0	f32	final_all_accel_y_mul	param_private	0.5
+8	0x01d4	f32	unk_1b0d6fe99c	param_private	1
+8	0x01d8	f32	final_center_dist_brake_meter	param_private	2
+8	0x01dc	f32	final_center_dist_brake_x	param_private	0.200000003
+8	0x01e0	f32	final_center_dist_brake_y	param_private	0.300000012
+8	0x01e4	i32	final_vortex_frame	param_private	120
+8	0x01e8	f32	final_vortex_speed	param_private	20
+8	0x01ec	f32	unk_1dbb5c9580	param_private	10
+8	0x01f0	f32	unk_20e60779f8	param_private	
+9	0x00c8	f32	dummy	param_private	0
+9	0x0118	u32	shape_type	map_collision_data_plunger	
+9	0x011c	f32	up	map_collision_data_plunger	1
+9	0x0120	f32	down	map_collision_data_plunger	-1
+9	0x0124	f32	half_w	map_collision_data_plunger	2
+9	0x01a0	u32	shape_type	map_collision_data_fireball	
+9	0x01a4	f32	up	map_collision_data_fireball	0.200000003
+9	0x01a8	f32	down	map_collision_data_fireball	-0.200000003
+9	0x01ac	f32	half_w	map_collision_data_fireball	1
+10	0x00b0	hash40	node	param_reflector	0
+10	0x00b8	f32	limit	param_reflector	80
+10	0x00bc	f32	offset_x	param_reflector	0
+10	0x00c0	f32	offset_y	param_reflector	6
+10	0x00c4	f32	offset_z	param_reflector	9
+10	0x00c8	f32	size	param_reflector	10
+10	0x00cc	f32	attack_mul	param_reflector	2
+10	0x00d0	f32	speed_mul	param_reflector	2.5
+10	0x00d4	f32	life_mul	param_reflector	0.5
+10	0x00d8	i32	no_m_ball	param_reflector	0
+10	0x00e0	f32	gravity	param_yoyo	5
+10	0x00e4	f32	air_resist	param_yoyo	0.00999999978
+10	0x00e8	f32	collision_size	param_yoyo	9.99999975e-05
+10	0x00ec	f32	restitution_rate	param_yoyo	
+10	0x00f0	f32	restitution_range	param_yoyo	
+10	0x00f4	f32	head_collision_size	param_yoyo	1.60000002
+10	0x00f8	f32	head_weight	param_yoyo	1000
+10	0x00fc	f32	length_min_hi	param_yoyo	0.5
+10	0x0100	f32	length_min_lw	param_yoyo	0.600000024
+10	0x0104	f32	z_range	param_yoyo	0.200000003
+10	0x0108	f32	head_accel	param_yoyo	1
+10	0x010c	f32	head_speed_max	param_yoyo	100
+10	0x0128	f32	rot_speed	param_yoyohead	30
+10	0x012c	f32	gravity_accel	param_yoyohead	
+10	0x0130	f32	gravity_acl_max	param_yoyohead	0.300000012
+10	0x0134	i32	rot_speed_down_frame	param_yoyohead	20
+10	0x0138	f32	rot_speed_brake	param_yoyohead	0.25
+10	0x013c	f32	rot_speed_attack	param_yoyohead	10
+10	0x0140	u32	shape_type	map_collision_yoyohead	
+10	0x0144	f32	center_y	map_collision_yoyohead	0
+10	0x0148	f32	radius	map_collision_yoyohead	1.70000005
+10	0x0180	u32	shape_type	map_collision_pkflash	
+10	0x0184	f32	center_y	map_collision_pkflash	0
+10	0x0188	f32	radius	map_collision_pkflash	2
+10	0x01c0	u32	shape_type	map_collision_pkfire	
+10	0x01c4	f32	center_y	map_collision_pkfire	0
+10	0x01c8	f32	radius	map_collision_pkfire	0.100000001
+10	0x0218	u32	shape_type	map_collision_pkthunder	
+10	0x021c	f32	center_y	map_collision_pkthunder	0
+10	0x0220	f32	radius	map_collision_pkthunder	2
+10	0x0240	f32	final_speed_y	param_private	0
+10	0x0244	f32	interval_frame	param_private	23
+10	0x0248	f32	interval_dec	param_private	0.5
+10	0x024c	i32	capture_speed_disable_frame	param_private	6
+11	0x0140	f32	final_height	param_final	200
+11	0x0144	f32	final_initialfallspeed	param_final	0.75
+11	0x0148	f32	final_fallacc	param_final	1
+11	0x014c	f32	final_radius	param_final	50
+11	0x0150	f32	final_clashspeedx	param_final	18.5
+11	0x0154	f32	final_clashspeedy	param_final	4
+11	0x0158	f32	blue_falcon_vector_min	param_final	42
+11	0x015c	f32	blue_falcon_vector_max	param_final	60
+11	0x0160	f32	blue_falcon_damage	param_final	0
+11	0x0164	f32	final_clashbrakex	param_final	0
+11	0x0168	f32	final_clashgravityacc	param_final	0
+11	0x016c	f32	final_height	param_private	
+11	0x0170	f32	final_initialfallspeed	param_private	0.75
+11	0x0174	f32	final_fallacc	param_private	1
+11	0x0178	f32	final_radius	param_private	
+11	0x017c	f32	final_clashspeedx	param_private	
+11	0x0180	f32	final_clashspeedy	param_private	4
+11	0x0184	f32	blue_falcon_vector_min	param_private	
+11	0x0188	f32	blue_falcon_vector_max	param_private	
+11	0x018c	f32	blue_falcon_damage	param_private	0
+11	0x0190	f32	final_clashbrakex	param_private	0
+11	0x0194	f32	final_clashgravityacc	param_private	0
+12	0x0158	i32	final_body_mul	param_private	17
+12	0x015c	i32	final_body_mul_frame	param_private	200
+12	0x0160	i32	final_wait_frame	param_private	90
+12	0x0164	i32	final_body_div_frame	param_private	121
+12	0x0168	f32	final_camera_range_add_front	param_private	75
+12	0x016c	f32	final_camera_range_add_back	param_private	67.5
+12	0x0170	f32	final_camera_range_add_top	param_private	200
+12	0x0174	f32	final_camera_range_add_bottom	param_private	7.5
+12	0x0178	i32	throw_hi_stop_frame	param_private	8
+13	0x0170	f32	final_rot_speed_y	param_private	1
+13	0x0174	f32	final_rot_speed_min	param_private	1
+13	0x0178	f32	final_rot_speed_max	param_private	10
+13	0x017c	f32	final_offset_x	param_private	0
+13	0x0180	f32	final_offset_y	param_private	0
+13	0x0184	f32	final_offset_z	param_private	0
+13	0x0188	i32	final_peach_appear_num	param_private	3
+13	0x018c	i32	final_peach_appear_interval	param_private	8
+13	0x0190	i32	final_lot_delay_frame	param_private	600
+13	0x0194	i32	uniq_float_float_frame	param_private	150
+13	0x0198	f32	uniq_float_start_y	param_private	1.5
+13	0x019c	f32	unk_23628e2e70	param_private	14
+13	0x01a0	i32	smash_rate_pan	param_private	30
+14	0x0170	f32	final_rot_speed_y	param_private	1
+14	0x0174	f32	final_rot_speed_min	param_private	1
+14	0x0178	f32	final_rot_speed_max	param_private	10
+14	0x017c	f32	final_offset_x	param_private	0
+14	0x0180	f32	final_offset_y	param_private	0
+14	0x0184	f32	final_offset_z	param_private	0
+14	0x0188	i32	final_peach_appear_num	param_private	3
+14	0x018c	i32	final_peach_appear_interval	param_private	8
+14	0x0190	i32	final_lot_delay_frame	param_private	600
+14	0x0194	i32	uniq_float_float_frame	param_private	150
+14	0x0198	f32	uniq_float_start_y	param_private	1.5
+14	0x019c	f32	unk_23628e2e70	param_private	14
+14	0x01a0	i32	smash_rate_pan	param_private	30
+15	0x00b0	f32	reaction_value	param_private	19
+15	0x00b4	f32	damage_air_brake	param_private	0.0799999982
+15	0x00b8	i32	final_change_frame_koopag	param_private	30
+15	0x00bc	i32	final_change_frame_koopa	param_private	30
+15	0x00f0	u32	shape_type	map_collision_breath	
+15	0x00f4	f32	up	map_collision_breath	2
+15	0x00f8	f32	down	map_collision_breath	0
+15	0x00fc	f32	half_width	map_collision_breath	1
+15	0x0160	f32	center_y	camera_range_koopag	5
+15	0x0164	f32	front	camera_range_koopag	20
+15	0x0168	f32	back	camera_range_koopag	-20
+15	0x016c	f32	up	camera_range_koopag	30
+15	0x0170	f32	down	camera_range_koopag	-5
+16	0x00e0	u32	shape_type	map_collision_needle	
+16	0x00e4	f32	up	map_collision_needle	0.400000006
+16	0x00e8	f32	down	map_collision_needle	0.100000001
+16	0x00ec	f32	half_width	map_collision_needle	0.300000012
+16	0x0120	f32	wire_bound_mul_y	unk_17c34e7ded	
+16	0x0158	f32	dash_speed	param_private	13.5
+16	0x015c	i32	max_count	param_private	2
+16	0x0160	i32	dash_start_cliff_stop_frame	param_private	6
+16	0x0164	f32	attack_pos_offset	param_private	10
+16	0x0168	f32	attack_pos_speed	param_private	3
+16	0x016c	f32	attack_pos_interval	param_private	10
+16	0x0170	f32	attack_range_limit	param_private	30
+16	0x0174	f32	finish_pos_offset	param_private	15
+16	0x0178	f32	dash_end_brake_x	param_private	0.150000006
+16	0x017c	f32	finish_capture_offset_x	param_private	15
+16	0x0180	f32	finish_capture_offset_y	param_private	5
+16	0x0184	f32	finish_capture_speed	param_private	3
+17	0x0128	u32	shape_type	map_collision_dein	
+17	0x012c	f32	up	map_collision_dein	2
+17	0x0130	f32	down	map_collision_dein	-2
+17	0x0134	f32	half_width	map_collision_dein	2
+17	0x0180	u32	shape_type	map_collision_phantom	
+17	0x0184	f32	up	map_collision_phantom	18
+17	0x0188	f32	down	map_collision_phantom	0
+17	0x018c	f32	half_width	map_collision_phantom	7
+17	0x01c0	f32	speed_x_gg	jostle_data_phantom	0.699999988
+17	0x01c4	f32	speed_x_ga	jostle_data_phantom	
+17	0x01c8	f32	speed_x_ag	jostle_data_phantom	0.300000012
+17	0x01cc	f32	speed_x_aa	jostle_data_phantom	
+17	0x01d0	f32	speed_z	jostle_data_phantom	0.100000001
+17	0x01d4	f32	pos_z_max	jostle_data_phantom	1.39999998
+17	0x01d8	f32	center_x	jostle_data_phantom	3
+17	0x01dc	f32	center_y	jostle_data_phantom	8
+17	0x01e0	f32	width	jostle_data_phantom	14
+17	0x01e4	f32	height	jostle_data_phantom	15
+17	0x01e8	f32	push_speed	jostle_data_phantom	1.5
+17	0x0208	f32	triforce_pos_x	param_private	20
+17	0x020c	f32	triforce_pos_y	param_private	12
+17	0x0210	f32	back_speed	param_private	1
+17	0x0214	i32	triforce_life	param_private	240
+17	0x0218	f32	damage_limit	param_private	100
+17	0x021c	f32	delta_angle	param_triforce	1.5
+17	0x0220	i32	expand_frame	param_triforce	30
+17	0x0224	i32	inhale_frame	param_triforce	180
+17	0x0228	f32	inhale_speed	param_triforce	2
+17	0x022c	f32	inhale_speed_mul_max	param_triforce	1.5
+17	0x0230	f32	inhale_range	param_triforce	150
+17	0x0234	f32	inhale_range_mul_max	param_triforce	1
+17	0x0238	i32	seal_frame	param_triforce	120
+17	0x023c	f32	seal_damage	param_triforce	50.0999985
+17	0x0240	i32	disappear_frame	param_triforce	30
+18	0x00b0	f32	dummy	param_private	0
+18	0x00b4	f32	attack_point	param_adjust	22
+18	0x00b8	f32	move_point	param_adjust	-65
+18	0x00f0	u32	shape_type	map_collision_data_drcapsule	
+18	0x00f4	f32	center_y	map_collision_data_drcapsule	0
+18	0x00f8	f32	radius	map_collision_data_drcapsule	1
+19	0x0110	u32	shape_type	map_collision_dengekidama	
+19	0x0114	f32	up	map_collision_dengekidama	2
+19	0x0118	f32	down	map_collision_dengekidama	-2
+19	0x011c	f32	half_width	map_collision_dengekidama	2
+19	0x0120	u32	shape_type	map_collision_dengeki	
+19	0x0124	f32	up	map_collision_dengeki	0.100000001
+19	0x0128	f32	down	map_collision_dengeki	-0.100000001
+19	0x012c	f32	half_width	map_collision_dengeki	
+19	0x01a8	f32	final_dash_speed	param_private	9
+19	0x01ac	i32	special_hi_guide_after_frame	param_private	3
+19	0x01b0	i32	final_dash_cliff_no_stop_frame	param_private	6
+19	0x01b4	f32	final_dash_end_brake_x	param_private	0.200000003
+19	0x01b8	f32	unk_21ec862be4	param_private	2
+19	0x01bc	f32	final_ground_offset_y	param_private	20
+19	0x01c0	f32	final_camera_dist	param_private	150
+19	0x01c4	f32	final_base_fov	param_private	30
+19	0x01c8	f32	final_min_fov	param_private	5
+19	0x01cc	f32	final_min_fov_mul	param_private	6
+19	0x01d0	f32	final_all_accel_y_mul	param_private	0.5
+19	0x01d4	f32	unk_1b0d6fe99c	param_private	1
+19	0x01d8	f32	final_center_dist_brake_meter	param_private	2
+19	0x01dc	f32	final_center_dist_brake_x	param_private	
+19	0x01e0	f32	final_center_dist_brake_y	param_private	0.300000012
+19	0x01e4	i32	final_vortex_frame	param_private	120
+19	0x01e8	f32	final_vortex_speed	param_private	20
+19	0x01ec	f32	unk_1dbb5c9580	param_private	10
+19	0x01f0	f32	unk_20e60779f8	param_private	
+20	0x00f8	u32	shape_type	map_collision_blaster_bullet	
+20	0x00fc	f32	up	map_collision_blaster_bullet	1
+20	0x0100	f32	down	map_collision_blaster_bullet	-1
+20	0x0104	f32	half_width	map_collision_blaster_bullet	10
+20	0x0180	f32	final_start_vector	param_private	70
+20	0x0184	f32	final_start_speed	param_private	4
+20	0x0188	f32	final_ready_speed_y	param_private	6
+20	0x018c	f32	final_vector_min	param_private	65
+20	0x0190	f32	final_vector_max	param_private	80
+20	0x0194	f32	fire_fall_x_mul	param_private	
+20	0x0198	i32	final_ready_frame	param_private	70
+20	0x019c	f32	final_camera_ofs_x	param_private	0
+20	0x01a0	f32	final_camera_ofs_y	param_private	0
+20	0x01a4	i32	final_zoom_in_frame	param_private	10
+20	0x01a8	f32	final_zoom_in_rate	param_private	2
+20	0x01ac	f32	final_reticle_offset_x	param_private	23
+20	0x01b0	f32	final_reticle_offset_y	param_private	14
+20	0x01b4	i32	final_hit_slow_mag	param_private	8
+20	0x01b8	f32	final_target_scale	param_private	8
+20	0x01bc	f32	final_target_offset_x_2	param_private	100
+20	0x01c0	f32	final_target_offset_y_2	param_private	
+20	0x01c4	f32	final_target_offset_z_2	param_private	
+20	0x01c8	f32	final_target_offset_x_3	param_private	-100
+20	0x01cc	f32	final_target_offset_y_3	param_private	
+20	0x01d0	f32	final_target_offset_z_3	param_private	
+21	0x0128	f32	dash_speed	param_private	9
+21	0x012c	i32	dash_frame	param_private	30
+21	0x0130	f32	window_pos_y	param_private	10
+21	0x0134	f32	window_offset	param_private	20
+21	0x0138	f32	window_speed	param_private	0.0500000007
+21	0x013c	i32	window_move_frame	param_private	40
+21	0x0140	i32	window_frame	param_private	90
+22	0x0128	f32	dash_speed	param_private	9
+22	0x012c	i32	dash_frame	param_private	30
+22	0x0130	f32	window_pos_y	param_private	10
+22	0x0134	f32	window_offset	param_private	20
+22	0x0138	f32	window_speed	param_private	0.0500000007
+22	0x013c	i32	window_move_frame	param_private	40
+22	0x0140	i32	window_frame	param_private	90
+23	0x00b0	f32	air_lw_blank_time	param_private	30
+23	0x00b4	i32	air_lw_max_hit	param_private	2
+23	0x00b8	f32	wait_shield_scale_x	param_private	2.4000001
+23	0x00bc	f32	wait_shield_scale_y	param_private	3.20000005
+23	0x00c0	f32	wait_shield_scale_z	param_private	0.800000012
+23	0x00c4	f32	unk_1affc51cec	param_private	1.13
+23	0x00c8	f32	shield_guard_degree	param_private	90
+23	0x00cc	f32	unk_1f4d90b6a0	param_private	20
+23	0x00d0	hash40	hookshot_map_coll_joint	param_private	0
+23	0x00d8	f32	hookshot_map_coll_offset_x	param_private	5
+23	0x00dc	f32	hookshot_map_coll_offset_y	param_private	0
+23	0x00e0	f32	hookshot_map_coll_offset_z	param_private	0
+23	0x00e4	f32	final_catch_size	param_private	7
+23	0x00e8	f32	final_chatch_dist	param_private	65
+23	0x00ec	i32	final_rigid_frame	param_private	10
+23	0x00f0	f32	final_dash_speed	param_private	8
+23	0x00f4	i32	final_finale_end_frame	param_private	30
+23	0x00f8	f32	final_fail_speed	param_private	3
+23	0x00fc	f32	final_raise_speed	param_private	0.0500000007
+23	0x01a8	u32	shape_type	map_collision_bowarrow	
+23	0x01ac	f32	up	map_collision_bowarrow	0.100000001
+23	0x01b0	f32	down	map_collision_bowarrow	-0.100000001
+23	0x01b4	f32	half_width	map_collision_bowarrow	
+24	0x0140	f32	offset_x	param_ganond	15
+24	0x0144	f32	offset_y	param_ganond	0
+24	0x0148	f32	speed	param_ganond	9.80000019
+24	0x014c	f32	center_y	camera_range_ganond	20
+24	0x0150	f32	front	camera_range_ganond	50
+24	0x0154	f32	back	camera_range_ganond	-40
+24	0x0158	f32	up	camera_range_ganond	30
+24	0x015c	f32	down	camera_range_ganond	-20
+24	0x0178	i32	dummy	param_private	0
+25	0x00b0	f32	unk_1bdbdbd21f	param_private	1
+25	0x00b4	f32	unk_1bacdce289	param_private	0.5
+25	0x00b8	f32	unk_1b35d5b333	param_private	0
+25	0x00f0	u32	shape_type	map_collision_shadowball	
+25	0x00f4	f32	center_y	map_collision_shadowball	0
+25	0x00f8	f32	radius	map_collision_shadowball	2
+25	0x0178	u32	shape_type	map_collision_bindball	
+25	0x017c	f32	up	map_collision_bindball	2
+25	0x0180	f32	down	map_collision_bindball	-2
+25	0x0184	f32	half_width	map_collision_bindball	2
+25	0x01a0	u32	shape_type	map_collision_mewtwom	
+25	0x01a4	f32	up	map_collision_mewtwom	4
+25	0x01a8	f32	down	map_collision_mewtwom	4
+25	0x01ac	f32	half_width	map_collision_mewtwom	0
+26	0x0128	f32	window_pos_y	param_private	10
+26	0x012c	f32	window_offset	param_private	20
+26	0x0130	f32	window_speed	param_private	0.0500000007
+26	0x0134	i32	window_move_frame	param_private	40
+26	0x0138	i32	window_frame	param_private	90
+26	0x013c	f32	ground_effect_offset_x	param_private	10
+26	0x0140	f32	ground_effect_offset_y	param_private	10
+26	0x0144	f32	ground_effect_velo_y	param_private	20
+27	0x0128	f32	dash_speed	param_private	10
+27	0x012c	i32	dash_frame	param_private	12
+27	0x0130	i32	disable_cliff_stop_frame	param_private	5
+27	0x0134	f32	dash_end_brake_x	param_private	0
+27	0x0138	i32	target_slow_rate	param_private	3
+27	0x013c	f32	target_speed_x	param_private	2.4000001
+27	0x0140	f32	target_speed_y	param_private	0.100000001
+27	0x0144	f32	target_accel_y	param_private	0
+27	0x0148	f32	target_brake_x	param_private	0.5
+27	0x014c	f32	target_motion_rate	param_private	0.25
+27	0x0150	f32	window_pos_y	param_private	30
+27	0x0154	f32	window_offset	param_private	30
+27	0x0158	f32	window_speed	param_private	0.0500000007
+27	0x015c	i32	window_move_frame	param_private	40
+27	0x0160	i32	window_frame	param_private	90
+28	0x00c8	f32	pos_offset_x	param_bomb	3.5
+28	0x00cc	f32	pos_offset_y	param_bomb	4
+28	0x00d0	f32	pos_offset_z	param_bomb	0
+28	0x00d4	i32	explosion_frame	param_bomb	1
+28	0x00d8	i32	life	param_bomb	30
+28	0x00dc	f32	speed_y	param_bomb	1.20000005
+28	0x00e0	f32	scale_mul	param_bomb	1.04999995
+28	0x00e4	f32	shoot_pos_offset_x	param_bomb	3.5
+28	0x00e8	f32	shoot_pos_offset_y	param_bomb	4
+28	0x00ec	i32	move_interval	param_bomb	1
+28	0x00f0	u32	shape_type	map_collision_bomb	
+28	0x00f4	f32	up	map_collision_bomb	3.5999999
+28	0x00f8	f32	down	map_collision_bomb	-2.70000005
+28	0x00fc	f32	half_width	map_collision_bomb	3
+28	0x0118	f32	pos_offset_x	param_breath	0.5
+28	0x011c	f32	pos_offset_y	param_breath	21.5
+28	0x0120	i32	life	param_breath	34
+28	0x0124	i32	move_interval	param_breath	7
+28	0x0128	f32	speed_y	param_breath	8.5
+28	0x012c	f32	scale_mul	param_breath	1.89999998
+28	0x0130	u32	shape_type	map_collision_breath	
+28	0x0134	f32	up	map_collision_breath	5
+28	0x0138	f32	down	map_collision_breath	0
+28	0x013c	f32	half_width	map_collision_breath	3
+28	0x0170	u32	shape_type	map_collision_food	
+28	0x0174	f32	up	map_collision_food	0.600000024
+28	0x0178	f32	down	map_collision_food	-0.600000024
+28	0x017c	f32	half_width	map_collision_food	
+28	0x01f8	f32	octopus_offset_x	param_private	0
+28	0x01fc	f32	octopus_offset_y	param_private	-15
+28	0x0200	f32	camera_target_offset_x	param_private	0
+28	0x0204	f32	camera_target_offset_y	param_private	0
+28	0x0208	f32	camera_distance_min	param_private	300
+28	0x020c	f32	scale_z	param_private	0.00999999978
+28	0x0210	f32	dash_speed	param_private	0.75
+28	0x0214	f32	ground_speed_limit	param_private	3
+28	0x0218	f32	ground_brake	param_private	0.0599999987
+28	0x021c	f32	run_speed_max	param_private	0.925000012
+28	0x0220	f32	run_accel_mul	param_private	0.0399999991
+28	0x0224	f32	run_accel_add	param_private	0.0450000018
+28	0x0228	i32	critical_bg_only_frame	param_private	30
+28	0x022c	f32	walk_speed_max	param_private	0.699999988
+28	0x0230	f32	walk_accel_mul	param_private	0.0500000007
+28	0x0234	f32	walk_accel_add	param_private	
+28	0x0238	f32	jump_speed_x	param_private	0.474999994
+28	0x023c	f32	jump_speed_x_mul	param_private	0.400000006
+28	0x0240	f32	jump_speed_x_max	param_private	0.75
+28	0x0244	f32	jump_speed_y	param_private	2.3499999
+28	0x0248	f32	jump_aerial_speed_x_mul	param_private	0.449999988
+28	0x024c	f32	jump_aerial_speed_y	param_private	1.10000002
+28	0x0250	f32	mini_jump_speed_y	param_private	0.839999974
+28	0x0254	f32	air_accel_y	param_private	
+28	0x0258	f32	air_speed_y_stable	param_private	0.899999976
+28	0x025c	f32	air_brake_y	param_private	0.00600000005
+28	0x0260	f32	air_speed_y_limit	param_private	10
+28	0x0264	f32	air_speed_x_stable	param_private	0.540499985
+28	0x0268	f32	air_brake_x	param_private	
+28	0x026c	f32	air_speed_x_limit	param_private	2.5
+28	0x0270	f32	air_accel_x_mul	param_private	0.0149999997
+28	0x0274	f32	air_accel_x_add	param_private	0.0350000001
+28	0x0278	f32	swim_brake	param_private	0.00100000005
+28	0x027c	f32	swim_accel_mul	param_private	
+28	0x0280	f32	swim_rise_accel_y	param_private	0.0799999982
+28	0x0284	f32	swim_rise_stable_speed_y	param_private	1
+28	0x0288	i32	turn_frame	param_private	1
+28	0x028c	i32	turn_run_frame	param_private	1
+28	0x0290	f32	back_distance_x	param_octopus	7
+28	0x0294	f32	back_speed_x	param_octopus	4
+28	0x0298	f32	back_brake_x	param_octopus	0.129999995
+28	0x029c	f32	front_speed_x	param_octopus	0
+28	0x02a0	f32	front_limit_speed_x	param_octopus	10
+28	0x02a4	f32	front_accel_x	param_octopus	
+28	0x02a8	f32	stick_speed_y_mul	param_octopus	0.200000003
+28	0x02ac	f32	attack_motion_rate	param_octopus	5
+28	0x02b0	i32	catch_hit_stop_frame	param_octopus	8
+28	0x02b4	f32	pull_speed	param_octopus	7
+28	0x02b8	f32	capture_cut_frame	param_octopus	30
+28	0x02bc	f32	capture_cut_frame_damage	param_octopus	3
+28	0x02c0	f32	capture_clatter_frame	param_octopus	10
+28	0x02c4	i32	catch_damage_interval	param_octopus	14
+28	0x02c8	f32	catch_damage_value	param_octopus	4.9000001
+28	0x02cc	f32	catch_cut_distance	param_octopus	4
+28	0x02d0	i32	invincible_frame	param_octopus	120
+28	0x02d8	hash40	node	param_octopus	0
+28	0x02e0	f32	offset_x	param_octopus	0
+28	0x02e4	f32	offset_y	param_octopus	0
+28	0x02e8	f32	width	param_octopus	80
+28	0x02ec	f32	height	param_octopus	40
+28	0x02f0	f32	camera_range_add_left	param_octopus	25
+28	0x02f4	f32	camera_range_add_right	param_octopus	50
+28	0x02f8	f32	camera_range_add_top	param_octopus	10
+28	0x02fc	f32	camera_range_add_bottom	param_octopus	20
+28	0x0300	f32	final_cancel_flash_frame	param_octopus	120
+28	0x0304	f32	final_base_time	param_octopus	999
+28	0x0308	f32	final_handicap_ratio	param_octopus	
+28	0x0328	u32	shape_type	map_collision_octopus	
+28	0x032c	f32	up	map_collision_octopus	32
+28	0x0330	f32	down	map_collision_octopus	30
+28	0x0334	f32	half_width	map_collision_octopus	1
+29	0x0170	f32	final_enemy_interval	param_private	5
+29	0x0174	f32	final_target_pos_offset_x	param_private	20
+29	0x0178	f32	final_target_pos_offset_y	param_private	5
+29	0x017c	i32	final_move_frame	param_private	15
+29	0x0180	f32	target_motion_rate	param_private	0.100000001
+30	0x0128	u32	shape_type	map_collision_bowarrow	
+30	0x012c	f32	up	map_collision_bowarrow	1
+30	0x0130	f32	down	map_collision_bowarrow	-1
+30	0x0134	f32	half_width	map_collision_bowarrow	1
+30	0x01c8	i32	final_performance_frame	param_private	50
+30	0x01cc	f32	final_slow_rate	param_private	12
+30	0x01d0	f32	final_zoom_rate	param_private	3
+30	0x01d4	i32	final_zoom_in_frame	param_private	2
+30	0x01d8	f32	final_camera_offset_x	param_private	0
+30	0x01dc	f32	final_camera_offset_y	param_private	15
+30	0x01e0	i32	final_cut_in_end_frame	param_private	60
+31	0x00b8	hash40	status		
+31	0x0128	u32	shape_type	map_collision_bowarrow	
+31	0x012c	f32	up	map_collision_bowarrow	1
+31	0x0130	f32	down	map_collision_bowarrow	-1
+31	0x0134	f32	half_width	map_collision_bowarrow	1
+31	0x01c8	f32	final_camera_angle_lr	param_private	50
+31	0x01cc	f32	final_camera_angle_u	param_private	38
+31	0x01d0	f32	final_camera_angle_d	param_private	5
+31	0x01d4	f32	final_camera_angle_speed_x	param_private	1.29999995
+31	0x01d8	f32	final_camera_angle_speed_y	param_private	0.600000024
+31	0x01dc	f32	final_zoom_time	param_private	20
+31	0x01e0	f32	final_zoom_cancel_time	param_private	0
+31	0x01e4	f32	final_attack_mul	param_private	0.899999976
+31	0x01e8	f32	final_start_zoom_in_dist	param_private	200
+32	0x0188	f32	reticle_velocity_x	param_private	16
+32	0x018c	f32	reticle_velocity_y	param_private	16
+32	0x0190	f32	reticle_shot_velocity_x	param_private	7
+32	0x0194	f32	reticle_shot_velocity_y	param_private	7
+32	0x0198	f32	reticle_init_offset_y	param_private	20
+32	0x019c	f32	final_scroll_rate	param_private	0
+32	0x01a0	f32	special_lw_area_w	param_private	
+32	0x01a4	f32	final_end_rhombus_offset_y	param_private	-240
+32	0x01a8	f32	unk_1610ba25f7	param_private	10
+32	0x01ac	f32	camera_near	param_private	15
+32	0x0210	f32	center_y	camera_range_gunship	0
+32	0x0214	f32	front	camera_range_gunship	30
+32	0x0218	f32	back	camera_range_gunship	-30
+32	0x021c	f32	up	camera_range_gunship	30
+32	0x0220	f32	down	camera_range_gunship	-30
+32	0x0228	hash40	node	camera_clip_sphere_gunship	0
+32	0x0230	f32	x_offset	camera_clip_sphere_gunship	0
+32	0x0234	f32	y_offset	camera_clip_sphere_gunship	0
+32	0x0238	f32	z_offset	camera_clip_sphere_gunship	0
+32	0x023c	f32	r	camera_clip_sphere_gunship	40
+32	0x0240	f32	center_y	camera_range_reticle	0
+32	0x0244	f32	front	camera_range_reticle	30
+32	0x0248	f32	back	camera_range_reticle	-30
+32	0x024c	f32	up	camera_range_reticle	30
+32	0x0250	f32	down	camera_range_reticle	-30
+32	0x0258	hash40	node	camera_clip_sphere_reticle	0
+32	0x0260	f32	x_offset	camera_clip_sphere_reticle	0
+32	0x0264	f32	y_offset	camera_clip_sphere_reticle	0
+32	0x0268	f32	z_offset	camera_clip_sphere_reticle	0
+32	0x026c	f32	r	camera_clip_sphere_reticle	
+33	0x0140	u32	shape_type	map_collision_wariobike	
+33	0x0144	f32	up	map_collision_wariobike	1
+33	0x0148	f32	down	map_collision_wariobike	0
+33	0x014c	f32	half_width	map_collision_wariobike	0.5
+33	0x0150	f32	speed_x_gg	jostle_data_wariobike	0.699999988
+33	0x0154	f32	speed_x_ga	jostle_data_wariobike	
+33	0x0158	f32	speed_x_ag	jostle_data_wariobike	0.300000012
+33	0x015c	f32	speed_x_aa	jostle_data_wariobike	
+33	0x0160	f32	speed_z	jostle_data_wariobike	0.100000001
+33	0x0164	f32	pos_z_max	jostle_data_wariobike	1.39999998
+33	0x0168	f32	center_x	jostle_data_wariobike	0
+33	0x016c	f32	center_y	jostle_data_wariobike	10
+33	0x0170	f32	width	jostle_data_wariobike	24
+33	0x0174	f32	height	jostle_data_wariobike	18
+33	0x0178	f32	push_speed	jostle_data_wariobike	3
+33	0x01b0	f32	final_dash_speed	param_private	8
+33	0x01b4	i32	critical_bg_only_frame	param_private	25
+33	0x01b8	i32	final_dash_cliff_no_stop_frame	param_private	4
+33	0x01bc	f32	final_dash_end_brake_x	param_private	0.0900000036
+33	0x01c0	i32	final_ready_frame	param_private	15
+33	0x01c4	i32	final_ready_slow_mag	param_private	3
+33	0x01c8	hash40	final_target_preset_1_motion_kind	param_private	0
+33	0x01d0	f32	final_target_preset_1_motion_start_frame	param_private	1
+33	0x01d8	hash40	final_target_preset_2_motion_kind	param_private	0
+33	0x01e0	f32	final_target_preset_2_motion_start_frame	param_private	1
+33	0x01e8	hash40	final_target_preset_3_motion_kind	param_private	0
+33	0x01f0	f32	final_target_preset_3_motion_start_frame	param_private	1
+33	0x01f8	hash40	final_target_preset_4_motion_kind	param_private	0
+33	0x0200	f32	final_target_preset_4_motion_start_frame	param_private	1
+33	0x0208	hash40	final_target_preset_5_motion_kind	param_private	0
+33	0x0210	f32	final_target_preset_5_motion_start_frame	param_private	1
+33	0x0218	hash40	final_target_preset_6_motion_kind	param_private	0
+33	0x0220	f32	final_target_preset_6_motion_start_frame	param_private	1
+33	0x0224	f32	final_vector_min	param_private	45
+33	0x0228	f32	final_vector_max	param_private	70
+34	0x00c8	u32	shape_type	map_collision_trenchmortarbullet	
+34	0x00cc	f32	up	map_collision_trenchmortarbullet	3
+34	0x00d0	f32	down	map_collision_trenchmortarbullet	-3
+34	0x00d4	f32	half_width	map_collision_trenchmortarbullet	1
+34	0x0138	u32	shape_type	map_collision_nikitamissile	
+34	0x013c	f32	up	map_collision_nikitamissile	2
+34	0x0140	f32	down	map_collision_nikitamissile	-2
+34	0x0144	f32	half_width	map_collision_nikitamissile	3
+34	0x01d8	u32	shape_type	map_collision_c4	
+34	0x01dc	f32	up	map_collision_c4	0.100000001
+34	0x01e0	f32	down	map_collision_c4	0
+34	0x01e4	f32	half_width	map_collision_c4	
+34	0x01e8	i32	lockon_start_frame	param_final	45
+34	0x01ec	i32	lockon_frame	param_final	240
+34	0x01f0	f32	reticle_velocity_x	param_final	20
+34	0x01f4	f32	reticle_velocity_y	param_final	16
+34	0x01f8	i32	flash_frame	param_final	48
+34	0x01fc	i32	flash_frame_2	param_final	48
+34	0x0200	f32	search_radius	param_final	30
+34	0x0204	i32	camera_zoom_frame	param_final	10
+34	0x0208	i32	missile_delay_frame	param_final	20
+34	0x0228	f32	start_scale	param_reticle	1.5
+34	0x022c	i32	revert_scale_frame	param_reticle	30
+34	0x0230	f32	start_offset_z	param_reticle	15
+34	0x0234	f32	offset_z_scale_fov	param_reticle	30
+34	0x0238	f32	offset_z_scale_ortho	param_reticle	1
+34	0x023c	i32	end_frame	param_reticle	500
+34	0x0240	f32	count3_offset	param_reticle	60
+34	0x0244	f32	success_color_r	param_reticle	1
+34	0x0248	f32	success_color_g	param_reticle	0
+34	0x024c	f32	success_color_b	param_reticle	0
+34	0x0250	f32	failure_color_r	param_reticle	
+34	0x0254	f32	failure_color_g	param_reticle	
+34	0x0258	f32	failure_color_b	param_reticle	
+34	0x0278	u32	shape_type	map_collision_flaregrenades	
+34	0x027c	f32	up	map_collision_flaregrenades	1
+34	0x0280	f32	down	map_collision_flaregrenades	-1
+34	0x0284	f32	half_width	map_collision_flaregrenades	1
+34	0x0288	f32	center_y	camera_range_reticle	0
+34	0x028c	f32	front	camera_range_reticle	30
+34	0x0290	f32	back	camera_range_reticle	-30
+34	0x0294	f32	up	camera_range_reticle	30
+34	0x0298	f32	down	camera_range_reticle	-30
+34	0x02a0	hash40	node	camera_clip_sphere_reticle	0
+34	0x02a8	f32	x_offset	camera_clip_sphere_reticle	0
+34	0x02ac	f32	y_offset	camera_clip_sphere_reticle	0
+34	0x02b0	f32	z_offset	camera_clip_sphere_reticle	0
+34	0x02b4	f32	r	camera_clip_sphere_reticle	40
+34	0x0300	i32	appeal_wait_frame	param_private	120
+34	0x0304	i32	smash_appeal_advance_frame	param_private	211
+34	0x0308	i32	lockon_start_frame	param_private	45
+34	0x030c	i32	lockon_frame	param_private	240
+34	0x0310	f32	reticle_velocity_x	param_private	20
+34	0x0314	f32	reticle_velocity_y	param_private	16
+34	0x0318	i32	flash_frame	param_private	48
+34	0x031c	i32	flash_frame_2	param_private	48
+34	0x0320	f32	search_radius	param_private	30
+34	0x0324	i32	camera_zoom_frame	param_private	10
+34	0x0328	i32	missile_delay_frame	param_private	20
+35	0x0128	i32	final_enemy_interval	param_private	3
+35	0x012c	f32	final_throw_point_offset_x	param_private	20
+35	0x0130	f32	final_throw_point_offset_y	param_private	20
+35	0x0134	f32	final_attack_upper_spd_y	param_private	0.0199999996
+35	0x0138	f32	final_attack_fall_spd_y	param_private	4.5999999
+35	0x013c	f32	final_target_pos_offset_x	param_private	20
+35	0x0140	f32	final_target_pos_offset_y	param_private	0
+35	0x0144	i32	final_sword_arrive_frame	param_private	50
+35	0x0148	f32	final_move_speed	param_private	20
+35	0x014c	f32	final_sword_upper_dst	param_private	60
+35	0x0150	f32	final_sword_upper_dst_min	param_private	12
+35	0x0154	f32	final_sword_start_offset_x	param_private	-5
+35	0x0158	f32	final_sword_start_offset_y	param_private	24
+35	0x015c	f32	final_sword_start_angle	param_private	160
+35	0x0178	u32	shape_type	map_collision_sword	
+35	0x017c	f32	center_y	map_collision_sword	0
+35	0x0180	f32	radius	map_collision_sword	9
+36	0x00c8	f32	dummy	param_private	0
+36	0x0100	u32	shape_type	map_collision_water	
+36	0x0104	f32	up	map_collision_water	2
+36	0x0108	f32	down	map_collision_water	-2
+36	0x010c	f32	half_width	map_collision_water	2
+37	0x00c8	f32	dummy	param_private	0
+37	0x0100	u32	shape_type	map_collision_seed	
+37	0x0104	f32	up	map_collision_seed	2
+37	0x0108	f32	down	map_collision_seed	-2
+37	0x010c	f32	half_width	map_collision_seed	2
+37	0x0140	u32	shape_type	map_collision_leafcutter	
+37	0x0144	f32	up	map_collision_leafcutter	3
+37	0x0148	f32	down	map_collision_leafcutter	-3
+37	0x014c	f32	half_width	map_collision_leafcutter	3
+38	0x00f8	i32	shoot_fly_next_frame	param_water_damage	32
+38	0x00fc	f32	water_damage	param_water_damage	0.330000013
+38	0x0100	f32	water_damage_limit	param_water_damage	300
+38	0x0138	u32	shape_type	map_collision_breath	
+38	0x013c	f32	up	map_collision_breath	6
+38	0x0140	f32	down	map_collision_breath	0
+38	0x0144	f32	half_width	map_collision_breath	3
+38	0x0178	u32	shape_type	map_collision_explosion	
+38	0x017c	f32	up	map_collision_explosion	6
+38	0x0180	f32	down	map_collision_explosion	0
+38	0x0184	f32	half_width	map_collision_explosion	3
+38	0x01b8	f32	daimonji_offset_y	param_private	16
+38	0x01bc	f32	daimonji_offset_z	param_private	18
+39	0x00c8	f32	final_peanut_start_spd_x	param_private	4
+39	0x00cc	f32	unk_13b32bb679	param_private	0
+39	0x00d0	f32	unk_13c42c86ef	param_private	2
+39	0x00d4	f32	unk_135d25d755	param_private	6
+39	0x00d8	f32	unk_13581c0d7a	param_private	0
+39	0x00dc	f32	unk_132f1b3dec	param_private	2
+39	0x00e0	f32	unk_13b6126c56	param_private	6
+39	0x00e4	f32	unk_13b7de6644	param_private	-4.5
+39	0x00e8	f32	unk_13c0d956d2	param_private	14.5
+39	0x00ec	f32	unk_1359d00768	param_private	-16
+39	0x00f0	f32	unk_1355027d3d	param_private	-0.5
+39	0x00f4	f32	unk_1322054dab	param_private	1
+39	0x00f8	f32	unk_13bb0c1c11	param_private	5
+39	0x00fc	f32	unk_100c9f0741	param_private	90
+39	0x0100	f32	unk_1062ce12df	param_private	2.4000001
+39	0x0104	f32	unk_103d771ddc	param_private	10
+39	0x0108	f32	unk_1053260842	param_private	
+39	0x010c	f32	unk_109b001668	param_private	310
+39	0x0110	f32	unk_10f55103f6	param_private	
+39	0x0114	f32	unk_105ea728e6	param_private	345
+39	0x0118	f32	unk_1030f63d78	param_private	1
+39	0x01c8	u32	shape_type	map_collision_barreljet	
+39	0x01cc	f32	up	map_collision_barreljet	3
+39	0x01d0	f32	down	map_collision_barreljet	-3
+39	0x01d4	f32	half_width	map_collision_barreljet	3
+39	0x0208	i32	camera_zoom_out_frame	param_final	60
+39	0x020c	f32	fly_speed	param_final	20
+39	0x0210	f32	fly_speed_max	param_final	30
+39	0x0214	f32	fly_speed_add	param_final	100
+39	0x0218	i32	min_wait_fly_frame	param_final	7
+39	0x021c	i32	max_wait_fly_frame	param_final	8
+39	0x0220	f32	aim_fighter_prob	param_final	50
+39	0x0224	i32	fly_frame	param_final	180
+39	0x0228	f32	ready_charge_brake	param_final	4
+39	0x022c	f32	ready_charge_min_speed	param_final	2
+39	0x0230	i32	target_aim_frame	param_final	20
+39	0x0234	f32	finish_attack_speed	param_final	25
+39	0x0238	i32	finish_attack_zoom_frame	param_final	3
+39	0x023c	f32	finish_attack_zoom_rate	param_final	3
+39	0x0240	i32	finish_attack_slow_rate	param_final	10
+39	0x0244	f32	end_speed	param_final	6
+39	0x0248	f32	end_deccel	param_final	0.0299999993
+39	0x024c	f32	end_speed_min	param_final	0.699999988
+39	0x0250	f32	unk_1a25d7284c	param_final	3
+39	0x0254	f32	end_changed_deccel	param_final	0.649999976
+39	0x0258	f32	final_explosion_offset_x	param_final	0
+39	0x025c	f32	final_explosion_offset_y	param_final	5
+39	0x0260	f32	depth_offset	param_final	0
+40	0x00b0	hash40	node	param_reflector	0
+40	0x00b8	f32	limit	param_reflector	50
+40	0x00bc	f32	offset_x	param_reflector	0
+40	0x00c0	f32	offset_y	param_reflector	6
+40	0x00c4	f32	offset_z	param_reflector	9
+40	0x00c8	f32	size	param_reflector	10
+40	0x00cc	f32	attack_mul	param_reflector	1.5
+40	0x00d0	f32	speed_mul	param_reflector	1.5
+40	0x00d4	f32	life_mul	param_reflector	0.699999988
+40	0x00d8	i32	no_m_ball	param_reflector	0
+40	0x0170	u32	shape_type	map_collision_pkfreeze	
+40	0x0174	f32	center_y	map_collision_pkfreeze	0
+40	0x0178	f32	radius	map_collision_pkfreeze	0.5
+40	0x01b0	u32	shape_type	map_collision_pkfire	
+40	0x01b4	f32	center_y	map_collision_pkfire	0
+40	0x01b8	f32	radius	map_collision_pkfire	2
+40	0x0220	u32	shape_type	map_collision_pkthunder	
+40	0x0224	f32	center_y	map_collision_pkthunder	0
+40	0x0228	f32	radius	map_collision_pkthunder	2
+40	0x0248	f32	final_speed_y	param_private	0
+40	0x024c	f32	interval_frame	param_private	24
+40	0x0250	f32	interval_dec	param_private	0.200000003
+40	0x0254	f32	capture_rot_speed	param_private	
+40	0x0258	f32	generate_diff_x	param_private	15
+40	0x025c	f32	init_dest_offset_y	param_private	20
+40	0x0260	f32	move_speed_max_rate	param_private	0.25
+40	0x0264	f32	max_width_rate	param_private	80
+40	0x0268	f32	max_height_rate	param_private	
+41	0x00b0	f32	dash_brake_mul	param_private	2
+41	0x00b4	f32	depth_offset	param_private	10
+41	0x00b8	f32	final_scroll_rate	param_private	0
+41	0x00bc	i32	final_scroll_rate_change_frame	param_private	0
+41	0x00c0	i32	water_damage_interval	param_water_damage	20
+41	0x00c4	f32	water_damage	param_water_damage	0.330000013
+41	0x00c8	f32	water_damage_limit	param_water_damage	300
+41	0x0130	u32	shape_type	map_collision_gimmickjump	
+41	0x0134	f32	up	map_collision_gimmickjump	10.5
+41	0x0138	f32	down	map_collision_gimmickjump	0
+41	0x013c	f32	half_width	map_collision_gimmickjump	4.5
+42	0x00d0	hash40	node		
+42	0x01e8	f32	final_start_vector	param_private	30
+42	0x01ec	f32	final_start_speed	param_private	6
+42	0x01f0	f32	final_vector_min	param_private	38
+42	0x01f4	f32	final_vector_max	param_private	
+42	0x01f8	i32	critical_bg_only_frame	param_private	25
+42	0x01fc	i32	final_ready_slow_mag	param_private	4
+42	0x0200	f32	final_camera_ofs_x	param_private	0
+42	0x0204	f32	final_camera_ofs_y	param_private	5
+42	0x0208	i32	final_zoom_in_frame	param_private	10
+42	0x020c	f32	final_zoom_in_rate	param_private	3.29999995
+43	0x00b0	f32	attack_s4_offset_x	param_private	4
+43	0x00b4	f32	attack_s4_offset_y	param_private	0
+43	0x00b8	f32	attack_hi4_offset_x	param_private	0
+43	0x00bc	f32	attack_hi4_offset_y	param_private	5
+43	0x00c0	f32	attack_lw4_offset_x	param_private	4
+43	0x00c4	f32	attack_lw4_offset_y	param_private	0
+43	0x00c8	f32	unk_22564113e3	param_private	0
+43	0x00cc	f32	unk_1c39ef2dc9	param_private	80
+43	0x00d0	f32	final_end_speed_y	param_private	2.79999995
+43	0x00d4	i32	unk_1669cc8254	param_private	255
+43	0x00d8	i32	unk_16041166bf	param_private	51
+43	0x00dc	i32	unk_16747b9230	param_private	51
+43	0x00e0	i32	unk_166b8a3c0d	param_private	255
+43	0x00e4	i32	unk_160657d8e6	param_private	51
+43	0x00e8	i32	unk_16763d2c69	param_private	51
+43	0x00ec	i32	unk_166a48563a	param_private	52
+43	0x00f0	i32	unk_160795b2d1	param_private	185
+43	0x00f4	i32	unk_1677ff465e	param_private	64
+43	0x00f8	i32	unk_166f0740bf	param_private	52
+43	0x00fc	i32	unk_1602daa454	param_private	111
+43	0x0100	i32	unk_1672b050db	param_private	255
+43	0x0104	i32	unk_166ec52a88	param_private	48
+43	0x0108	i32	unk_160318ce63	param_private	142
+43	0x010c	i32	unk_1673723aec	param_private	255
+43	0x0110	i32	unk_166c8394d1	param_private	52
+43	0x0114	i32	unk_16015e703a	param_private	185
+43	0x0118	i32	unk_16713484b5	param_private	64
+43	0x011c	i32	unk_166d41fee6	param_private	255
+43	0x0120	i32	unk_16009c1a0d	param_private	50
+43	0x0124	i32	unk_1670f6ee82	param_private	160
+43	0x0128	i32	unk_16661db9db	param_private	255
+43	0x012c	i32	unk_160bc05d30	param_private	51
+43	0x0130	i32	unk_167baaa9bf	param_private	51
+43	0x0134	f32	speed_x_gg	jostle_data_pikmin	0.5
+43	0x0138	f32	speed_x_ga	jostle_data_pikmin	0.5
+43	0x013c	f32	speed_x_ag	jostle_data_pikmin	0.5
+43	0x0140	f32	speed_x_aa	jostle_data_pikmin	0.5
+43	0x0144	f32	speed_z	jostle_data_pikmin	0.5
+43	0x0148	f32	pos_z_max	jostle_data_pikmin	3
+43	0x01e0	u32	shape_type	map_collision_dolfin	
+43	0x01e4	f32	up	map_collision_dolfin	50
+43	0x01e8	f32	down	map_collision_dolfin	13
+43	0x01ec	f32	half_width	map_collision_dolfin	10
+43	0x01f0	f32	center_y	camera_range_dolfin	10
+43	0x01f4	f32	front	camera_range_dolfin	22
+43	0x01f8	f32	back	camera_range_dolfin	-9
+43	0x01fc	f32	up	camera_range_dolfin	16
+43	0x0200	f32	down	camera_range_dolfin	-9
+44	0x00c8	f32	attack_air_lw_speed	param_private	0.100000001
+44	0x00cc	f32	attack_air_lw_speed_dec	param_private	0.300000012
+44	0x00d0	i32	final_entry_frame	param_private	7
+44	0x00d4	f32	swing_aura_power_min	param_private	0.670000017
+44	0x00d8	f32	swing_aura_power_max	param_private	1.34000003
+44	0x0170	u32	shape_type	map_collision_auraball	
+44	0x0174	f32	up	map_collision_auraball	2
+44	0x0178	f32	down	map_collision_auraball	-2
+44	0x017c	f32	half_width	map_collision_auraball	2
+45	0x00b0	i32	throw_lw_clatter_frame	param_throw	30
+45	0x00b4	f32	throw_lw_clatter_damage_frame	param_throw	0.400000006
+45	0x00e8	u32	shape_type	shape_data_beam	
+45	0x00ec	f32	center_y	shape_data_beam	0
+45	0x00f0	f32	radius	shape_data_beam	0.5
+45	0x0170	u32	shape_type	map_collision_gyro	
+45	0x0174	f32	up	map_collision_gyro	6
+45	0x0178	f32	down	map_collision_gyro	0
+45	0x017c	f32	half_width	map_collision_gyro	3
+45	0x0180	f32	initial_speed_y	param_private	0
+45	0x0184	f32	gravity	param_private	0
+45	0x0188	f32	limit_speed_y	param_private	0
+45	0x018c	i32	mainlaser_time	param_private	90
+45	0x0190	f32	mainlaser_limit_angle	param_private	70
+45	0x0194	f32	mainlaser_delta_angle	param_private	0.349999994
+45	0x0198	i32	hominglaser_time	param_private	200
+45	0x019c	i32	hominglaser_interval	param_private	12
+45	0x01a0	i32	hominglaser_interval2	param_private	80
+45	0x01a4	f32	hominglaser_search_size	param_private	40
+45	0x01a8	f32	hominglaser_search_offset_x	param_private	50
+45	0x01ac	f32	hominglaser_search_offset_y	param_private	10
+45	0x01c8	f32	speed	param_mainlaser	8
+45	0x01cc	f32	initial_length	param_mainlaser	19
+45	0x01d0	f32	limit_length	param_mainlaser	
+45	0x01d4	i32	lifetime	param_hominglaser	160
+45	0x01d8	i32	search_interval	param_hominglaser	15
+45	0x01dc	f32	speed	param_hominglaser	2
+45	0x01e0	f32	speed_min	param_hominglaser	0
+45	0x01e4	f32	speed_max	param_hominglaser	5
+45	0x01e8	f32	accel	param_hominglaser	
+45	0x01ec	f32	brake	param_hominglaser	5
+45	0x01f0	f32	curve_angle	param_hominglaser	10
+45	0x01f4	f32	brake_distance	param_hominglaser	1.79999995
+45	0x01f8	i32	brake_disable_frame	param_hominglaser	24
+45	0x01fc	f32	curve_distance	param_hominglaser	2
+45	0x0200	i32	homing_frame	param_hominglaser	60
+45	0x0204	f32	homing_angle_rate	param_hominglaser	
+45	0x0208	f32	homing_distance	param_hominglaser	0.100000001
+45	0x020c	f32	lock_angle_distance	param_hominglaser	5
+45	0x0210	f32	lock_angle_limit	param_hominglaser	225
+45	0x0214	i32	ignore_ground	param_hominglaser	1
+45	0x0218	u32	shape_type	map_collision_hominglaser	
+45	0x021c	f32	up	map_collision_hominglaser	1
+45	0x0220	f32	down	map_collision_hominglaser	-1
+45	0x0224	f32	half_width	map_collision_hominglaser	1
+46	0x00b0	f32	air_lw_blank_time	param_private	30
+46	0x00b4	i32	air_lw_max_hit	param_private	2
+46	0x00b8	f32	wait_shield_scale_x	param_private	2.4000001
+46	0x00bc	f32	wait_shield_scale_y	param_private	3.20000005
+46	0x00c0	f32	wait_shield_scale_z	param_private	0.800000012
+46	0x00c4	f32	unk_1affc51cec	param_private	1.13
+46	0x00c8	f32	shield_guard_degree	param_private	90
+46	0x00d0	hash40	hookshot_map_coll_joint	param_private	0
+46	0x00d8	f32	hookshot_map_coll_offset_x	param_private	5
+46	0x00dc	f32	hookshot_map_coll_offset_y	param_private	0
+46	0x00e0	f32	hookshot_map_coll_offset_z	param_private	0
+46	0x00e4	f32	final_catch_size	param_private	7
+46	0x00e8	f32	final_chatch_dist	param_private	75
+46	0x00ec	i32	final_rigid_frame	param_private	10
+46	0x00f0	f32	final_dash_speed	param_private	8
+46	0x00f4	i32	final_finale_end_frame	param_private	30
+46	0x00f8	f32	final_fail_speed	param_private	3
+46	0x00fc	f32	final_raise_speed	param_private	0.0500000007
+46	0x01d8	u32	shape_type	map_collision_bowarrow	
+46	0x01dc	f32	up	map_collision_bowarrow	0.100000001
+46	0x01e0	f32	down	map_collision_bowarrow	-0.100000001
+46	0x01e4	f32	half_width	map_collision_bowarrow	
+47	0x0110	u32	shape_type	map_collision_blaster_bullet	
+47	0x0114	f32	up	map_collision_blaster_bullet	1
+47	0x0118	f32	down	map_collision_blaster_bullet	-1
+47	0x011c	f32	half_width	map_collision_blaster_bullet	10
+47	0x0198	f32	final_start_vector	param_private	70
+47	0x019c	f32	final_start_speed	param_private	4
+47	0x01a0	f32	final_ready_speed_y	param_private	6
+47	0x01a4	f32	final_vector_min	param_private	35
+47	0x01a8	f32	final_vector_max	param_private	40
+47	0x01ac	i32	final_ready_screen_effect_frame	param_private	69
+47	0x01b0	i32	final_ready_frame	param_private	70
+47	0x01b4	f32	final_camera_ofs_x	param_private	0
+47	0x01b8	f32	final_camera_ofs_y	param_private	0
+47	0x01bc	i32	final_zoom_in_frame	param_private	10
+47	0x01c0	f32	final_zoom_in_rate	param_private	2
+47	0x01c4	f32	final_reticle_offset_x	param_private	23
+47	0x01c8	f32	final_reticle_offset_y	param_private	14
+47	0x01cc	i32	final_hit_slow_mag	param_private	6
+47	0x01d0	f32	final_target_scale	param_private	8
+47	0x01d4	f32	final_target_offset_x_2	param_private	100
+47	0x01d8	f32	final_target_offset_y_2	param_private	
+47	0x01dc	f32	final_target_offset_z_2	param_private	
+47	0x01e0	f32	final_target_offset_x_3	param_private	-100
+47	0x01e4	f32	final_target_offset_y_3	param_private	
+47	0x01e8	f32	final_target_offset_z_3	param_private	
+48	0x0110	f32	unk_18423a654b	param_private	30
+48	0x0114	f32	unk_18db3334f1	param_private	30
+48	0x0118	f32	unk_18ac340467	param_private	40
+48	0x011c	u32	shape_type	map_collision_flowerpot	
+48	0x0120	f32	up	map_collision_flowerpot	2
+48	0x0124	f32	down	map_collision_flowerpot	0
+48	0x0128	f32	half_width	map_collision_flowerpot	2
+48	0x012c	u32	shape_type	map_collision_bowlingball	
+48	0x0130	f32	center_y	map_collision_bowlingball	0
+48	0x0134	f32	radius	map_collision_bowlingball	3
+48	0x0138	f32	center_x	jostle_data_bowlingball	0
+48	0x013c	f32	center_y	jostle_data_bowlingball	0
+48	0x0140	f32	width	jostle_data_bowlingball	6
+48	0x0144	f32	height	jostle_data_bowlingball	6
+48	0x0148	f32	push_speed	jostle_data_bowlingball	0.400000006
+48	0x014c	u32	shape_type	map_collision_bullet	
+48	0x0150	f32	center_y	map_collision_bullet	0
+48	0x0154	f32	radius	map_collision_bullet	0.5
+48	0x0158	f32	offset_x	param_item_search_catch	13.5
+48	0x015c	f32	offset_y	param_item_search_catch	3
+48	0x0160	f32	radius	param_item_search_catch	6
+48	0x0164	f32	offset_x	param_item_search_catch_dash	14.5
+48	0x0168	f32	offset_y	param_item_search_catch_dash	3
+48	0x016c	f32	radius	param_item_search_catch_dash	6
+48	0x0170	f32	offset_x	param_item_search_catch_turn	16.5
+48	0x0174	f32	offset_y	param_item_search_catch_turn	3
+48	0x0178	f32	radius	param_item_search_catch_turn	6
+48	0x01f8	u32	shape_type	map_collision_clayrocket	
+48	0x01fc	f32	up	map_collision_clayrocket	5
+48	0x0200	f32	down	map_collision_clayrocket	-5
+48	0x0204	f32	half_width	map_collision_clayrocket	6
+48	0x0208	f32	half_width_fly	map_collision_clayrocket	4
+48	0x02e8	u32	shape_type	map_collision_sprout	
+48	0x02ec	f32	center_y	map_collision_sprout	0
+48	0x02f0	f32	radius	map_collision_sprout	0.100000001
+48	0x02f4	u32	shape_type	map_collision_sprinkling_water	
+48	0x02f8	f32	center_y	map_collision_sprinkling_water	0
+48	0x02fc	f32	radius	map_collision_sprinkling_water	
+48	0x0300	u32	shape_type	map_collision_tree	
+48	0x0304	f32	up	map_collision_tree	-4.5
+48	0x0308	f32	down	map_collision_tree	-4.5999999
+48	0x030c	f32	half_width	map_collision_tree	1
+48	0x0310	u32	shape_type	map_collision_stump	
+48	0x0314	f32	up	map_collision_stump	-4.5
+48	0x0318	f32	down	map_collision_stump	
+48	0x031c	f32	half_width	map_collision_stump	1
+48	0x0338	f32	center_x	jostle_data_tree	0
+48	0x033c	f32	center_y	jostle_data_tree	9
+48	0x0340	f32	width	jostle_data_tree	9
+48	0x0344	f32	height	jostle_data_tree	21
+48	0x0348	f32	push_speed_ground	jostle_data_tree	2
+48	0x034c	f32	push_speed_air	jostle_data_tree	0.800000012
+48	0x0368	u32	shape_type	map_collision_tomnook	
+48	0x036c	f32	up	map_collision_tomnook	8
+48	0x0370	f32	down	map_collision_tomnook	0
+48	0x0374	f32	half_width	map_collision_tomnook	2
+48	0x0378	u32	shape_type	map_collision_house	
+48	0x037c	f32	up	map_collision_house	1
+48	0x0380	f32	down	map_collision_house	0
+48	0x0384	f32	half_width	map_collision_house	1
+49	0x00b0	f32	attack_1_offset_x	param_private	0
+49	0x00b4	f32	attack_s3_offset_x	param_private	8
+49	0x00b8	f32	attack_s3_offset_y	param_private	8
+49	0x00bc	i32	attack_hi3_landing_frame	param_private	20
+49	0x00c0	f32	attack_s4_offset_x	param_private	8
+49	0x00c4	f32	final_x_pos	param_private	14
+49	0x00c8	f32	final_y_pos	param_private	7.5
+49	0x00cc	i32	final_inhale_frame	param_private	40
+49	0x00d0	i32	final_zoom_in_frame	param_private	30
+49	0x00d4	f32	final_zoom_in_view_angle	param_private	42
+49	0x00d8	f32	final_target_x_pos	param_private	-160
+49	0x00dc	f32	final_target_z_pos	param_private	-8
+49	0x00e0	f32	final_target_z_length	param_private	10
+49	0x00e4	f32	final_hit_stop_frame	param_private	4
+49	0x00e8	f32	final_hit_shake_frame	param_private	5
+49	0x00ec	f32	final_vector_min	param_private	45
+49	0x00f0	f32	final_vector_max	param_private	50
+49	0x0158	u32	shape_type	map_collision_chargeshot	
+49	0x015c	f32	up	map_collision_chargeshot	1
+49	0x0160	f32	down	map_collision_chargeshot	-1
+49	0x0164	f32	half_width	map_collision_chargeshot	1
+49	0x0168	u32	shape_type	map_collision_hardknuckle	
+49	0x016c	f32	up	map_collision_hardknuckle	3
+49	0x0170	f32	down	map_collision_hardknuckle	-1
+49	0x0174	f32	half_width	map_collision_hardknuckle	3
+49	0x0178	u32	shape_type	map_collision_blackhole	
+49	0x017c	f32	up	map_collision_blackhole	1
+49	0x0180	f32	down	map_collision_blackhole	-1
+49	0x0184	f32	half_width	map_collision_blackhole	1
+49	0x0200	u32	shape_type	map_collision_crashbomb	
+49	0x0204	f32	up	map_collision_crashbomb	0.5
+49	0x0208	f32	down	map_collision_crashbomb	-0.5
+49	0x020c	f32	half_width	map_collision_crashbomb	0.5
+49	0x0240	f32	center_x	jostle_data_rushcoil	0
+49	0x0244	f32	center_y	jostle_data_rushcoil	3
+49	0x0248	f32	width	jostle_data_rushcoil	10
+49	0x024c	f32	height	jostle_data_rushcoil	16
+49	0x0250	f32	push_speed	jostle_data_rushcoil	0.400000006
+49	0x0254	u32	shape_type	map_collision_rushcoil	
+49	0x0258	f32	up	map_collision_rushcoil	5
+49	0x025c	f32	down	map_collision_rushcoil	0
+49	0x0260	f32	half_width	map_collision_rushcoil	4
+49	0x0298	u32	shape_type	map_collision_leafshield	
+49	0x029c	f32	up	map_collision_leafshield	1.5
+49	0x02a0	f32	down	map_collision_leafshield	-1.5
+49	0x02a4	f32	half_width	map_collision_leafshield	1.5
+49	0x02c0	f32	center_y	camera_range_blackhole	0
+49	0x02c4	f32	front	camera_range_blackhole	15
+49	0x02c8	f32	back	camera_range_blackhole	-15
+49	0x02cc	f32	up	camera_range_blackhole	15
+49	0x02d0	f32	down	camera_range_blackhole	-15
+50	0x00f8	u32	shape_type	map_collision_sunbullet	
+50	0x00fc	f32	up	map_collision_sunbullet	0.5
+50	0x0100	f32	down	map_collision_sunbullet	-0.5
+50	0x0104	f32	half_width	map_collision_sunbullet	4
+50	0x0198	f32	final_silhouette_offset_x	param_private	10
+50	0x019c	f32	final_silhouette_offset_y	param_private	10
+50	0x01a0	i32	breathing_waza_restore_frame	param_private	2400
+50	0x01a4	f32	final_silhouette_blur_length	param_private	0
+50	0x01a8	f32	final_silhouette_blur_start_radius_x	param_private	0
+50	0x01ac	f32	final_silhouette_blur_start_radius_y	param_private	0
+50	0x01b0	f32	final_silhouette_blur_end_radius_x	param_private	0
+50	0x01b4	f32	final_silhouette_blur_end_radius_y	param_private	0
+50	0x01b8	f32	final_silhouette_blur_power	param_private	0
+50	0x01bc	f32	final_silhouette_blur_alpha	param_private	0
+51	0x00b0	f32	speed_forward	squat_walk_data	0.699999988
+51	0x00b4	f32	speed_back	squat_walk_data	0.5
+51	0x00e8	u32	shape_type	map_collision_starpiece	
+51	0x00ec	f32	center_y	map_collision_starpiece	0.5
+51	0x00f0	f32	radius	map_collision_starpiece	2
+51	0x0128	f32	powerstar_offset_y	param_private	4.5
+51	0x012c	f32	item_end_radius	param_private	
+51	0x0130	f32	unk_1949b305f8	param_private	10.5
+51	0x0134	f32	unk_23dfabf4f8	param_private	5.5
+51	0x0138	f32	unk_19d0ba5442	param_private	2.5
+51	0x013c	f32	unk_124b1f53d2	param_private	2
+51	0x0140	f32	appear_frame	param_powerstar	40
+51	0x0144	f32	appear_scale	param_powerstar	2
+51	0x0148	f32	appear_rot	param_powerstar	1
+51	0x014c	i32	shoot_start_frame	param_powerstar	60
+51	0x0150	f32	scale_frame	param_powerstar	260
+51	0x0154	f32	scale_max	param_powerstar	14
+51	0x0158	i32	shoot_interval_frame	param_powerstar	3
+51	0x015c	f32	shoot_front_max_rate	param_powerstar	0
+51	0x0160	f32	shoot_prev_range	param_powerstar	50
+51	0x0164	i32	life_frame	param_powerstar	300
+51	0x0168	i32	shoot_end_frame	param_powerstar	20
+51	0x016c	f32	speed_min	param_meteor	3
+51	0x0170	f32	speed_max	param_meteor	3
+51	0x0174	f32	reflect_rate	param_meteor	0
+51	0x0178	i32	life_frame	param_meteor	23
+51	0x017c	f32	scale	param_meteor	3
+51	0x0180	u32	shape_type	map_collision_powerstar	
+51	0x0184	f32	up	map_collision_powerstar	2
+51	0x0188	f32	down	map_collision_powerstar	-2
+51	0x018c	f32	half_width	map_collision_powerstar	2
+51	0x0190	f32	center_y	camera_range_powerstar	0
+51	0x0194	f32	front	camera_range_powerstar	10
+51	0x0198	f32	back	camera_range_powerstar	-10
+51	0x019c	f32	up	camera_range_powerstar	6
+51	0x01a0	f32	down	camera_range_powerstar	-10
+51	0x01a8	hash40	node	camera_clip_sphere_powerstar	0
+51	0x01b0	f32	x_offset	camera_clip_sphere_powerstar	0
+51	0x01b4	f32	y_offset	camera_clip_sphere_powerstar	0
+51	0x01b8	f32	z_offset	camera_clip_sphere_powerstar	0
+51	0x01bc	f32	r	camera_clip_sphere_powerstar	1
+51	0x01c0	u32	shape_type	map_collision_meteor	
+51	0x01c4	f32	center_y	map_collision_meteor	0
+51	0x01c8	f32	radius	map_collision_meteor	2
+51	0x01e8	u32	shape_type	map_collision_tico	
+51	0x01ec	f32	up	map_collision_tico	8
+51	0x01f0	f32	down	map_collision_tico	0
+51	0x01f4	f32	half_width	map_collision_tico	2.4000001
+51	0x01f8	f32	down_free	map_collision_tico	-3
+52	0x0140	f32	final_dash_speed	param_private_final	10.5
+52	0x0144	f32	special_lw_shield_size	param_private_final	
+52	0x0148	i32	final_dash_cliff_no_stop_frame	param_private_final	5
+52	0x014c	f32	final_dash_end_brake_x	param_private_final	0.180000007
+52	0x0150	f32	final_fix_pos_offset_x	param_private_final	22
+52	0x0154	f32	final_fix_pos_offset_y	param_private_final	5
+52	0x0158	f32	final_wall_leave_speed	param_private_final	2
+52	0x015c	f32	final_hit_space	param_private_final	7
+52	0x0178	f32	final_dash_speed	param_private	10.5
+52	0x017c	i32	final_dash_frame	param_private	9
+52	0x0180	i32	final_dash_cliff_no_stop_frame	param_private	5
+52	0x0184	f32	final_dash_end_brake_x	param_private	
+52	0x0188	f32	final_fix_pos_offset_x	param_private	22
+52	0x018c	f32	final_fix_pos_offset_y	param_private	5
+52	0x0190	f32	final_wall_leave_speed	param_private	2
+52	0x0194	f32	final_hit_space	param_private	7
+53	0x00f8	u32	shape_type	map_collision_shuriken	
+53	0x00fc	f32	center_y	map_collision_shuriken	0
+53	0x0100	f32	radius	map_collision_shuriken	0.5
+53	0x0150	u32	shape_type	map_collision_water	
+53	0x0154	f32	up	map_collision_water	2
+53	0x0158	f32	down	map_collision_water	-2
+53	0x015c	f32	half_width	map_collision_water	2
+53	0x01f0	f32	power_max	param_gekkougas	
+53	0x01f4	f32	final_attack_upper_spd_y	param_gekkougas	0.0199999996
+53	0x01f8	f32	final_target_pos_offset_x	param_gekkougas	30
+53	0x01fc	f32	final_target_pos_offset_y	param_gekkougas	0
+53	0x0200	i32	final_arrive_frame	param_gekkougas	65
+53	0x0204	f32	final_move_speed	param_gekkougas	5
+53	0x0208	i32	black_out_frame	param_gekkougas	20
+53	0x020c	f32	moon_target_pos_offset_y	param_gekkougas	-110
+53	0x0210	f32	moon_target_pos_offset_z	param_gekkougas	-200
+53	0x0214	f32	moon_depth_offset	param_gekkougas	0
+53	0x0248	f32	center_y	camera_range_gekkougas	0
+53	0x024c	f32	front	camera_range_gekkougas	5
+53	0x0250	f32	back	camera_range_gekkougas	-5
+53	0x0254	f32	up	camera_range_gekkougas	5
+53	0x0258	f32	down	camera_range_gekkougas	-5
+53	0x0260	hash40	node	camera_clip_sphere_gekkougas	0
+53	0x0268	f32	x_offset	camera_clip_sphere_gekkougas	0
+53	0x026c	f32	y_offset	camera_clip_sphere_gekkougas	24
+53	0x0270	f32	z_offset	camera_clip_sphere_gekkougas	0
+53	0x0274	f32	r	camera_clip_sphere_gekkougas	19
+54	0x00f8	u32	shape_type	map_collision_autoaimbullet	
+54	0x00fc	f32	center_y	map_collision_autoaimbullet	0
+54	0x0100	f32	radius	map_collision_autoaimbullet	0.300000012
+54	0x0150	u32	shape_type	map_collision_explosiveflame	
+54	0x0154	f32	up	map_collision_explosiveflame	0.5
+54	0x0158	f32	down	map_collision_explosiveflame	-0.5
+54	0x015c	f32	half_width	map_collision_explosiveflame	1
+54	0x01d8	i32	final_wait_time	param_private	28
+54	0x01dc	i32	final_high_speed_slide_frame	param_private	25
+54	0x01e0	f32	final_handicap_angle	param_private	30
+54	0x01e4	f32	unk_24dbe0724e	param_private	30
+54	0x01e8	f32	unk_17fd69eb24	param_private	0.150000006
+54	0x01ec	f32	final_slide_z_offset	param_private	6
+54	0x01f0	i32	final_beam_life	param_private	120
+54	0x01f4	f32	final_beam_speed	param_private	30
+54	0x01f8	f32	final_beam_length	param_private	314
+54	0x01fc	f32	final_beam_reduce_overlap	param_private	9.30000019
+54	0x0200	f32	blackhole_radius	param_private	1.5
+54	0x0204	f32	blackhole_wind_radius	param_private	5
+54	0x0208	f32	unk_1b46a59192	param_private	2
+54	0x020c	i32	final_end_move_frame	param_private	50
+54	0x0210	i32	final_end_rot_frame	param_private	10
+54	0x0214	f32	attack_shield_scale_x	param_private	3.0999999
+54	0x0218	f32	attack_shield_scale_y	param_private	
+54	0x021c	f32	attack_shield_scale_z	param_private	1.60000002
+55	0x00b0	i32	max_length_frame	param_catch_effect	23
+55	0x00b4	f32	speed_length	param_catch_effect	0.0599999987
+55	0x00b8	f32	max_length_v	param_catch_effect	1.20000005
+55	0x0390	u32	shape_type	map_collision_esa	
+55	0x0394	f32	up	map_collision_esa	5.9000001
+55	0x0398	f32	down	map_collision_esa	-5.9000001
+55	0x039c	f32	half_width	map_collision_esa	
+55	0x03a0	u32	shape_type	map_collision_poweresa	
+55	0x03a4	f32	up	map_collision_poweresa	2
+55	0x03a8	f32	down	map_collision_poweresa	-2
+55	0x03ac	f32	half_width	map_collision_poweresa	2
+55	0x03f8	u32	shape_type	map_collision_trampoline	
+55	0x03fc	f32	up	map_collision_trampoline	0
+55	0x0400	f32	down	map_collision_trampoline	-10
+55	0x0404	f32	half_width	map_collision_trampoline	10
+55	0x0468	u32	shape_type	map_collision_firehydrant	
+55	0x046c	f32	up	map_collision_firehydrant	6
+55	0x0470	f32	down	map_collision_firehydrant	-7
+55	0x0474	f32	half_width	map_collision_firehydrant	4
+55	0x0478	u32	shape_type	map_collision_firehydrantwater	
+55	0x047c	f32	center_y	map_collision_firehydrantwater	0
+55	0x0480	f32	radius	map_collision_firehydrantwater	2
+55	0x04a0	f32	center_x	jostle_data_firehydrant	0
+55	0x04a4	f32	center_y	jostle_data_firehydrant	5
+55	0x04a8	f32	width	jostle_data_firehydrant	6.4000001
+55	0x04ac	f32	height	jostle_data_firehydrant	10
+55	0x04b0	f32	push_speed	jostle_data_firehydrant	5
+55	0x04b4	f32	overlap_rate	jostle_data_firehydrant	15
+55	0x04b8	f32	camera_target_offset_x	param_final	0
+55	0x04bc	f32	camera_target_offset_y	param_final	0
+55	0x04c0	i32	camera_move_frame	param_final	40
+55	0x04e0	i32	life	param_bigpacman	260
+55	0x04e4	f32	init_speed	param_bigpacman	7
+55	0x04e8	f32	max_speed	param_bigpacman	14
+55	0x04ec	f32	init_accel	param_bigpacman	0.00100000005
+55	0x04f0	i32	accel_change_frame	param_bigpacman	15
+55	0x04f4	f32	add_accel	param_bigpacman	0.00170000002
+55	0x04f8	f32	max_speed_motion_rate	param_bigpacman	4.5
+55	0x04fc	f32	change_degree	param_bigpacman	1.89999998
+55	0x0500	f32	max_change_degree	param_bigpacman	14.5
+55	0x0504	i32	fighter_hit_stop_frame	param_bigpacman	15
+55	0x0508	i32	item_hit_stop_frame	param_bigpacman	15
+55	0x050c	i32	special_effect_frame	param_bigpacman	30
+55	0x0510	i32	flash_frame	param_bigpacman	80
+55	0x0514	i32	finish_speed_change_frame	param_bigpacman	30
+55	0x0518	f32	finish_speed	param_bigpacman	3
+55	0x051c	f32	unk_11c74c4ccd	param_bigpacman	32
+55	0x0520	f32	depth_offset	param_bigpacman	10
+55	0x0524	i32	se_pitch_start_frame	param_bigpacman	10
+55	0x0528	f32	se_pitch_ratio_min	param_bigpacman	1
+55	0x052c	f32	se_pitch_ratio_max	param_bigpacman	1.60000002
+55	0x0530	f32	turn_prob_pochama	param_bigpacman	1
+55	0x0534	i32	disable_frame	param_bigpacman	23
+55	0x0538	f32	center_y	camera_range_bigpacman	0
+55	0x053c	f32	front	camera_range_bigpacman	14
+55	0x0540	f32	back	camera_range_bigpacman	-14
+55	0x0544	f32	up	camera_range_bigpacman	14
+55	0x0548	f32	down	camera_range_bigpacman	-14
+55	0x0550	hash40	node	camera_clip_sphere_bigpacman	0
+55	0x0558	f32	x_offset	camera_clip_sphere_bigpacman	0
+55	0x055c	f32	y_offset	camera_clip_sphere_bigpacman	24
+55	0x0560	f32	z_offset	camera_clip_sphere_bigpacman	0
+55	0x0564	f32	r	camera_clip_sphere_bigpacman	19
+56	0x00b0	i32	thunder_sword_usage_count_max	param_private	8
+56	0x00b4	i32	grimoire_thunder_usage_count_max	param_private	20
+56	0x00b8	i32	grimoire_giga_fire_usage_count_max	param_private	6
+56	0x00bc	i32	grimoire_el_window_usage_count_max	param_private	10
+56	0x00c0	i32	grimoire_rizaia_usage_count_max	param_private	3
+56	0x00c4	i32	thunder_sword_revival_time	param_private	600
+56	0x00c8	i32	grimoire_thunder_revival_time	param_private	720
+56	0x00cc	i32	grimoire_giga_fire_revival_time	param_private	720
+56	0x00d0	i32	grimoire_el_window_revival_time	param_private	360
+56	0x00d4	i32	grimoire_rizaia_revival_time	param_private	1800
+56	0x00d8	i32	unk_25c27089c0	param_private	180
+56	0x00dc	i32	unk_288b144c1a	param_private	90
+56	0x00e0	i32	unk_2a6c1d9d75	param_private	60
+56	0x00e4	i32	unk_2a8b628ebd	param_private	120
+56	0x00e8	i32	unk_2764bc06e8	param_private	60
+56	0x00ec	i32	thunder_sword_smash_attack_revival_time	param_private	24
+56	0x00f0	i32	thunder_sword_throw_enable_attack_frame	param_private	20
+56	0x00f4	i32	unk_1a233f054b	param_private	40
+56	0x00f8	i32	final_enemy_interval	param_private	3
+56	0x00fc	f32	final_attack_upper_spd_y	param_private	0.0199999996
+56	0x0100	f32	final_target_pos_offset_x	param_private	0
+56	0x0104	f32	final_target_pos_offset_y	param_private	0
+56	0x0108	i32	final_arrive_frame	param_private	35
+56	0x010c	f32	final_move_speed	param_private	5
+56	0x0110	f32	cutin_pos_y	param_private	480
+56	0x0148	u32	shape_type	map_collision_thunder	
+56	0x014c	f32	up	map_collision_thunder	3
+56	0x0150	f32	down	map_collision_thunder	0
+56	0x0154	f32	half_width	map_collision_thunder	1.5
+56	0x01a0	u32	shape_type	map_collision_gigafire	
+56	0x01a4	f32	up	map_collision_gigafire	2
+56	0x01a8	f32	down	map_collision_gigafire	-2
+56	0x01ac	f32	half_width	map_collision_gigafire	2
+56	0x0210	u32	shape_type	map_collision_chrom	
+56	0x0214	f32	up	map_collision_chrom	5
+56	0x0218	f32	down	map_collision_chrom	-3
+56	0x021c	f32	half_width	map_collision_chrom	3
+57	0x0128	f32	final_camera_ofs_x	param_private	0
+57	0x012c	f32	final_camera_ofs_y	param_private	0
+57	0x0130	i32	final_zoom_in_frame	param_private	12
+57	0x0134	f32	final_zoom_in_rate	param_private	3
+57	0x0138	f32	final_target_z	param_private	30
+57	0x013c	f32	final_radius	param_private	15
+57	0x0140	f32	final_hit_stop_frame	param_private	4
+57	0x0144	f32	final_hit_shake_frame	param_private	5
+57	0x0148	f32	final_hit_rot	param_private	32
+57	0x014c	f32	final_fly_speed_y	param_private	10
+57	0x0150	f32	final_fly_acc_y	param_private	0.5
+57	0x0154	f32	final_vector_min	param_private	35
+57	0x0158	f32	final_vector_max	param_private	45
+58	0x00c8	f32	walk_shaft_rot_speed_min	param_private	6
+58	0x00cc	f32	walk_shaft_rot_speed_max	param_private	24
+58	0x00d0	f32	walk_shaft_rot_speed_min_threshold	param_private	0.300000012
+58	0x00d4	f32	walk_shaft_rot_brake	param_private	1.10000002
+58	0x00d8	f32	run_shaft_rot_speed_min	param_private	24
+58	0x00dc	f32	run_shaft_rot_speed_max	param_private	36
+58	0x00e0	f32	run_shaft_rot_speed_min_threshold	param_private	0.899999976
+58	0x00e4	f32	run_shaft_rot_brake	param_private	
+58	0x0118	u32	shape_type	map_collision_cannonball	
+58	0x011c	f32	center_y	map_collision_cannonball	0
+58	0x0120	f32	radius	map_collision_cannonball	4
+58	0x0170	u32	shape_type	map_collision_remainclown	
+58	0x0174	f32	center_y	map_collision_remainclown	6
+58	0x0178	f32	radius	map_collision_remainclown	6
+58	0x01e0	f32	center_y	camera_range_shadowmario	0
+58	0x01e4	f32	front	camera_range_shadowmario	2
+58	0x01e8	f32	back	camera_range_shadowmario	-2
+58	0x01ec	f32	up	camera_range_shadowmario	2
+58	0x01f0	f32	down	camera_range_shadowmario	-2
+58	0x01f8	hash40	node	camera_clip_sphere_shadowmario	0
+58	0x0200	f32	x_offset	camera_clip_sphere_shadowmario	0
+58	0x0204	f32	y_offset	camera_clip_sphere_shadowmario	0
+58	0x0208	f32	z_offset	camera_clip_sphere_shadowmario	0
+58	0x020c	f32	r	camera_clip_sphere_shadowmario	1
+59	0x0110	u32	shape_type	map_collision_can	
+59	0x0114	f32	up	map_collision_can	3.5
+59	0x0118	f32	down	map_collision_can	-3.5
+59	0x011c	f32	half_width	map_collision_can	2.5
+59	0x0180	u32	shape_type	map_collision_clay	
+59	0x0184	f32	up	map_collision_clay	0.850000024
+59	0x0188	f32	down	map_collision_clay	-0.850000024
+59	0x018c	f32	half_width	map_collision_clay	3
+59	0x0208	u32	shape_type	map_collision_gunman	
+59	0x020c	f32	up	map_collision_gunman	16
+59	0x0210	f32	down	map_collision_gunman	0
+59	0x0214	f32	half_width	map_collision_gunman	3
+59	0x0218	u32	shape_type	map_collision_gunman_yarare	
+59	0x021c	f32	up	map_collision_gunman_yarare	6
+59	0x0220	f32	down	map_collision_gunman_yarare	0
+59	0x0224	f32	half_width	map_collision_gunman_yarare	4
+59	0x0228	u32	shape_type	map_collision_gunman_noppo	
+59	0x022c	f32	up	map_collision_gunman_noppo	18
+59	0x0230	f32	down	map_collision_gunman_noppo	0
+59	0x0234	f32	half_width	map_collision_gunman_noppo	2.5
+59	0x0238	u32	shape_type	map_collision_gunman_noppo_yarare	
+59	0x023c	f32	up	map_collision_gunman_noppo_yarare	6
+59	0x0240	f32	down	map_collision_gunman_noppo_yarare	0
+59	0x0244	f32	half_width	map_collision_gunman_noppo_yarare	4
+59	0x0248	u32	shape_type	map_collision_gunman_kurofuku	
+59	0x024c	f32	up	map_collision_gunman_kurofuku	20
+59	0x0250	f32	down	map_collision_gunman_kurofuku	0
+59	0x0254	f32	half_width	map_collision_gunman_kurofuku	3.5
+59	0x0258	u32	shape_type	map_collision_gunman_kurofuku_yarare	
+59	0x025c	f32	up	map_collision_gunman_kurofuku_yarare	6
+59	0x0260	f32	down	map_collision_gunman_kurofuku_yarare	0
+59	0x0264	f32	half_width	map_collision_gunman_kurofuku_yarare	4
+59	0x0268	u32	shape_type	map_collision_gunman_sonburero	
+59	0x026c	f32	up	map_collision_gunman_sonburero	15
+59	0x0270	f32	down	map_collision_gunman_sonburero	0
+59	0x0274	f32	half_width	map_collision_gunman_sonburero	4
+59	0x0278	u32	shape_type	map_collision_gunman_sonburero_yarare	
+59	0x027c	f32	up	map_collision_gunman_sonburero_yarare	6
+59	0x0280	f32	down	map_collision_gunman_sonburero_yarare	0
+59	0x0284	f32	half_width	map_collision_gunman_sonburero_yarare	4
+59	0x0288	u32	shape_type	map_collision_gunman_boss	
+59	0x028c	f32	up	map_collision_gunman_boss	18
+59	0x0290	f32	down	map_collision_gunman_boss	0
+59	0x0294	f32	half_width	map_collision_gunman_boss	3.5
+59	0x0298	u32	shape_type	map_collision_gunman_boss_yarare	
+59	0x029c	f32	up	map_collision_gunman_boss_yarare	6
+59	0x02a0	f32	down	map_collision_gunman_boss_yarare	0
+59	0x02a4	f32	half_width	map_collision_gunman_boss_yarare	4
+59	0x0398	f32	speed_x_gg	jostle_data_gunman	0.699999988
+59	0x039c	f32	speed_x_ga	jostle_data_gunman	
+59	0x03a0	f32	speed_x_ag	jostle_data_gunman	0.300000012
+59	0x03a4	f32	speed_x_aa	jostle_data_gunman	
+59	0x03a8	f32	speed_z	jostle_data_gunman	0.100000001
+59	0x03ac	f32	pos_z_max	jostle_data_gunman	1.39999998
+59	0x03b0	f32	center_x	jostle_data_gunman	8
+59	0x03b4	f32	center_y	jostle_data_gunman	10
+59	0x03b8	f32	width	jostle_data_gunman	18
+59	0x03bc	f32	height	jostle_data_gunman	18
+59	0x03c0	f32	push_speed	jostle_data_gunman	1
+59	0x03c4	u32	shape_type	map_collision_kurofukuhat	
+59	0x03c8	f32	up	map_collision_kurofukuhat	2
+59	0x03cc	f32	down	map_collision_kurofukuhat	0
+59	0x03d0	f32	half_width	map_collision_kurofukuhat	2
+59	0x03d4	f32	final_cut1_frame	param_private	49
+59	0x03d8	f32	final_cut2_frame	param_private	85
+59	0x03dc	f32	final_cut3_frame	param_private	44
+59	0x03e0	f32	final_cut4_frame	param_private	55
+59	0x03e4	f32	final_cut5_frame	param_private	75
+59	0x03e8	f32	final_vector_min	param_private	35
+59	0x03ec	f32	final_vector_max	param_private	40
+59	0x03f0	f32	final_radius	param_private	0
+59	0x03f4	f32	final_fall_offset_x_2	param_private	-11
+59	0x03f8	f32	final_fall_offset_z_2	param_private	-20
+59	0x03fc	f32	final_fall_offset_x_3	param_private	-28
+59	0x0400	f32	final_fall_offset_z_3	param_private	-32
+59	0x0404	f32	final_fall_offset_x_4	param_private	-20
+59	0x0408	f32	final_fall_offset_z_4	param_private	-4.5
+59	0x040c	f32	final_fall_offset_x_5	param_private	-8
+59	0x0410	f32	final_fall_offset_z_5	param_private	-33
+59	0x0414	f32	final_fall_offset_x_6	param_private	-46
+59	0x0418	f32	final_fall_offset_z_6	param_private	-11
+59	0x041c	f32	final_fall_offset_x_7	param_private	-38
+59	0x0420	f32	final_fall_offset_z_7	param_private	-60
+59	0x0424	f32	final_fall_offset_x_8	param_private	0
+59	0x0428	f32	final_fall_offset_z_8	param_private	0
+59	0x042c	f32	final_height	param_private	160
+59	0x0430	f32	final_initialfallspeed	param_private	0.75
+59	0x0434	f32	final_fallacc	param_private	1
+59	0x0438	f32	final_offset_x_2	param_private	-15
+59	0x043c	f32	final_offset_z_2	param_private	-20
+59	0x0440	f32	final_offset_x_3	param_private	
+59	0x0444	f32	final_offset_z_3	param_private	-5
+59	0x0448	f32	final_offset_x_4	param_private	-50
+59	0x044c	f32	final_offset_z_4	param_private	0
+59	0x0450	f32	final_offset_x_5	param_private	-3
+59	0x0454	f32	final_offset_z_5	param_private	-45
+59	0x0458	f32	final_offset_x_6	param_private	-25
+59	0x045c	f32	final_offset_z_6	param_private	18
+59	0x0460	f32	final_offset_x_7	param_private	-27
+59	0x0464	f32	final_offset_z_7	param_private	-48
+59	0x0468	f32	final_offset_x_8	param_private	0
+59	0x046c	f32	final_offset_z_8	param_private	0
+59	0x0470	f32	final_hit_stop_frame	param_private	6
+59	0x0474	f32	final_hit_shake_frame	param_private	8
+59	0x0478	f32	final_hit_rot	param_private	24
+59	0x047c	f32	final_fly_speed_y	param_private	0.119999997
+59	0x0480	f32	final_end_fall_speed_y	param_private	1.29999995
+59	0x0484	f32	closing_ear_distance	param_private	2
+59	0x0488	f32	smash_s_distance_mul	param_private	
+59	0x048c	f32	smash_s_random_offset_x_meters	param_private	0
+59	0x0490	f32	smash_s_random_offset_y_meters	param_private	0.5
+59	0x0494	f32	smash_s_random_offset_y_meters_hit	param_private	0
+59	0x0498	f32	smash_s_random_offset_y_mul_2	param_private	0.600000024
+59	0x049c	f32	smash_s_random_offset_y_mul_3	param_private	
+59	0x04a0	f32	invalid_3ps_frames	param_private	10
+59	0x04a4	f32	unk_21dcf05fe5	param_private	10
+60	0x00e0	u32	shape_type	map_collision_hadoken	
+60	0x00e4	f32	up	map_collision_hadoken	1
+60	0x00e8	f32	down	map_collision_hadoken	-1
+60	0x00ec	f32	half_width	map_collision_hadoken	1
+60	0x0150	i32	final_cancel_hit_stop_frame	param_private	25
+60	0x0154	f32	final_search_ofs_y	param_private	6.5
+60	0x0158	f32	final_search_radius	param_private	20
+60	0x015c	f32	final_ignore_back_dist	param_private	1.5
+60	0x0160	i32	final_fall_frame	param_private	25
+60	0x0164	i32	final_landing_frame	param_private	30
+60	0x0168	i32	final_hit_fall_frame	param_private	25
+60	0x016c	f32	final_air_speed_y_stable_mul	param_private	1.14999998
+60	0x0170	f32	final_fall_brake_y_mul	param_private	1.20000005
+60	0x0174	f32	final_damage_ofs_x	param_private	11
+60	0x0178	f32	final_damage_ofs_y	param_private	0
+60	0x017c	f32	final_damage_speed	param_private	4
+60	0x0180	i32	final_damage2_start_frame	param_private	3
+60	0x0184	f32	final_damage2_ofs_x	param_private	11
+60	0x0188	f32	final_damage2_ofs_y	param_private	15
+60	0x018c	f32	final_damage2_speed	param_private	8
+60	0x0190	f32	final_damage3_ofs_x	param_private	12.5
+60	0x0194	f32	final_damage3_ofs_y	param_private	20
+60	0x0198	f32	final_damage3_speed	param_private	4
+60	0x019c	f32	final_camera_offset_x	param_private	10
+60	0x01a0	f32	final_camera_offset_y	param_private	0
+60	0x01a4	f32	final_camera_offset2_x	param_private	10
+60	0x01a8	f32	final_camera_offset2_y	param_private	2
+60	0x01ac	f32	final_camera_offset3_x	param_private	4
+60	0x01b0	f32	final_camera_offset3_y	param_private	4.5
+60	0x01b4	f32	final_shake_scale	param_private	0.699999988
+60	0x01b8	f32	final_shake_scale2	param_private	
+60	0x01bc	f32	final_shake_scale3	param_private	0.600000024
+60	0x01c0	i32	final_stage_invisible_time	param_private	35
+60	0x01c4	i32	final_bg_color_r	param_private	242
+60	0x01c8	i32	final_bg_color_g	param_private	102
+60	0x01cc	i32	final_bg_color_b	param_private	26
+60	0x01d0	i32	final_bg_return_time	param_private	1
+60	0x01d4	f32	final2_scroll_rate	param_private	0.5
+60	0x01d8	i32	final2_scroll_rate_change_frame	param_private	60
+60	0x01dc	f32	final2_shoot_x	param_private	13
+60	0x01e0	f32	final2_shoot_y	param_private	11.5
+60	0x01e4	f32	attack_11_w_frame	param_private	5
+60	0x01e8	f32	attack_s3_w_frame	param_private	5
+60	0x01ec	f32	attack_hi3_w_frame	param_private	5
+60	0x01f0	f32	attack_lw3_w_frame	param_private	5
+60	0x01f4	f32	attack_11_s_button_on_frame	param_private	3
+60	0x01f8	f32	attack_hi3_s_button_on_frame	param_private	3
+60	0x01fc	f32	attack_lw3_s_button_on_frame	param_private	3
+60	0x0200	f32	turn_dash_dash_cancel_frame	param_private	5
+60	0x0204	f32	attack_start_cancel_frame	param_private	3
+60	0x0208	f32	wall_stop_cancel_frame	param_private	8
+60	0x020c	f32	ladder_catch_bottom_cancel_frame	param_private	5
+60	0x0210	i32	unk_1e4ea8f9a7	param_private	4
+60	0x0214	f32	unk_19996b81b6	param_private	800
+60	0x0218	i32	pass_cancel_command_frame	param_private	8
+60	0x021c	f32	near_opponent_range_x	param_private	4.5
+60	0x0220	f32	near_opponent_ref_y	param_private	0.75
+60	0x0224	f32	near_opponent_ref_y_opponent	param_private	0.25
+60	0x0228	f32	near_opponent_range_y	param_private	30
+60	0x022c	f32	attack_s4_w_frame	param_private	5
+61	0x00e0	u32	shape_type	map_collision_hadoken	
+61	0x00e4	f32	up	map_collision_hadoken	1
+61	0x00e8	f32	down	map_collision_hadoken	-1
+61	0x00ec	f32	half_width	map_collision_hadoken	1
+61	0x0138	i32	hit_cancel_command_extend_frame	param_private	5
+61	0x013c	f32	final_search_ofs_y	param_private	8
+61	0x0140	f32	final_search_radius	param_private	18
+61	0x0144	f32	final_ignore_back_dist	param_private	1.5
+61	0x0148	f32	final_air_speed_y_stable_mul	param_private	1.14999998
+61	0x014c	f32	final_fall_brake_y_mul	param_private	1.20000005
+61	0x0150	i32	final_landing_frame	param_private	30
+61	0x0154	f32	final_damage_ofs_x	param_private	12
+61	0x0158	f32	final_damage_ofs_y	param_private	8
+61	0x015c	f32	final_damage_speed	param_private	2
+61	0x0160	i32	final_damage2_start_frame	param_private	1
+61	0x0164	f32	final_damage2_ofs_x	param_private	25
+61	0x0168	f32	final_damage2_ofs_y	param_private	8
+61	0x016c	f32	final_damage2_speed	param_private	1.5
+61	0x0170	f32	final_damage3_ofs_x	param_private	22
+61	0x0174	f32	final_damage3_ofs_y	param_private	12
+61	0x0178	f32	final_damage3_speed	param_private	1.5
+61	0x017c	f32	final_damage4_ofs_x	param_private	22
+61	0x0180	f32	final_damage4_ofs_y	param_private	14
+61	0x0184	f32	final_damage4_speed	param_private	1.5
+61	0x0188	f32	final_damage5_ofs_x	param_private	22
+61	0x018c	f32	final_damage5_ofs_y	param_private	14
+61	0x0190	f32	final_damage5_speed	param_private	1.5
+61	0x0194	f32	final_damage6_ofs_x	param_private	20
+61	0x0198	f32	final_damage6_ofs_y	param_private	14
+61	0x019c	f32	final_damage6_speed	param_private	1.5
+61	0x01a0	f32	final_damage7_ofs_x	param_private	22
+61	0x01a4	f32	final_damage7_ofs_y	param_private	17
+61	0x01a8	f32	final_damage7_speed	param_private	1
+61	0x01ac	f32	final_camera_offset_x	param_private	0
+61	0x01b0	f32	final_camera_offset_y	param_private	0
+61	0x01b4	f32	final_camera_offset2_x	param_private	0
+61	0x01b8	f32	final_camera_offset2_y	param_private	0
+61	0x01bc	f32	final_camera_offset3_x	param_private	0
+61	0x01c0	f32	final_camera_offset3_y	param_private	0
+61	0x01c4	f32	final_camera_offset4_x	param_private	0
+61	0x01c8	f32	final_camera_offset4_y	param_private	0
+61	0x01cc	f32	final_camera_offset5_x	param_private	0
+61	0x01d0	f32	final_camera_offset5_y	param_private	0
+61	0x01d4	f32	final_camera_offset6_x	param_private	0
+61	0x01d8	f32	final_camera_offset6_y	param_private	0
+61	0x01dc	f32	final_camera_offset7_x	param_private	0
+61	0x01e0	f32	final_camera_offset7_y	param_private	5
+61	0x01e4	f32	final_shake_scale	param_private	0
+61	0x01e8	f32	final_shake_scale2	param_private	0
+61	0x01ec	f32	final_shake_scale3	param_private	0
+61	0x01f0	f32	final_shake_scale4	param_private	0
+61	0x01f4	f32	final_shake_scale5	param_private	0
+61	0x01f8	f32	final_shake_scale6	param_private	0
+61	0x01fc	f32	final_shake_scale7	param_private	0
+61	0x0200	i32	final_stage_invisible_time	param_private	35
+61	0x0204	i32	final_bg_color_r	param_private	242
+61	0x0208	i32	final_bg_color_g	param_private	102
+61	0x020c	i32	final_bg_color_b	param_private	26
+61	0x0210	i32	final_bg_return_time	param_private	1
+61	0x0214	i32	final2_fall_frame	param_private	25
+61	0x0218	f32	final2_air_speed_y_stable_mul	param_private	
+61	0x021c	f32	final2_fall_brake_y_mul	param_private	
+61	0x0220	i32	final2_landing_frame	param_private	30
+61	0x0224	f32	final2_scroll_rate	param_private	0.5
+61	0x0228	i32	final2_scroll_rate_change_frame	param_private	60
+61	0x022c	f32	final2_beam_offset_y	param_private	12
+61	0x0230	f32	attack_11_w_frame	param_private	5
+61	0x0234	f32	attack_s3_w_frame	param_private	5
+61	0x0238	f32	attack_hi3_w_frame	param_private	5
+61	0x023c	f32	attack_lw3_w_frame	param_private	5
+61	0x0240	f32	attack_11_s_button_on_frame	param_private	3
+61	0x0244	f32	attack_hi3_s_button_on_frame	param_private	3
+61	0x0248	f32	attack_lw3_s_button_on_frame	param_private	3
+61	0x024c	i32	add_squat_pass_frame	param_private	0
+61	0x0250	f32	turn_dash_dash_cancel_frame	param_private	5
+61	0x0254	f32	attack_start_cancel_frame	param_private	3
+61	0x0258	f32	wall_stop_cancel_frame	param_private	8
+61	0x025c	f32	ladder_catch_bottom_cancel_frame	param_private	5
+61	0x0260	i32	unk_1e4ea8f9a7	param_private	4
+61	0x0264	f32	unk_19996b81b6	param_private	1200
+61	0x0268	i32	pass_cancel_command_frame	param_private	4
+61	0x026c	f32	near_opponent_range_x	param_private	2.5
+61	0x0270	f32	near_opponent_ref_y	param_private	0.5
+61	0x0274	f32	near_opponent_ref_y_opponent	param_private	0.25
+61	0x0278	f32	near_opponent_range_y	param_private	13
+61	0x027c	f32	attack_s4_w_frame	param_private	13
+61	0x0280	f32	abnormal_attack_cliff_max	param_private	8
+62	0x00e0	u32	shape_type	map_collision_wave	
+62	0x00e4	f32	up	map_collision_wave	10
+62	0x00e8	f32	down	map_collision_wave	0
+62	0x00ec	f32	half_width	map_collision_wave	2
+62	0x0150	f32	critical_zoom_rate	param_private	
+62	0x0154	f32	final_dash_speed	param_private	10
+62	0x0158	i32	final_dash_frame	param_private	16
+62	0x015c	i32	final_dash_cliff_no_stop_frame	param_private	6
+62	0x0160	f32	final_dash_end_brake_x	param_private	0.0900000036
+62	0x0164	f32	final_hit_space	param_private	7
+62	0x0168	f32	final_hit_target_offset_x	param_private	20
+62	0x016c	f32	final_hit_target_offset_y	param_private	0
+62	0x0170	i32	final_hit_move_frame	param_private	8
+62	0x0174	i32	final_hit_target_move_frame	param_private	24
+62	0x0178	f32	final_hit_target_move_param1	param_private	0.899999976
+62	0x017c	f32	final_hit_target_move_param2	param_private	0.949999988
+62	0x0180	f32	final_fall_speed_y	param_private	5
+62	0x0184	f32	limit_gauge_damage_add	param_private	1
+62	0x0188	f32	limit_gauge_attack_add	param_private	0.666999996
+62	0x0190	f32	final_hit_target_offset_x	param_private2	24
+62	0x0194	f32	final_fusionsword_fall_frame	param_private2	39
+62	0x0198	f32	final_lr_stick_x	param_private2	0.25
+62	0x019c	f32	final_can_reverse_lr	param_private2	10
+62	0x01a0	hash40	constrain_joint	param_private2	0
+62	0x01a8	hash40	unk_158fcfbbc3	param_private2	0
+62	0x01b0	f32	fall_rhombus_up	param_private2	11.8000002
+62	0x01b4	f32	fall_rhombus_down	param_private2	0
+62	0x01b8	f32	fall_rhombus_left	param_private2	-2
+62	0x01bc	f32	fall_rhombus_right	param_private2	2.70000005
+63	0x00e0	u32	shape_type	map_collision_ryusensya	
+63	0x00e4	f32	center_y	map_collision_ryusensya	0
+63	0x00e8	f32	radius	map_collision_ryusensya	2
+63	0x0150	f32	final_vector_min	param_private	40
+63	0x0154	f32	final_vector_max	param_private	55
+63	0x0158	f32	slow_mul	param_private	
+63	0x015c	f32	final_camera_ofs_x	param_private	0
+63	0x0160	f32	final_camera_ofs_y	param_private	0
+63	0x0164	i32	final_zoom_in_frame	param_private	10
+63	0x0168	f32	final_zoom_in_rate	param_private	3.29999995
+63	0x016c	f32	unk_16a8e82674	param_private	216
+63	0x0170	f32	unk_16c535c29f	param_private	50
+63	0x0174	f32	unk_16b55f3610	param_private	
+63	0x0178	f32	unk_159c0d7ff4	param_private	159
+63	0x017c	f32	unk_15f1d09b1f	param_private	54
+63	0x0180	f32	unk_1581ba6f90	param_private	51
+63	0x0184	f32	unk_16cc894bbd	param_private	207
+63	0x0188	f32	unk_16a154af56	param_private	71
+63	0x018c	f32	unk_16d13e5bd9	param_private	41
+63	0x0190	f32	unk_1596c876ed	param_private	182
+63	0x0194	f32	unk_15fb159206	param_private	70
+63	0x0198	f32	unk_158b7f6689	param_private	29
+63	0x019c	f32	unk_16dbf25ffe	param_private	
+63	0x01a0	f32	unk_16b62fbb15	param_private	87
+63	0x01a4	f32	unk_16c6454f9a	param_private	160
+63	0x01a8	f32	unk_155a627673	param_private	48
+63	0x01ac	f32	unk_1537bf9298	param_private	67
+63	0x01b0	f32	unk_1547d56617	param_private	149
+63	0x01b4	f32	unk_16e27f633b	param_private	228
+63	0x01b8	f32	unk_168fa287d0	param_private	
+63	0x01bc	f32	unk_16ffc8735f	param_private	135
+63	0x01c0	f32	unk_15d4ed7190	param_private	169
+63	0x01c4	f32	unk_15b930957b	param_private	
+63	0x01c8	f32	unk_15c95a61f4	param_private	118
+63	0x01cc	f32	unk_16f5047778	param_private	
+63	0x01d0	f32	unk_1698d99393	param_private	153
+63	0x01d4	f32	unk_16e8b3671c	param_private	130
+63	0x01d8	f32	unk_151847710e	param_private	24
+63	0x01dc	f32	unk_15759a95e5	param_private	84
+63	0x01e0	f32	unk_1505f0616a	param_private	60
+63	0x01e4	f32	unk_162abdb8a9	param_private	
+63	0x01e8	f32	unk_1647605c42	param_private	79
+63	0x01ec	f32	unk_16370aa8cd	param_private	83
+63	0x01f0	f32	unk_15c16763a2	param_private	44
+63	0x01f4	f32	unk_15acba8749	param_private	45
+63	0x01f8	f32	unk_15dcd073c6	param_private	46
+64	0x00b0	i32	attack_air_n_loop_max	param_private	4
+64	0x00b4	i32	attack_air_hi_loop_max	param_private	4
+64	0x00b8	f32	attack_air_f_hit_speed_y	param_private	1.5
+64	0x00bc	f32	attack_air_f2_hit_speed_y	param_private	1.5
+64	0x00c0	i32	attack_air_f_combo_max	param_private	3
+64	0x00c4	f32	combo_attack_ari_f2_end	param_private	36
+64	0x00c8	f32	combo_attack_ari_f3_end	param_private	
+64	0x00cc	f32	dash_attack_hit_reduct_coef	param_private	0.800000012
+64	0x00d0	i32	dash_attack_hit_reduct_count	param_private	4
+64	0x00d4	f32	rose_effect_pos_rand	param_private	2
+64	0x00d8	f32	rose_effect_scale_min	param_private	0.699999988
+64	0x00dc	f32	rose_effect_scale_max	param_private	1.29999995
+64	0x00e0	f32	unk_1f5881d7c2	param_private	
+64	0x00e4	i32	unk_1dbeaa451f	param_private	30
+64	0x00e8	i32	attack_air_n_shoot_landing_frame	param_private	8
+64	0x00ec	i32	attack_air_f_shoot_landing_frame	param_private	6
+64	0x00f0	i32	attack_air_b_shoot_landing_frame	param_private	6
+64	0x00f4	i32	attack_air_hi_shoot_landing_frame	param_private	8
+64	0x00f8	i32	batwithin_slow_time	param_private	25
+64	0x00fc	i32	batwithin_slow_rate	param_private	6
+64	0x0100	f32	batwithin_slow_distance	param_private	60
+64	0x0104	f32	batwithin_escape_air_speed	param_private	1.70000005
+64	0x0108	f32	bat_escape_frame	param_private	30
+64	0x010c	f32	bat_escape_end_frame	param_private	24
+64	0x0110	f32	bat_escape_f_frame	param_private	30
+64	0x0114	f32	bat_escape_f_end_frame	param_private	26
+64	0x0118	f32	bat_escape_b_frame	param_private	30
+64	0x011c	f32	bat_escape_b_end_frame	param_private	26
+64	0x0120	f32	bat_escape_air_frame	param_private	30
+64	0x0124	f32	bat_escape_air_end_frame	param_private	25
+64	0x0128	i32	final_slow_rate	param_private	3
+64	0x012c	i32	final_slow_time	param_private	420
+64	0x0130	f32	final_time_add_gauge	param_private	1.5
+64	0x0134	f32	final_damage_add_gauge	param_private	2.0999999
+64	0x0138	f32	final_hit_fighter_damage_threshold	param_private	12
+64	0x013c	f32	final_time_add_gauge_entry_rate	param_private	0.600000024
+64	0x0140	f32	final_damage_add_gauge_entry_rate	param_private	1.5
+64	0x0144	i32	final_button_count	param_private	14
+64	0x0148	f32	final_death_damage_threshold	param_private	100
+64	0x014c	f32	final_death_hp_threshold	param_private	
+64	0x0150	f32	final_vector_min	param_private	40
+64	0x0154	f32	final_vector_max	param_private	45
+64	0x0158	f32	final_release_ofs_x	param_private	10
+64	0x015c	f32	final_release_ofs_y	param_private	5
+64	0x0160	i32	final_start_time	param_private	13
+64	0x0164	f32	final_start_motion_rate	param_private	0.100000001
+64	0x0168	i32	final_start_zoom_in_start_time	param_private	3
+64	0x016c	i32	final_start_zoom_in_time	param_private	6
+64	0x0170	f32	final_start_zoom_in_rate	param_private	20
+64	0x0174	i32	final_start_black_out_start_time	param_private	20
+64	0x0178	i32	final_start_black_out_time	param_private	20
+64	0x017c	i32	final_start_effect_kill_time	param_private	10
+64	0x0180	f32	final_target_delay2	param_private	3
+64	0x0184	f32	final_target_delay3	param_private	4
+64	0x0188	f32	final_target_ofs_x	param_private	-20
+64	0x018c	f32	final_target_ofs_y	param_private	10
+64	0x0190	f32	final_target_ofs_z	param_private	300
+64	0x0194	f32	final_target_arrive_time	param_private	11
+64	0x0198	f32	final_target_target_ofs_x	param_private	0
+64	0x019c	f32	final_target_target_ofs_y	param_private	20
+64	0x01a0	f32	final_target_target_ofs_z	param_private	15
+64	0x01a4	f32	final_target_target_ofs_y2	param_private	-3
+64	0x01a8	f32	final_target_target_ofs_z2	param_private	-5
+64	0x01ac	i32	final_target_hit_stop_frame	param_private	8
+64	0x01b0	i32	final_target_shake_frame	param_private	20
+64	0x01b4	f32	final_target_shake_scale	param_private	1
+64	0x01b8	f32	final_target_hit_rot_x	param_private	32
+64	0x01bc	f32	final_target_hit_rot_y	param_private	
+64	0x01c0	f32	final_target_hit_rot_z	param_private	
+64	0x01c4	f32	final_end_cam_ofs_x	param_private	20
+64	0x01c8	f32	final_end_cam_ofs_y	param_private	0
+64	0x01f0	hash40	node	param_private	
+64	0x0208	hash40	y	param_private	
+64	0x0278	u32	shape_type	map_collision_wickedweavearm	
+64	0x027c	f32	up	map_collision_wickedweavearm	1
+64	0x0280	f32	down	map_collision_wickedweavearm	-1
+64	0x0284	f32	half_width	map_collision_wickedweavearm	1
+64	0x0288	u32	shape_type	map_collision_wickedweaveleg	
+64	0x028c	f32	up	map_collision_wickedweaveleg	1
+64	0x0290	f32	down	map_collision_wickedweaveleg	-1
+64	0x0294	f32	half_width	map_collision_wickedweaveleg	1
+64	0x02c8	u32	shape_type	map_collision_specialn_bullet	
+64	0x02cc	f32	up	map_collision_specialn_bullet	1
+64	0x02d0	f32	down	map_collision_specialn_bullet	-1
+64	0x02d4	f32	half_width	map_collision_specialn_bullet	1
+65	0x00c8	f32	ink_max	param_private	150
+65	0x00cc	f32	charge_ink	param_private	1.5
+65	0x00d0	i32	charge_ink_max_frame	param_private	180
+65	0x00d4	i32	sub_ink_attack_100_frame	param_private	2
+65	0x00d8	f32	sub_ink_attack_100	param_private	2
+65	0x00dc	f32	sub_ink_attack_s4	param_private	10
+65	0x00e0	f32	sub_ink_attack_hi4	param_private	30
+65	0x00e4	f32	sub_ink_attack_lw4	param_private	20
+65	0x00e8	f32	sub_ink_throw_f	param_private	10
+65	0x00ec	f32	sub_ink_special_n	param_private	1.5
+65	0x00f0	f32	sub_ink_special_lw	param_private	30
+65	0x00f4	f32	sub_ink_special_s	param_private	3
+65	0x00f8	f32	paint_life	param_private	300
+65	0x00fc	i32	water_damage_interval	param_water_damage	20
+65	0x0100	f32	water_damage	param_water_damage	0.330000013
+65	0x0104	f32	water_damage_limit	param_water_damage	
+65	0x0120	f32	erosion_rate	param_special_paint	0.699999988
+65	0x0124	i32	revert_frame	param_special_paint	10
+65	0x0158	u32	shape_type	map_collision_inkbullet	
+65	0x015c	f32	up	map_collision_inkbullet	2
+65	0x0160	f32	down	map_collision_inkbullet	-2
+65	0x0164	f32	half_width	map_collision_inkbullet	2
+65	0x01b0	u32	shape_type	map_collision_rollerink	
+65	0x01b4	f32	center_y	map_collision_rollerink	0
+65	0x01b8	f32	radius	map_collision_rollerink	1
+65	0x0238	u32	shape_type	map_collision_splashbomb	
+65	0x023c	f32	center_y	map_collision_splashbomb	0
+65	0x0240	f32	radius	map_collision_splashbomb	1.5
+65	0x0244	f32	speed_x_gg	jostle_data_splashbomb	0.5
+65	0x0248	f32	speed_x_ga	jostle_data_splashbomb	0.5
+65	0x024c	f32	speed_x_ag	jostle_data_splashbomb	0.5
+65	0x0250	f32	speed_x_aa	jostle_data_splashbomb	0.5
+65	0x0254	f32	speed_z	jostle_data_splashbomb	0.5
+65	0x0258	f32	pos_z_max	jostle_data_splashbomb	3
+65	0x025c	f32	center_x	jostle_data_splashbomb	0
+65	0x0260	f32	center_y	jostle_data_splashbomb	0
+65	0x0264	f32	width	jostle_data_splashbomb	5
+65	0x0268	f32	height	jostle_data_splashbomb	5
+65	0x026c	f32	push_speed	jostle_data_splashbomb	1
+65	0x0288	f32	speed_x_gg	jostle_data_megaphonelaser	0.5
+65	0x028c	f32	speed_x_ga	jostle_data_megaphonelaser	0.5
+65	0x0290	f32	speed_x_ag	jostle_data_megaphonelaser	0.5
+65	0x0294	f32	speed_x_aa	jostle_data_megaphonelaser	0.5
+65	0x0298	f32	speed_z	jostle_data_megaphonelaser	0.5
+65	0x029c	f32	pos_z_max	jostle_data_megaphonelaser	3
+65	0x02a0	f32	center_x	jostle_data_megaphonelaser	2
+65	0x02a4	f32	center_y	jostle_data_megaphonelaser	10
+65	0x02a8	f32	width	jostle_data_megaphonelaser	18
+65	0x02ac	f32	height	jostle_data_megaphonelaser	18
+65	0x02b0	f32	push_speed	jostle_data_megaphonelaser	1
+66	0x00f8	f32	dummy	param_private	0
+66	0x0130	u32	shape_type	map_collision_breath	
+66	0x0134	f32	center_y	map_collision_breath	0
+66	0x0138	f32	radius	map_collision_breath	1
+66	0x0188	f32	dash_speed_x	param_final	8.80000019
+66	0x018c	f32	critical_camera_offset_y	param_final	
+66	0x0190	i32	disable_cliff_stop_frame	param_final	8
+66	0x0194	f32	dash_end_brake_x	param_final	0.25
+66	0x0198	i32	hit_slow_mag	param_final	3
+66	0x019c	i32	final_ready_frame	param_final	13
+66	0x01a0	i32	add_damage_start_frame	param_final	10
+66	0x01a4	i32	add_damage_frame	param_final	30
+66	0x01a8	f32	add_damage	param_final	50
+66	0x01ac	f32	target_distance	param_final	10
+66	0x01b0	f32	target_dead_damage	param_final	99
+66	0x01b4	f32	final_smash_degree	param_final	270
+66	0x01b8	f32	final_end_rhombus_offset_y	param_final	-240
+66	0x01bc	f32	gunship_offset_x	param_final	-100
+66	0x01c0	f32	gunship_offset_y	param_final	0
+66	0x01c4	f32	gunship_offset_z	param_final	-500
+66	0x01c8	f32	gunship_scale	param_final	0.200000003
+67	0x0140	f32	joint_length	physics_data_whip	1.79999995
+67	0x0144	f32	air_resistance	physics_data_whip	0.100000001
+67	0x0148	f32	water_resistance	physics_data_whip	0
+67	0x014c	f32	collision_size	physics_data_whip	0.449999988
+67	0x0150	f32	friction_rate	physics_data_whip	
+67	0x0154	f32	inertial_mass	physics_data_whip	
+67	0x0200	u32	shape_type	map_collision_cross	
+67	0x0204	f32	center_y	map_collision_cross	0
+67	0x0208	f32	radius	map_collision_cross	4.30000019
+67	0x0270	f32	attack_air_stick_dir_hi_min	param_private	15
+67	0x0274	f32	attack_air_stick_dir_hi_max	param_private	65
+67	0x0278	f32	attack_air_stick_dir_lw_min	param_private	-65
+67	0x027c	f32	attack_air_stick_dir_lw_max	param_private	-15
+67	0x0280	f32	attack_lw32_motion_speed_mul	param_private	1
+67	0x0284	i32	reflect_shield_rot_speed	param_private	55
+67	0x0288	i32	attack_lw32_landing_frame	param_private	25
+67	0x028c	f32	lasso_stake_offset_x	param_private	0.949999988
+67	0x0290	f32	lasso_stake_offset_y	param_private	-1.58000004
+67	0x0294	f32	lasso_raycheck_length	param_private	7
+67	0x0298	f32	lasso_raycheck_angle	param_private	270
+67	0x029c	f32	lasso_raycheck_length_2	param_private	5.5
+67	0x02a0	f32	lasso_raycheck_angle_2	param_private	-30
+67	0x02a4	f32	lasso_raycheck_length_3	param_private	5.5
+67	0x02a8	f32	lasso_raycheck_angle_3	param_private	-60
+67	0x02ac	f32	lasso_raycheck_length_4	param_private	5.5
+67	0x02b0	f32	lasso_raycheck_angle_4	param_private	210
+67	0x02b4	f32	lasso_raycheck_length_5	param_private	5.5
+67	0x02b8	f32	lasso_raycheck_angle_5	param_private	240
+67	0x02bc	f32	final_coffin_x	param_private	30
+67	0x02c0	f32	final_coffin_y	param_private	0
+67	0x02c4	f32	final_coffin_z	param_private	-5
+67	0x02c8	f32	final_air_coffin_x	param_private	30
+67	0x02cc	f32	final_air_coffin_y	param_private	-10
+67	0x02d0	f32	final_air_coffin_z	param_private	-5
+67	0x02d4	i32	sub_item_rate_cancel_frame	param_private	45
+67	0x02d8	i32	sub_item_rate_cancel_frame_fix	param_private	70
+67	0x02dc	f32	sub_item_rate_cancel_offset_y	param_private	10
+67	0x02e0	f32	final_whole_slow_mul	param_private	1
+67	0x02e4	i32	final_hit_after_frame	param_private	60
+67	0x02e8	i32	unk_1fb895230d	param_private	40
+67	0x02ec	i32	unk_19d8173066	param_private	75
+67	0x02f0	f32	unk_133e52f4f0	param_private	35
+67	0x02f4	f32	final_finish_attack_angle_min	param_private	60
+67	0x02f8	f32	final_finish_attack_angle_max	param_private	
+68	0x0140	f32	joint_length	physics_data_whip	1.79999995
+68	0x0144	f32	air_resistance	physics_data_whip	0.100000001
+68	0x0148	f32	water_resistance	physics_data_whip	0
+68	0x014c	f32	collision_size	physics_data_whip	0.449999988
+68	0x0150	f32	friction_rate	physics_data_whip	
+68	0x0154	f32	inertial_mass	physics_data_whip	
+68	0x0200	u32	shape_type	map_collision_cross	
+68	0x0204	f32	center_y	map_collision_cross	0
+68	0x0208	f32	radius	map_collision_cross	4.30000019
+68	0x0270	f32	attack_air_stick_dir_hi_min	param_private	15
+68	0x0274	f32	attack_air_stick_dir_hi_max	param_private	65
+68	0x0278	f32	attack_air_stick_dir_lw_min	param_private	-65
+68	0x027c	f32	attack_air_stick_dir_lw_max	param_private	-15
+68	0x0280	f32	attack_lw32_motion_speed_mul	param_private	1
+68	0x0284	i32	reflect_shield_rot_speed	param_private	55
+68	0x0288	i32	attack_lw32_landing_frame	param_private	25
+68	0x028c	f32	lasso_stake_offset_x	param_private	0.949999988
+68	0x0290	f32	lasso_stake_offset_y	param_private	-1.58000004
+68	0x0294	f32	lasso_raycheck_length	param_private	7
+68	0x0298	f32	lasso_raycheck_angle	param_private	270
+68	0x029c	f32	lasso_raycheck_length_2	param_private	5.5
+68	0x02a0	f32	lasso_raycheck_angle_2	param_private	-30
+68	0x02a4	f32	lasso_raycheck_length_3	param_private	5.5
+68	0x02a8	f32	lasso_raycheck_angle_3	param_private	-60
+68	0x02ac	f32	lasso_raycheck_length_4	param_private	5.5
+68	0x02b0	f32	lasso_raycheck_angle_4	param_private	210
+68	0x02b4	f32	lasso_raycheck_length_5	param_private	5.5
+68	0x02b8	f32	lasso_raycheck_angle_5	param_private	240
+68	0x02bc	f32	final_coffin_x	param_private	30
+68	0x02c0	f32	final_coffin_y	param_private	0
+68	0x02c4	f32	final_coffin_z	param_private	-5
+68	0x02c8	f32	final_air_coffin_x	param_private	30
+68	0x02cc	f32	final_air_coffin_y	param_private	-10
+68	0x02d0	f32	final_air_coffin_z	param_private	-5
+68	0x02d4	i32	sub_item_rate_cancel_frame	param_private	45
+68	0x02d8	i32	sub_item_rate_cancel_frame_fix	param_private	80
+68	0x02dc	f32	sub_item_rate_cancel_offset_y	param_private	10
+68	0x02e0	f32	final_whole_slow_mul	param_private	1
+68	0x02e4	i32	final_hit_after_frame	param_private	60
+68	0x02e8	i32	unk_1fb895230d	param_private	40
+68	0x02ec	i32	unk_19d8173066	param_private	75
+68	0x02f0	f32	unk_133e52f4f0	param_private	35
+68	0x02f4	f32	final_finish_attack_angle_min	param_private	60
+68	0x02f8	f32	final_finish_attack_angle_max	param_private	
+69	0x00b0	f32	life	param_waist	18.0100002
+69	0x00b4	f32	damage_mul	param_waist	0.5
+69	0x00b8	f32	damage_mul_special_lw	param_waist	0
+69	0x00bc	f32	guard_mark_effect_scale	param_waist	1.29999995
+69	0x00c0	i32	hit_stop_frame_min	param_waist	16
+69	0x00c4	f32	life_recover	param_waist	0.0799999982
+69	0x00c8	f32	crack_life_1	param_waist	11.5
+69	0x00cc	f32	crack_life_2	param_waist	6.0999999
+69	0x00d0	i32	crack_frame	param_waist	120
+69	0x00d4	f32	break_hit_stop_mul	param_waist	1.79999995
+69	0x00d8	f32	unk_1bef789506	param_waist	1
+69	0x00dc	f32	unk_1b7671c4bc	param_waist	17
+69	0x00e0	f32	unk_1b0176f42a	param_waist	33
+69	0x00e8	hash40	shield_parts_no	param_waist	0
+69	0x00f0	f32	shield_offset_x	param_waist	-1.5
+69	0x00f4	f32	shield_offset_y	param_waist	3
+69	0x00f8	f32	shield_offset_z	param_waist	2
+69	0x00fc	f32	shield_offset_x2	param_waist	-1.5
+69	0x0100	f32	shield_offset_y2	param_waist	3
+69	0x0104	f32	shield_offset_z2	param_waist	-2
+69	0x0108	f32	shield_size	param_waist	7
+69	0x0110	hash40	special_lw_shield_parts_no	param_waist	0
+69	0x0118	f32	special_lw_shield_offset_x	param_waist	-10
+69	0x011c	f32	special_lw_shield_offset_y	param_waist	7.4000001
+69	0x0120	f32	special_lw_shield_offset_z	param_waist	4.4000001
+69	0x0124	f32	special_lw_shield_offset_x2	param_waist	10
+69	0x0128	f32	special_lw_shield_offset_y2	param_waist	
+69	0x012c	f32	special_lw_shield_offset_z2	param_waist	
+69	0x0130	f32	special_lw_shield_size	param_waist	7.80000019
+69	0x0228	f32	special_lw_reflect_power_max	param_private	
+69	0x022c	i32	throw_lw_clatter_frame	param_private	60
+69	0x0230	f32	throw_lw_clatter_damage_frame	param_private	0.75
+69	0x0234	f32	final_dash_speed	param_private	6
+69	0x0238	i32	final_dash_frame	param_private	12
+69	0x023c	i32	final_dash_cliff_no_stop_frame	param_private	6
+69	0x0240	f32	final_dash_end_brake_x	param_private	0.100000001
+69	0x0244	f32	final_opponent_scale	param_private	3
+69	0x0248	f32	final_opponent_offset_x_1	param_private	0
+69	0x024c	f32	final_opponent_offset_y_1	param_private	35
+69	0x0250	f32	final_opponent_offset_z_1	param_private	70
+69	0x0254	f32	final_opponent_offset_x_2	param_private	30
+69	0x0258	f32	final_opponent_offset_y_2	param_private	
+69	0x025c	f32	final_opponent_offset_z_2	param_private	
+69	0x0260	f32	final_opponent_offset_x_3	param_private	-30
+69	0x0264	f32	final_opponent_offset_y_3	param_private	
+69	0x0268	f32	final_opponent_offset_z_3	param_private	
+69	0x026c	f32	final_opponent_offset_x_4	param_private	60
+69	0x0270	f32	final_opponent_offset_y_4	param_private	30
+69	0x0274	f32	final_opponent_offset_z_4	param_private	
+69	0x0278	f32	final_opponent_offset_x_5	param_private	-60
+69	0x027c	f32	final_opponent_offset_y_5	param_private	30
+69	0x0280	f32	final_opponent_offset_z_5	param_private	
+69	0x0284	f32	final_opponent_offset_x_6	param_private	90
+69	0x0288	f32	final_opponent_offset_y_6	param_private	25
+69	0x028c	f32	final_opponent_offset_z_6	param_private	
+69	0x0290	f32	final_opponent_offset_x_7	param_private	-90
+69	0x0294	f32	final_opponent_offset_y_7	param_private	25
+69	0x0298	f32	final_opponent_offset_z_7	param_private	
+69	0x029c	f32	final_vector_min	param_private	40
+69	0x02a0	f32	final_vector_max	param_private	50
+70	0x00b0	f32	dummy	param_private	0
+70	0x0100	u32	shape_type	map_collision_pot	
+70	0x0104	f32	up	map_collision_pot	2
+70	0x0108	f32	down	map_collision_pot	0
+70	0x010c	f32	half_width	map_collision_pot	2
+70	0x0110	u32	shape_type	map_collision_bullet	
+70	0x0114	f32	center_y	map_collision_bullet	0
+70	0x0118	f32	radius	map_collision_bullet	0.5
+70	0x011c	f32	offset_x	param_item_search_catch	13.5
+70	0x0120	f32	offset_y	param_item_search_catch	13
+70	0x0124	f32	radius	param_item_search_catch	16
+70	0x0128	f32	offset_x	param_item_search_catch_dash	14.5
+70	0x012c	f32	offset_y	param_item_search_catch_dash	3
+70	0x0130	f32	radius	param_item_search_catch_dash	6
+70	0x0134	f32	offset_x	param_item_search_catch_turn	16.5
+70	0x0138	f32	offset_y	param_item_search_catch_turn	3
+70	0x013c	f32	radius	param_item_search_catch_turn	6
+70	0x0188	f32	shoot_speed	param_fishingrod	2.20000005
+70	0x018c	f32	shoot_speed_flick	param_fishingrod	2.79999995
+70	0x0190	f32	shoot_limit_length	param_fishingrod	42
+70	0x0194	f32	shoot_limit_length_flick	param_fishingrod	52
+70	0x0198	f32	shoot_angle	param_fishingrod	16
+70	0x019c	f32	bound_enable_speed	param_fishingrod	0.300000012
+70	0x01a0	f32	shoot_float_angle	param_fishingrod	-20
+70	0x01a4	f32	bound_speed_mul	param_fishingrod	0.600000024
+70	0x01a8	f32	shoot_float_effect_speed_y	param_fishingrod	1.39999998
+70	0x01ac	f32	shoot_float_sound_speed_y	param_fishingrod	
+70	0x01b0	f32	hook_enable_speed	param_fishingrod	0.5
+70	0x01b4	f32	hook_search_size	param_fishingrod	3
+70	0x01b8	f32	hook_search_offset_x	param_fishingrod	0
+70	0x01bc	f32	hook_search_offset_y	param_fishingrod	0
+70	0x01c0	f32	hook_float_angle	param_fishingrod	-45
+70	0x01c4	f32	reel_tension	param_fishingrod	0.949999988
+70	0x01c8	f32	cut_reel_speed	param_fishingrod	6
+70	0x01cc	f32	end_hook_search_size_mul	param_fishingrod	1
+70	0x01d0	f32	capture_cut_speed	param_fishingrod	
+70	0x01d4	i32	shoot_air_resistance_change_frame	param_fishingrod	24
+70	0x01d8	f32	z_range	param_fishingrod	1.5
+70	0x01dc	f32	restitution_rate	param_fishingrod	1
+70	0x01e0	f32	restitution_range	param_fishingrod	0
+70	0x01e4	f32	gravity	param_fishingrod	0
+70	0x01e8	f32	air_resistance	param_fishingrod	1
+70	0x01f8	hash40	throw_add_damage_max	param_fishingrod	
+70	0x0200	hash40	speed_mul_y	param_fishingrod	
+70	0x0208	f32	reach_speed	param_fishingline	6
+70	0x020c	f32	reach_length_max	param_fishingline	60
+70	0x0210	i32	rewind_frame	param_fishingline	9
+70	0x0214	f32	fighter_weight	param_fishingline	1
+70	0x0218	f32	gravity_hang	param_fishingline	6.19999981
+70	0x021c	f32	air_resist_hang	param_fishingline	0.00100000005
+70	0x0220	f32	air_resist_max_hang	param_fishingline	10
+70	0x0224	i32	air_resist_max_frame_hang	param_fishingline	500
+70	0x0228	f32	water_resist_hang	param_fishingline	0
+70	0x022c	f32	fighter_size	param_fishingline	1.5
+70	0x0230	f32	fighter_offset	param_fishingline	13
+70	0x0234	f32	restitution_rate_hang	param_fishingline	0.330000013
+70	0x0238	f32	extend_arm_speed	param_fishingline	0.100000001
+70	0x023c	i32	extend_arm_frame	param_fishingline	2
+70	0x0240	f32	hang_bound_tension	param_fishingline	0.00400000019
+70	0x0244	f32	hang_bound_angle	param_fishingline	
+70	0x0248	f32	hang_bound_speed_mul	param_fishingline	0.5
+70	0x024c	f32	reach_cliff_offset_x	param_fishingline	-1.5
+70	0x0250	f32	reach_cliff_offset_y	param_fishingline	0.5
+70	0x0254	f32	tip_angle_max	param_fishingline	20
+70	0x0258	f32	unk_17f42cfc3c	param_fishingline	7
+70	0x025c	f32	hang_dist	param_fishingline	6
+70	0x0260	f32	collision_size	param_fishingline	0.5
+70	0x0264	f32	gravity	param_fishingline	3.5
+70	0x0268	f32	air_resist	param_fishingline	0.5
+70	0x026c	f32	restitution_rate	param_fishingline	0.400000006
+70	0x0270	f32	restitution_range	param_fishingline	0.5
+70	0x0338	u32	shape_type	map_collision_clayrocket	
+70	0x033c	f32	up	map_collision_clayrocket	1
+70	0x0340	f32	down	map_collision_clayrocket	0
+70	0x0344	f32	half_width	map_collision_clayrocket	2
+70	0x0348	u32	shape_type	map_collision_clayrocket_fly	
+70	0x034c	f32	up	map_collision_clayrocket_fly	7
+70	0x0350	f32	down	map_collision_clayrocket_fly	-5
+70	0x0354	f32	half_width	map_collision_clayrocket_fly	3.5
+70	0x0388	u32	shape_type	map_collision_tomnook	
+70	0x038c	f32	up	map_collision_tomnook	8
+70	0x0390	f32	down	map_collision_tomnook	-0.5
+70	0x0394	f32	half_width	map_collision_tomnook	2
+70	0x0398	u32	shape_type	map_collision_office	
+70	0x039c	f32	up	map_collision_office	1
+70	0x03a0	f32	down	map_collision_office	-0.5
+70	0x03a4	f32	half_width	map_collision_office	1
+71	0x00b0	f32	dummy	param_private_base	0
+71	0x00b4	i32	water_damage_interval	param_water_damage	20
+71	0x00b8	f32	water_damage	param_water_damage	0.330000013
+71	0x00bc	f32	water_damage_limit	param_water_damage	300
+71	0x0108	f32	center_y	camera_range_rope	10
+71	0x010c	f32	front	camera_range_rope	19
+71	0x0110	f32	back	camera_range_rope	-9
+71	0x0114	f32	up	camera_range_rope	12
+71	0x0118	f32	down	camera_range_rope	-9
+71	0x0168	f32	final_dash_speed	param_private	8
+71	0x016c	i32	critical_1_on_1	param_private	1
+71	0x0170	i32	final_dash_cliff_no_stop_frame	param_private	6
+71	0x0174	f32	final_dash_end_brake_x	param_private	0.150000006
+71	0x0178	f32	final_vector_min	param_private	50
+71	0x017c	f32	final_vector_max	param_private	65
+72	0x00e0	u32	shape_type	map_collision_ironball	
+72	0x00e4	f32	up	map_collision_ironball	2.4000001
+72	0x00e8	f32	down	map_collision_ironball	-2.4000001
+72	0x00ec	f32	half_width	map_collision_ironball	
+72	0x0108	i32	final_enemy_interval	param_private	2
+72	0x010c	f32	final_attack_upper_spd_y	param_private	0
+72	0x0110	f32	final_target_pos_offset	param_private	27
+72	0x0114	i32	final_arrive_frame	param_private	10
+72	0x0118	f32	final_move_speed	param_private	0
+72	0x011c	i32	final_arrive_wait_frame	param_private	0
+72	0x0120	f32	final_attack_add_camera_offset_x	param_private	27
+72	0x0124	f32	final_attack_add_camera_offset_y	param_private	-15
+72	0x0128	f32	final_attack_camera_offset_y	param_private	0
+72	0x012c	f32	final_attack_camera_offset_z	param_private	0
+72	0x0130	f32	final_attack_camera_offset_time	param_private	0
+73	0x0110	u32	shape_type	map_collision_tornadoshot	
+73	0x0114	f32	up	map_collision_tornadoshot	8
+73	0x0118	f32	down	map_collision_tornadoshot	-3.5
+73	0x011c	f32	half_width	map_collision_tornadoshot	4
+73	0x0120	u32	shape_type	map_collision_lightshuriken	
+73	0x0124	f32	up	map_collision_lightshuriken	2.4000001
+73	0x0128	f32	down	map_collision_lightshuriken	-2.4000001
+73	0x012c	f32	half_width	map_collision_lightshuriken	
+73	0x0130	u32	shape_type	map_collision_chakram	
+73	0x0134	f32	up	map_collision_chakram	2.20000005
+73	0x0138	f32	down	map_collision_chakram	-2.20000005
+73	0x013c	f32	half_width	map_collision_chakram	
+73	0x0140	f32	final_shoot_offset_x	param_private	12
+73	0x0144	f32	final_shoot_offset_y	param_private	8
+73	0x0148	f32	final_wave_speed	param_private	4.69999981
+73	0x014c	f32	final_wave_scale	param_private	0.400000006
+73	0x0150	f32	final_wave_scale_max	param_private	0.699999988
+73	0x0154	f32	final_wave_scale_mul	param_private	1.04999995
+73	0x0158	f32	final_wave_blur_length	param_private	0
+73	0x015c	f32	final_wave_blur_start_radius_x	param_private	0
+73	0x0160	f32	final_wave_blur_start_radius_y	param_private	0
+73	0x0164	f32	final_wave_blur_end_radius_x	param_private	0
+73	0x0168	f32	final_wave_blur_end_radius_y	param_private	0
+73	0x016c	f32	final_wave_blur_power	param_private	0
+73	0x0170	f32	final_wave_blur_alpha	param_private	0
+74	0x0110	f32	final_a_vy0	param_private	0.300000012
+74	0x0114	f32	final_a_ay	param_private	0.00999999978
+74	0x0118	f32	final_a_vy_max	param_private	0.075000003
+74	0x011c	f32	final_laser_ang_spd	param_private	0.25999999
+74	0x0120	f32	final_laser_ang_max	param_private	8
+74	0x0124	f32	final_laser_spd	param_private	2.5
+74	0x0128	f32	size	param_private	
+74	0x012c	f32	final_laser_initial_distance	param_private	210
+74	0x0130	f32	final_laser_max_distance	param_private	380
+74	0x0168	u32	shape_type	map_collision_laser	
+74	0x016c	f32	up	map_collision_laser	2
+74	0x0170	f32	down	map_collision_laser	-2
+74	0x0174	f32	half_width	map_collision_laser	2
+74	0x0178	u32	shape_type	map_collision_fullthrottle	
+74	0x017c	f32	up	map_collision_fullthrottle	2
+74	0x0180	f32	down	map_collision_fullthrottle	-2
+74	0x0184	f32	half_width	map_collision_fullthrottle	2
+74	0x01b8	u32	shape_type	map_collision_attack_airf_bullet	
+74	0x01bc	f32	up	map_collision_attack_airf_bullet	1
+74	0x01c0	f32	down	map_collision_attack_airf_bullet	-1
+74	0x01c4	f32	half_width	map_collision_attack_airf_bullet	2
+74	0x0228	u32	shape_type	map_collision_gunnercharge	
+74	0x022c	f32	up	map_collision_gunnercharge	2
+74	0x0230	f32	down	map_collision_gunnercharge	-2
+74	0x0234	f32	half_width	map_collision_gunnercharge	2
+74	0x0238	u32	shape_type	map_collision_rapidshot_bullet	
+74	0x023c	f32	up	map_collision_rapidshot_bullet	1
+74	0x0240	f32	down	map_collision_rapidshot_bullet	-1
+74	0x0244	f32	half_width	map_collision_rapidshot_bullet	10
+74	0x0248	u32	shape_type	map_collision_grenadelauncher	
+74	0x024c	f32	up	map_collision_grenadelauncher	1
+74	0x0250	f32	down	map_collision_grenadelauncher	-1
+74	0x0254	f32	half_width	map_collision_grenadelauncher	1
+74	0x02e8	u32	shape_type	map_collision_flamepillar	
+74	0x02ec	f32	up	map_collision_flamepillar	2.4000001
+74	0x02f0	f32	down	map_collision_flamepillar	-2.4000001
+74	0x02f4	f32	half_width	map_collision_flamepillar	
+74	0x02f8	u32	shape_type	map_collision_stealthbomb	
+74	0x02fc	f32	up	map_collision_stealthbomb	
+74	0x0300	f32	down	map_collision_stealthbomb	
+74	0x0304	f32	half_width	map_collision_stealthbomb	
+74	0x0308	u32	shape_type	map_collision_miimissile	
+74	0x030c	f32	up	map_collision_miimissile	
+74	0x0310	f32	down	map_collision_miimissile	
+74	0x0314	f32	half_width	map_collision_miimissile	
+74	0x0318	u32	shape_type	map_collision_supermissile	
+74	0x031c	f32	up	map_collision_supermissile	
+74	0x0320	f32	down	map_collision_supermissile	
+74	0x0324	f32	half_width	map_collision_supermissile	
+74	0x03a0	u32	shape_type	map_collision_groundbomb	
+74	0x03a4	f32	up	map_collision_groundbomb	2
+74	0x03a8	f32	down	map_collision_groundbomb	-2
+74	0x03ac	f32	half_width	map_collision_groundbomb	2
+75	0x00f8	f32	speed_x_gg	jostle_data_nana	1
+75	0x00fc	f32	speed_x_ga	jostle_data_nana	1
+75	0x0100	f32	speed_x_ag	jostle_data_nana	1
+75	0x0104	f32	speed_x_aa	jostle_data_nana	1
+75	0x0108	f32	speed_z	jostle_data_nana	0.200000003
+75	0x010c	f32	max_pos_z	jostle_data_nana	3.79999995
+75	0x0110	f32	speed_x_gg	jostle_data_nana_small	1
+75	0x0114	f32	speed_x_ga	jostle_data_nana_small	1
+75	0x0118	f32	speed_x_ag	jostle_data_nana_small	1
+75	0x011c	f32	speed_x_aa	jostle_data_nana_small	1
+75	0x0120	f32	speed_z	jostle_data_nana_small	
+75	0x0124	f32	max_pos_z	jostle_data_nana_small	1
+75	0x0128	f32	rebirth_diff_x	param_private	3
+75	0x012c	f32	nana_damage_mul	param_private	1.04999995
+75	0x0130	f32	nana_damage_reaction_mul	param_private	
+75	0x0134	f32	unk_1435e39667	param_private	30
+75	0x0138	f32	nana_different_damage_motion_rate	param_private	80
+75	0x013c	f32	nana_opt_dst	param_private	25
+75	0x0140	i32	nana_delay	param_private	6
+75	0x0144	f32	nana_pos_x_offset	param_private	-3
+75	0x0148	f32	nana_partner_comp_rate_x	param_private	0.100000001
+75	0x014c	f32	nana_opt_dst_max	param_private	5
+75	0x0150	f32	nana_opt_near_dst	param_private	25
+75	0x0154	f32	nana_partner_near_comp_rate_x	param_private	
+75	0x0158	f32	nana_roulette_pos_x_offset	param_private	-7
+75	0x015c	f32	nana_warp_sync_dst	param_private	20
+75	0x0160	f32	popo_modify_jostle_range	param_private	8
+75	0x0164	f32	popo_jostle_add_back	param_private	2
+75	0x0168	f32	popo_jostle_weight_mul	param_private	1.60000002
+75	0x016c	f32	nana_partner_modify_jostle_comp_rate_x	param_private	0.5
+75	0x0170	i32	nana_partner_modify_jostle_comp_rate_continual_frame	param_private	4
+75	0x0174	f32	unk_219438148d	param_private	0.5
+75	0x0178	f32	unk_214f2437da	param_private	0.5
+75	0x017c	i32	nana_cp_rank_for_2	param_private	77
+75	0x0180	i32	nana_cp_rank_for_3	param_private	77
+75	0x0184	i32	nana_cp_rank_for_4	param_private	77
+75	0x0188	i32	nana_cp_rank_for_5	param_private	77
+75	0x018c	i32	nana_cp_rank_for_6	param_private	77
+75	0x0190	i32	nana_cp_rank_for_7	param_private	77
+75	0x0194	i32	nana_cp_rank_for_8	param_private	77
+75	0x0198	f32	final_couple_distance	param_private	60
+75	0x019c	f32	final_couple_condor_distance	param_private	
+75	0x01a0	i32	unk_1a4d9acd60	param_private	120
+75	0x01a4	f32	final_scroll_rate	param_private	0
+75	0x01a8	i32	final_scroll_rate_change_frame	param_private	0
+75	0x01f8	u32	shape_type	map_collision_iceshot	
+75	0x01fc	f32	up	map_collision_iceshot	8
+75	0x0200	f32	down	map_collision_iceshot	0
+75	0x0204	f32	half_width	map_collision_iceshot	4
+75	0x0328	f32	offset_x	param_search_condor	0
+75	0x032c	f32	offset_y	param_search_condor	13
+75	0x0330	f32	offset2_x	param_search_condor	0
+75	0x0334	f32	offset2_y	param_search_condor	14
+75	0x0338	f32	radius	param_search_condor	8
+75	0x0358	u32	shape_type	map_collision_iceberg	
+75	0x035c	f32	up	map_collision_iceberg	4
+75	0x0360	f32	down	map_collision_iceberg	-4
+75	0x0364	f32	half_width	map_collision_iceberg	8
+75	0x0380	u32	shape_type	map_collision_whitebear	
+75	0x0384	f32	up	map_collision_whitebear	1
+75	0x0388	f32	down	map_collision_whitebear	0
+75	0x038c	f32	half_width	map_collision_whitebear	0.5
+75	0x03a8	u32	shape_type	map_collision_condor	
+75	0x03ac	f32	up	map_collision_condor	1
+75	0x03b0	f32	down	map_collision_condor	0
+75	0x03b4	f32	half_width	map_collision_condor	0.5
+76	0x00f8	f32	speed_x_gg	jostle_data_nana	1
+76	0x00fc	f32	speed_x_ga	jostle_data_nana	1
+76	0x0100	f32	speed_x_ag	jostle_data_nana	1
+76	0x0104	f32	speed_x_aa	jostle_data_nana	1
+76	0x0108	f32	speed_z	jostle_data_nana	0.200000003
+76	0x010c	f32	max_pos_z	jostle_data_nana	3.79999995
+76	0x0110	f32	speed_x_gg	jostle_data_nana_small	1
+76	0x0114	f32	speed_x_ga	jostle_data_nana_small	1
+76	0x0118	f32	speed_x_ag	jostle_data_nana_small	1
+76	0x011c	f32	speed_x_aa	jostle_data_nana_small	1
+76	0x0120	f32	speed_z	jostle_data_nana_small	
+76	0x0124	f32	max_pos_z	jostle_data_nana_small	1
+76	0x0128	f32	rebirth_diff_x	param_private	3
+76	0x012c	f32	nana_damage_mul	param_private	1.04999995
+76	0x0130	f32	nana_damage_reaction_mul	param_private	
+76	0x0134	f32	unk_1435e39667	param_private	30
+76	0x0138	f32	nana_different_damage_motion_rate	param_private	80
+76	0x013c	f32	nana_opt_dst	param_private	25
+76	0x0140	i32	nana_delay	param_private	6
+76	0x0144	f32	nana_pos_x_offset	param_private	-3
+76	0x0148	f32	nana_partner_comp_rate_x	param_private	0.100000001
+76	0x014c	f32	nana_opt_dst_max	param_private	5
+76	0x0150	f32	nana_opt_near_dst	param_private	25
+76	0x0154	f32	nana_partner_near_comp_rate_x	param_private	
+76	0x0158	f32	nana_roulette_pos_x_offset	param_private	-7
+76	0x015c	f32	nana_warp_sync_dst	param_private	20
+76	0x0160	f32	popo_modify_jostle_range	param_private	8
+76	0x0164	f32	popo_jostle_add_back	param_private	2
+76	0x0168	f32	popo_jostle_weight_mul	param_private	1.60000002
+76	0x016c	f32	nana_partner_modify_jostle_comp_rate_x	param_private	0.5
+76	0x0170	i32	nana_partner_modify_jostle_comp_rate_continual_frame	param_private	4
+76	0x0174	f32	unk_219438148d	param_private	0.5
+76	0x0178	f32	unk_214f2437da	param_private	0.5
+76	0x017c	i32	nana_cp_rank_for_2	param_private	77
+76	0x0180	i32	nana_cp_rank_for_3	param_private	77
+76	0x0184	i32	nana_cp_rank_for_4	param_private	77
+76	0x0188	i32	nana_cp_rank_for_5	param_private	77
+76	0x018c	i32	nana_cp_rank_for_6	param_private	77
+76	0x0190	i32	nana_cp_rank_for_7	param_private	77
+76	0x0194	i32	nana_cp_rank_for_8	param_private	77
+76	0x0198	f32	final_couple_distance	param_private	60
+76	0x019c	f32	final_couple_condor_distance	param_private	
+76	0x01a0	i32	unk_1a4d9acd60	param_private	120
+76	0x01a4	f32	final_scroll_rate	param_private	0
+76	0x01a8	i32	final_scroll_rate_change_frame	param_private	0
+76	0x01f8	u32	shape_type	map_collision_iceshot	
+76	0x01fc	f32	up	map_collision_iceshot	8
+76	0x0200	f32	down	map_collision_iceshot	0
+76	0x0204	f32	half_width	map_collision_iceshot	4
+76	0x0328	f32	offset_x	param_search_condor	0
+76	0x032c	f32	offset_y	param_search_condor	13
+76	0x0330	f32	offset2_x	param_search_condor	0
+76	0x0334	f32	offset2_y	param_search_condor	14
+76	0x0338	f32	radius	param_search_condor	8
+76	0x0358	u32	shape_type	map_collision_iceberg	
+76	0x035c	f32	up	map_collision_iceberg	4
+76	0x0360	f32	down	map_collision_iceberg	-4
+76	0x0364	f32	half_width	map_collision_iceberg	8
+76	0x0380	u32	shape_type	map_collision_whitebear	
+76	0x0384	f32	up	map_collision_whitebear	1
+76	0x0388	f32	down	map_collision_whitebear	0
+76	0x038c	f32	half_width	map_collision_whitebear	0.5
+76	0x03a8	u32	shape_type	map_collision_condor	
+76	0x03ac	f32	up	map_collision_condor	1
+76	0x03b0	f32	down	map_collision_condor	0
+76	0x03b4	f32	half_width	map_collision_condor	0.5
+77	0x0098	f32	reaction_value	param_private	95
+77	0x009c	f32	damage_air_brake	param_private	0.0799999982
+77	0x00a0	f32	jostle_speed_mul	param_private	2.5
+77	0x00a4	f32	shield_rebound_speed_mul	param_private	0.5
+77	0x00a8	f32	reaction_add_mul_max	param_private	60
+77	0x00ac	f32	reaction_add_mul	param_private	0.400000006
+77	0x00b0	f32	reaction_add_mul_damage_threshold	param_private	32
+77	0x00b4	i32	hp_battle_damage_reaction	param_private	10
+77	0x00b8	i32	reaction_fix_max	param_private	30
+77	0x00d8	f32	ground_offset	param_breath	-3.5999999
+77	0x00dc	f32	life	param_breath	28
+77	0x00e0	f32	hit_frames	param_breath	25
+77	0x00e4	f32	min_speed	param_breath	3.5
+77	0x00e8	f32	max_speed	param_breath	4
+77	0x00ec	u32	shape_type	map_collision_breath	
+77	0x00f0	f32	up	map_collision_breath	6
+77	0x00f4	f32	down	map_collision_breath	0
+77	0x00f8	f32	half_width	map_collision_breath	3
+80	0x0098	f32	final_a_vy0	param_private	0.5
+80	0x009c	f32	final_a_ay	param_private	0.00999999978
+80	0x00a0	f32	final_a_vy_max	param_private	0.180000007
+80	0x00a4	f32	final_laser_ang_spd	param_private	0.129999995
+80	0x00a8	f32	final_laser_ang_max	param_private	8
+80	0x00ac	f32	final_laser_spd	param_private	2.5
+80	0x00b0	i32	final_laser_time	param_private	150
+80	0x00b4	i32	appeal_frame	param_private	33
+80	0x00b8	i32	appeal_repeat_num	param_private	4
+80	0x0108	u32	shape_type	map_collision_attack_airf_bullet	
+80	0x010c	f32	up	map_collision_attack_airf_bullet	1
+80	0x0110	f32	down	map_collision_attack_airf_bullet	-1
+80	0x0114	f32	half_width	map_collision_attack_airf_bullet	2
+81	0x00b0	f32	loupe_pos_offset_x	param_private	0
+81	0x00b4	f32	loupe_pos_offset_y	param_private	6
+81	0x00b8	f32	final_start_x_range	param_private	10
+81	0x00bc	f32	final_scroll_rate	param_private	0
+81	0x00c0	i32	final_scroll_rate_change_frame	param_private	0
+81	0x00f8	u32	shape_type	map_collision_spikeball	
+81	0x00fc	f32	up	map_collision_spikeball	4.5
+81	0x0100	f32	down	map_collision_spikeball	-4.5
+81	0x0104	f32	half_width	map_collision_spikeball	4.5
+81	0x0108	f32	center_y	camera_range_spikeball	0
+81	0x010c	f32	front	camera_range_spikeball	5
+81	0x0110	f32	back	camera_range_spikeball	-5
+81	0x0114	f32	up	camera_range_spikeball	15
+81	0x0118	f32	down	camera_range_spikeball	0
+81	0x0120	hash40	node	camera_clip_sphere_spikeball	0
+81	0x0128	f32	x_offset	camera_clip_sphere_spikeball	0
+81	0x012c	f32	y_offset	camera_clip_sphere_spikeball	0
+81	0x0130	f32	z_offset	camera_clip_sphere_spikeball	0
+81	0x0134	f32	r	camera_clip_sphere_spikeball	40
+81	0x0180	u32	shape_type	map_collision_poisonbreath	
+81	0x0184	f32	center_y	map_collision_poisonbreath	1.5
+81	0x0188	f32	radius	map_collision_poisonbreath	7
+81	0x01d8	u32	shape_type	map_collision_bosspackun	
+81	0x01dc	f32	up	map_collision_bosspackun	15
+81	0x01e0	f32	down	map_collision_bosspackun	0
+81	0x01e4	f32	half_width	map_collision_bosspackun	13
+81	0x01e8	f32	center_y	camera_range_bosspackun	0
+81	0x01ec	f32	front	camera_range_bosspackun	40
+81	0x01f0	f32	back	camera_range_bosspackun	-40
+81	0x01f4	f32	up	camera_range_bosspackun	70
+81	0x01f8	f32	down	camera_range_bosspackun	0
+81	0x0200	hash40	node	camera_clip_sphere_bosspackun	0
+81	0x0208	f32	x_offset	camera_clip_sphere_bosspackun	0
+81	0x020c	f32	y_offset	camera_clip_sphere_bosspackun	35
+81	0x0210	f32	z_offset	camera_clip_sphere_bosspackun	0
+81	0x0214	f32	r	camera_clip_sphere_bosspackun	60
+82	0x00c8	f32	rebel_gauge_damage_add	param_private	1.29999995
+82	0x00cc	f32	rebel_gauge_damage_add_handi	param_private	2
+82	0x00d0	f32	rebel_gauge_add_dead	param_private	20
+82	0x00d4	f32	rebel_gauge_add_dead_handi	param_private	2
+82	0x00d8	f32	rebel_gauge_add_ally	param_private	0.200000003
+82	0x00dc	f32	rebel_gauge_add	param_private	0.00925000012
+82	0x00e0	i32	doyle_frame	param_private	1800
+82	0x00e4	f32	rebel_gauge_keep_ratio	param_private	10
+82	0x00e8	i32	doyle_summon_wait_frame	param_private	30
+82	0x00ec	i32	summon_dispatch_xlu_frame	param_private	3
+82	0x00f0	f32	unk_253e446628	param_private	1
+82	0x00f4	f32	unk_2502495971	param_private	4
+82	0x00f8	f32	rebel_gauge_add_handi_mul	param_private	0.649999976
+82	0x00fc	f32	unk_183b5cb5ea	param_homerun	100
+82	0x0148	f32	speed_x_gg	jostle_data_doyle	
+82	0x014c	f32	speed_x_ga	jostle_data_doyle	
+82	0x0150	f32	speed_x_ag	jostle_data_doyle	0.100000001
+82	0x0154	f32	speed_x_aa	jostle_data_doyle	
+82	0x0158	f32	speed_z	jostle_data_doyle	
+82	0x015c	f32	pos_z_max	jostle_data_doyle	1.39999998
+82	0x0160	f32	center_x	jostle_data_doyle	0
+82	0x0164	f32	center_y	jostle_data_doyle	5
+82	0x0168	f32	width	jostle_data_doyle	4.80000019
+82	0x016c	f32	height	jostle_data_doyle	7
+82	0x0170	f32	push_speed	jostle_data_doyle	
+82	0x0174	u32	priority	jostle_data_doyle	
+82	0x0208	u32	shape_type	map_collision_fire	
+82	0x020c	f32	center_y	map_collision_fire	0
+82	0x0210	f32	radius	map_collision_fire	1
+82	0x0214	u32	shape_type	map_collision_fire2	
+82	0x0218	f32	center_y	map_collision_fire2	0
+82	0x021c	f32	radius	map_collision_fire2	1
+82	0x02c8	f32	dash_speed	param_final	8.5
+82	0x02cc	f32	dash_length	param_final	80
+82	0x02d0	i32	air_accel_y	param_final	0
+82	0x02d4	f32	turn_dash_length	param_final	60
+82	0x02d8	f32	dash_end_brake	param_final	0.150000006
+82	0x02dc	i32	whole_slow_mul	param_final	5
+82	0x02e0	f32	visual_scene_damage	param_final	3.79999995
+82	0x02e4	f32	visual_scene_damage_finish	param_final	7
+82	0x02e8	i32	clear_color_r	param_final	255
+82	0x02ec	i32	clear_color_g	param_final	255
+82	0x02f0	i32	clear_color_b	param_final	255
+82	0x02f4	f32	finish_attack_angle_min	param_final	50
+82	0x02f8	f32	finish_attack_angle_max	param_final	
+82	0x02fc	i32	doyle_remove_life	param_final	120
+82	0x0300	f32	target_dead_damage	param_final	
+82	0x0304	f32	target_dead_damage_charge_final	param_final	
+82	0x0308	f32	target_dead_hp	param_final	1
+82	0x030c	i32	movie_01_prob	param_final	70
+82	0x0310	f32	near_clip_scene_01	param_final	0.100000001
+82	0x0314	f32	near_clip_scene_02	param_final	1
+83	0x00b0	f32	sp_max	param_private	100
+83	0x00b4	i32	sp_recover_frame	param_private	60
+83	0x00b8	f32	recover_sp	param_private	1
+83	0x00bc	f32	sp_recover_damage_mul	param_private	0.800000012
+83	0x00c0	f32	sp_recover_shield_mul	param_private	
+83	0x00c4	f32	sp_special_n1	param_private	6
+83	0x00c8	f32	sp_special_n2	param_private	16
+83	0x00cc	f32	sp_special_n3	param_private	36
+83	0x00d0	f32	sp_special_s1	param_private	8
+83	0x00d4	f32	sp_special_s2	param_private	18
+83	0x00d8	f32	sp_special_s3	param_private	42
+83	0x00dc	f32	sp_special_hi1	param_private	5
+83	0x00e0	f32	sp_special_hi2	param_private	9
+83	0x00e4	f32	sp_special_hi3	param_private	18
+83	0x0148	f32	wait_shield_scale_x	param_shield	4
+83	0x014c	f32	wait_shield_scale_y	param_shield	4.69999981
+83	0x0150	f32	wait_shield_scale_z	param_shield	1.29999995
+83	0x0154	f32	unk_1affc51cec	param_shield	1.13
+83	0x0158	f32	shield_guard_degree	param_shield	90
+83	0x0190	u32	shape_type	map_collision_fireball	
+83	0x0194	f32	up	map_collision_fireball	2
+83	0x0198	f32	down	map_collision_fireball	-2
+83	0x019c	f32	half_width	map_collision_fireball	2
+83	0x01a0	u32	shape_type	map_collision_fireball_m	
+83	0x01a4	f32	up	map_collision_fireball_m	3.5
+83	0x01a8	f32	down	map_collision_fireball_m	-3.5
+83	0x01ac	f32	half_width	map_collision_fireball_m	4.5
+83	0x01b0	u32	shape_type	map_collision_fireball_l	
+83	0x01b4	f32	up	map_collision_fireball_l	5
+83	0x01b8	f32	down	map_collision_fireball_l	-5
+83	0x01bc	f32	half_width	map_collision_fireball_l	5
+83	0x0238	u32	shape_type	map_collision_tornado	
+83	0x023c	f32	up	map_collision_tornado	3
+83	0x0240	f32	down	map_collision_tornado	-3
+83	0x0244	f32	half_width	map_collision_tornado	1.5
+83	0x0248	u32	shape_type	map_collision_tornado_m	
+83	0x024c	f32	up	map_collision_tornado_m	2
+83	0x0250	f32	down	map_collision_tornado_m	-2
+83	0x0254	f32	half_width	map_collision_tornado_m	1.5
+83	0x0258	u32	shape_type	map_collision_tornado_l	
+83	0x025c	f32	up	map_collision_tornado_l	3
+83	0x0260	f32	down	map_collision_tornado_l	-3
+83	0x0264	f32	half_width	map_collision_tornado_l	1.5
+83	0x0298	u32	shape_type	map_collision_flash	
+83	0x029c	f32	up	map_collision_flash	1.5
+83	0x02a0	f32	down	map_collision_flash	-1.5
+83	0x02a4	f32	half_width	map_collision_flash	2
+83	0x02c0	u32	shape_type	map_collision_explosion	
+83	0x02c4	f32	up	map_collision_explosion	1.5
+83	0x02c8	f32	down	map_collision_explosion	-1.5
+83	0x02cc	f32	half_width	map_collision_explosion	1.5
+83	0x02e8	u32	shape_type	map_collision_deathball	
+83	0x02ec	f32	up	map_collision_deathball	2
+83	0x02f0	f32	down	map_collision_deathball	-2
+83	0x02f4	f32	half_width	map_collision_deathball	2
+83	0x0310	f32	center_y	camera_range_crash1	0
+83	0x0314	f32	front	camera_range_crash1	10
+83	0x0318	f32	back	camera_range_crash1	-10
+83	0x031c	f32	up	camera_range_crash1	10
+83	0x0320	f32	down	camera_range_crash1	-10
+83	0x0324	f32	center_y	camera_range_target_crash1	0
+83	0x0328	f32	front	camera_range_target_crash1	60
+83	0x032c	f32	back	camera_range_target_crash1	-60
+83	0x0330	f32	up	camera_range_target_crash1	
+83	0x0334	f32	down	camera_range_target_crash1	
+83	0x0350	u32	shape_type	map_collision_sleep	
+83	0x0354	f32	up	map_collision_sleep	2
+83	0x0358	f32	down	map_collision_sleep	-2
+83	0x035c	f32	half_width	map_collision_sleep	2
+83	0x03a8	f32	final_start_vector	param_final	
+83	0x03ac	f32	final_start_speed	param_final	1.5
+83	0x03b0	f32	final_start_motion_rate	param_final	0.300000012
+83	0x03b4	i32	final_ready_frame	param_final	15
+83	0x03b8	i32	whole_slow_mul	param_final	4
+83	0x03bc	f32	finish_attack_angle_min	param_final	40
+83	0x03c0	f32	finish_attack_angle_max	param_final	
+83	0x03c4	f32	near_clip_scene_01	param_final	0.100000001
+83	0x03c8	i32	clear_color_r	param_final	255
+83	0x03cc	i32	clear_color_g	param_final	255
+83	0x03d0	i32	clear_color_b	param_final	255
+84	0x0128	f32	length_range_angle	param_bound_missile	90
+84	0x012c	f32	length_bound_speed_y_mul	param_bound_missile	0.850000024
+84	0x0130	f32	length_bounded_speed_y_min	param_bound_missile	1.04999995
+84	0x0134	f32	length_bounded_speed_y_max	param_bound_missile	1.45000005
+84	0x0138	f32	length_bound_speed_x_mul	param_bound_missile	0.949999988
+84	0x013c	f32	length_bounded_speed_x_min	param_bound_missile	0.550000012
+84	0x0140	f32	length_bounded_speed_x_max	param_bound_missile	
+84	0x0144	f32	side_bound_speed_y_mul	param_bound_missile	
+84	0x0148	f32	side_bounded_speed_y_min	param_bound_missile	0.75
+84	0x014c	f32	side_bounded_speed_y_max	param_bound_missile	1.14999998
+84	0x0150	f32	side_bound_speed_x_mul	param_bound_missile	
+84	0x0154	f32	side_bounded_speed_x_min	param_bound_missile	0.75
+84	0x0158	f32	side_bounded_speed_x_max	param_bound_missile	0.75
+84	0x015c	f32	wall_angle	param_bound_missile	40
+84	0x0160	f32	landing_speed	param_bound_missile	1
+84	0x0164	f32	wall_bound_speed_mul	param_bound_missile	1
+84	0x0168	f32	length_range_angle	param_bound_bakyun	
+84	0x016c	f32	length_bound_speed_y_mul	param_bound_bakyun	1
+84	0x0170	f32	length_bounded_speed_y_min	param_bound_bakyun	0
+84	0x0174	f32	length_bounded_speed_y_max	param_bound_bakyun	0
+84	0x0178	f32	length_bound_speed_x_mul	param_bound_bakyun	1
+84	0x017c	f32	length_bounded_speed_x_min	param_bound_bakyun	0
+84	0x0180	f32	length_bounded_speed_x_max	param_bound_bakyun	0
+84	0x0184	f32	side_bound_speed_y_mul	param_bound_bakyun	1
+84	0x0188	f32	side_bounded_speed_y_min	param_bound_bakyun	0
+84	0x018c	f32	side_bounded_speed_y_max	param_bound_bakyun	0
+84	0x0190	f32	side_bound_speed_x_mul	param_bound_bakyun	1
+84	0x0194	f32	side_bounded_speed_x_min	param_bound_bakyun	0
+84	0x0198	f32	side_bounded_speed_x_max	param_bound_bakyun	0
+84	0x019c	f32	wall_angle	param_bound_bakyun	
+84	0x01a0	f32	landing_speed	param_bound_bakyun	1
+84	0x01a4	f32	wall_bound_speed_mul	param_bound_bakyun	0.800000012
+84	0x0208	u32	shape_type	map_collision_pad	
+84	0x020c	f32	up	map_collision_pad	1
+84	0x0210	f32	down	map_collision_pad	0
+84	0x0214	f32	half_width	map_collision_pad	4
+84	0x0230	f32	pos_offset_y	param_buddybomb	
+84	0x0234	f32	special_lw_gravity	param_buddybomb	0.0799999982
+84	0x0238	f32	special_lw_speed_y_max	param_buddybomb	2
+84	0x023c	f32	length_range_angle	param_buddybomb	
+84	0x0240	f32	length_gravity	param_buddybomb	0.0599999987
+84	0x0244	f32	length_speed_y_max	param_buddybomb	2
+84	0x0248	f32	length_bound_speed_y_mul	param_buddybomb	1.10000002
+84	0x024c	f32	length_bounded_speed_y_min	param_buddybomb	0.600000024
+84	0x0250	f32	length_bounded_speed_y_max	param_buddybomb	1.5
+84	0x0254	f32	length_bound_speed_x_mul	param_buddybomb	0.899999976
+84	0x0258	f32	length_bounded_speed_x_min	param_buddybomb	0.200000003
+84	0x025c	f32	length_bounded_speed_x_max	param_buddybomb	0.400000006
+84	0x0260	f32	length_angle_x_velocity	param_buddybomb	0
+84	0x0264	f32	length_angle_y_velocity	param_buddybomb	0
+84	0x0268	f32	length_angle_z_velocity	param_buddybomb	12
+84	0x026c	f32	side_gravity	param_buddybomb	
+84	0x0270	f32	side_speed_y_max	param_buddybomb	2
+84	0x0274	f32	side_bound_speed_y_mul	param_buddybomb	
+84	0x0278	f32	side_bounded_speed_y_min	param_buddybomb	0.300000012
+84	0x027c	f32	side_bounded_speed_y_max	param_buddybomb	1.20000005
+84	0x0280	f32	side_bound_speed_x_mul	param_buddybomb	
+84	0x0284	f32	side_bounded_speed_x_min	param_buddybomb	
+84	0x0288	f32	side_bounded_speed_x_max	param_buddybomb	
+84	0x028c	f32	side_angle_x_velocity	param_buddybomb	0
+84	0x0290	f32	side_angle_y_velocity	param_buddybomb	0
+84	0x0294	f32	side_angle_z_velocity	param_buddybomb	12
+84	0x0298	f32	wall_angle	param_buddybomb	
+84	0x029c	f32	landing_speed	param_buddybomb	0.00100000005
+84	0x02a0	i32	life	param_buddybomb	135
+84	0x02a4	i32	flashing_frame_before_life_over	param_buddybomb	60
+84	0x02a8	f32	rebound_speed_x_add	param_buddybomb	0.699999988
+84	0x02ac	f32	rebound_speed_y_add	param_buddybomb	0
+84	0x02b0	f32	bound_se_speed_less	param_buddybomb	
+84	0x02b4	f32	wall_bound_speed_mul	param_buddybomb	1
+84	0x02e8	i32	throw_lw_clatter_frame	param_private	35
+84	0x02ec	f32	throw_lw_clatter_damage_frame	param_private	0.5
+84	0x02f0	i32	unk_157eb5d8e9	param_private	11
+84	0x02f4	f32	final_bigbird_x	param_private	25
+84	0x02f8	f32	final_bigbird_y	param_private	0
+84	0x02fc	f32	final_bigbird_z	param_private	-10
+84	0x0300	f32	final_bigbird_z_flat	param_private	-5
+84	0x0304	f32	final_weapon_life	param_private	120
+84	0x0308	f32	final_scale	param_private	1
+84	0x030c	f32	final_start_vector	param_private	80
+84	0x0310	f32	final_start_speed	param_private	4
+84	0x0314	i32	final_ready_slow_mag	param_private	4
+84	0x0318	f32	final_ready_slow_start_frame	param_private	
+84	0x031c	i32	final_hit_after_frame	param_private	20
+84	0x0320	f32	final_finish_attack_angle_min	param_private	45
+84	0x0324	f32	final_finish_attack_angle_max	param_private	
+85	0x0098	i32	special_pad_release_w	param_private	5
+85	0x009c	f32	super_special_damage	param_private	100
+85	0x00a0	f32	super_special_hp_rate	param_private	30
+85	0x00a4	f32	super_special_hp_min	param_private	5
+85	0x00a8	f32	super_special_hp_max	param_private	
+85	0x00ac	i32	unk_1e4ea8f9a7	param_private	4
+85	0x00b0	f32	unk_19996b81b6	param_private	1200
+85	0x00b4	i32	pass_cancel_command_frame	param_private	8
+85	0x00b8	i32	pass_cancel_command_extend_frame	param_private	4
+85	0x00bc	i32	final_cancel_hit_stop_frame	param_private	25
+85	0x00c0	i32	attack_start_cancel_frame	param_private	3
+85	0x00c4	i32	wall_stop_cancel_frame	param_private	8
+85	0x00c8	i32	ladder_catch_bottom_cancel_frame	param_private	5
+85	0x0100	u32	shape_type	map_collision_cap	
+85	0x0104	f32	up	map_collision_cap	1
+85	0x0108	f32	down	map_collision_cap	-1
+85	0x010c	f32	half_width	map_collision_cap	1
+85	0x0140	u32	shape_type	map_collision_wave	
+85	0x0144	f32	up	map_collision_wave	10
+85	0x0148	f32	down	map_collision_wave	0
+85	0x014c	f32	half_width	map_collision_wave	2
+85	0x0198	f32	start_speed_x_mul_ground	param_super_special	0.5
+85	0x019c	f32	start_brake_x_ground	param_super_special	0.109999999
+85	0x01a0	f32	start_speed_x_mul_air	param_super_special	0.5
+85	0x01a4	f32	start_brake_x_air	param_super_special	0.0199999996
+85	0x01a8	f32	start_control_accel_x_mul_air	param_super_special	0
+85	0x01ac	f32	start_control_max_speed_x_mul_air	param_super_special	0
+85	0x01b0	i32	landing_heavy_frame	param_super_special	9
+85	0x01b4	f32	start_accel_y_mul_air	param_super_special	1
+85	0x01b8	f32	start_max_speed_y_mul_air	param_super_special	1
+85	0x01bc	f32	start_speed_y_air	param_super_special	0
+85	0x01c0	f32	start_speed_y_mul_air	param_super_special	0.699999988
+85	0x01c4	f32	start_speed_y_add_air	param_super_special	0
+85	0x01c8	hash40	map_coll_joint	param_super_special	0
+85	0x01d0	f32	map_coll_offset_x	param_super_special	24
+85	0x01d4	f32	map_coll_offset_y	param_super_special	0
+85	0x01d8	f32	map_coll_offset_z	param_super_special	0
+85	0x01dc	i32	map_coll_offset_frame	param_super_special	20
+85	0x01e0	f32	burst_offset_z	param_super_special	23
+85	0x01e4	i32	screen_effect_remove_frame	param_super_special	30
+85	0x0200	u32	shape_type	map_collision_burst	
+85	0x0204	f32	up	map_collision_burst	5
+85	0x0208	f32	down	map_collision_burst	0
+85	0x020c	f32	half_width	map_collision_burst	2
+85	0x0210	f32	speed_mul	param_super_special2	1
+85	0x0214	f32	catch_fail_dist_x	param_super_special2	4
+85	0x0218	f32	catch_fail_dist_y	param_super_special2	4
+85	0x021c	f32	hit_speed_mul	param_super_special2	0.100000001
+85	0x0220	i32	hit_stop_frame_fighter	param_super_special2	18
+85	0x0224	i32	hit_move_frame	param_super_special2	10
+85	0x0228	i32	hit_motion_comp_frame	param_super_special2	10
+85	0x0260	u32	shape_type	map_collision_fire	
+85	0x0264	f32	up	map_collision_fire	10
+85	0x0268	f32	down	map_collision_fire	0
+85	0x026c	f32	half_width	map_collision_fire	2
+85	0x0270	f32	start_speed_x_mul_ground	param_final	0.5
+85	0x0274	f32	start_brake_x_ground	param_final	
+85	0x0278	f32	start_speed_x_mul_air	param_final	0.5
+85	0x027c	f32	start_brake_x_air	param_final	
+85	0x0280	f32	start_control_accel_x_mul_air	param_final	0
+85	0x0284	f32	start_control_max_speed_x_mul_air	param_final	0
+85	0x0288	i32	start_stop_y_frame_air	param_final	0
+85	0x028c	f32	start_accel_y_mul_air	param_final	1
+85	0x0290	f32	start_max_speed_y_mul_air	param_final	1
+85	0x0294	f32	start_speed_y_air	param_final	0
+85	0x0298	f32	start_speed_y_mul_air	param_final	0.699999988
+85	0x029c	f32	start_speed_y_add_air	param_final	0
+85	0x02a0	i32	target_slow_rate	param_final	1
+85	0x02a4	f32	target_speed_x	param_final	2
+85	0x02a8	f32	target_speed_y	param_final	0.899999976
+85	0x02ac	f32	target_accel_y	param_final	
+85	0x02b0	f32	target_brake_x	param_final	0.119999997
+85	0x02b4	f32	target_motion_rate	param_final	0.5
+85	0x02b8	i32	target_slow_rate2	param_final	1
+85	0x02bc	f32	target_speed_x2	param_final	2.20000005
+85	0x02c0	f32	target_speed_y2	param_final	1
+85	0x02c4	f32	target_accel_y2	param_final	
+85	0x02c8	f32	target_brake_x2	param_final	
+85	0x02cc	f32	target_motion_rate2	param_final	0.5
+85	0x02d0	hash40	map_coll_joint	param_final	0
+85	0x02d8	f32	map_coll_offset_x	param_final	21
+85	0x02dc	f32	map_coll_offset_y	param_final	0
+85	0x02e0	f32	map_coll_offset_z	param_final	0
+85	0x02e4	i32	map_coll_offset_frame	param_final	30
+85	0x02e8	f32	burst_offset_z	param_final	18
+85	0x02ec	i32	whole_slow_mul	param_final	2
+85	0x02f0	f32	finish_attack_angle_min	param_final	40
+85	0x02f4	f32	finish_attack_angle_max	param_final	
+85	0x02f8	f32	target_start_vector	param_final	70
+85	0x02fc	f32	target_start_speed	param_final	2
+85	0x0300	i32	ready_frame	param_final	30
+85	0x0304	i32	zoom_in_frame	param_final	10
+85	0x0308	f32	zoom_in_rate	param_final	3.29999995
+85	0x030c	f32	scene01_motion_rate_opponent	param_final	0.800000012
+85	0x0310	f32	scene02_motion_frame_opponent	param_final	20
+85	0x0314	f32	scene03_motion_rate_opponent	param_final	1
+85	0x0318	f32	scene03_motion_rate2_opponent	param_final	
+85	0x031c	f32	scene05_motion_rate_opponent	param_final	0.00999999978
+85	0x0320	f32	scene05_motion_rate2_opponent	param_final	
+86	0x00c8	f32	dummy	param_private	0
+86	0x0118	u32	shape_type	map_collision_arrow1	
+86	0x011c	f32	up	map_collision_arrow1	0.300000012
+86	0x0120	f32	down	map_collision_arrow1	-0.300000012
+86	0x0124	f32	half_width	map_collision_arrow1	
+86	0x0128	u32	shape_type	map_collision_arrow2	
+86	0x012c	f32	up	map_collision_arrow2	
+86	0x0130	f32	down	map_collision_arrow2	
+86	0x0134	f32	half_width	map_collision_arrow2	
+86	0x0138	f32	radius	param_search_arrow2	1.20000005
+86	0x013c	f32	offset_x	param_search_arrow2	-10
+86	0x0200	f32	attack_offset_y	param_final	
+86	0x0204	f32	final_start_vector	param_final	55
+86	0x0208	f32	final_start_speed	param_final	1.70000005
+86	0x020c	f32	final_finish_attack_angle_min	param_final	60
+86	0x0210	f32	final_finish_attack_angle_max	param_final	
+86	0x0214	f32	final_near_clip	param_final	0.100000001
+87	0x00b0	i32	arm_l_big_frame	param_private	1200
+87	0x00b4	f32	arm_l_big_scale	param_private	1.20000005
+87	0x00b8	f32	arm_l_big_reaction_max	param_private	999
+87	0x0168	hash40	node	param_reflector_attack_dush	0
+87	0x0170	f32	size	param_reflector_attack_dush	7
+87	0x0174	f32	offset_x	param_reflector_attack_dush	0
+87	0x0178	f32	offset_y	param_reflector_attack_dush	9
+87	0x017c	f32	offset_z	param_reflector_attack_dush	10
+87	0x0180	f32	attack_mul	param_reflector_attack_dush	1.5
+87	0x0184	f32	speed_mul	param_reflector_attack_dush	1.5
+87	0x0188	f32	life_mul	param_reflector_attack_dush	0.800000012
+87	0x018c	f32	limit	param_reflector_attack_dush	80
+87	0x01a8	f32	attack_mul	param_reflector_attack_hi4	1.79999995
+87	0x01ac	f32	speed_mul	param_reflector_attack_hi4	2.4000001
+87	0x01b0	f32	life_mul	param_reflector_attack_hi4	
+87	0x01b4	f32	limit	param_reflector_attack_hi4	
+87	0x01b8	f32	hit_stop_mul	param_reflector_attack_hi4	0
+87	0x01bc	f32	walk_speed_max_mul	param_attack	0.761900008
+87	0x01c0	f32	walk_accel_mul_mul	param_attack	0.666599989
+87	0x01c4	f32	walk_accel_add_mul	param_attack	0.45449999
+87	0x01c8	i32	start_both_frame	param_attack	16
+87	0x01cc	i32	start_intp_frame	param_attack	5
+87	0x01d0	i32	stop_frame_short	param_attack	0
+87	0x01d4	i32	stop_frame_long	param_attack	85
+87	0x01d8	f32	hold_shoot_frame_mul	param_attack	1
+87	0x01dc	f32	air_angle	param_attack	0
+87	0x01e0	f32	air_angle_behind	param_attack	0
+87	0x01e4	f32	air_long_speed_x_max_mul	param_attack	0.649999976
+87	0x01e8	f32	hop_threshold_speed_y	param_attack	1
+87	0x01ec	f32	hop_speed_y	param_attack	1.20000005
+87	0x01f0	f32	unk_21fd7b55bd	param_attack	
+87	0x01f4	f32	special_stick_x	param_attack	0.400000006
+87	0x01f8	i32	start_sync_leg_frame	param_attack	6
+87	0x01fc	i32	map_coll_offset_frame	param_attack	11
+87	0x0200	f32	map_coll_offset_x	param_attack	0
+87	0x0204	i32	end_back_rotate_frame	param_attack	24
+87	0x0208	f32	end_back_rotate_rate	param_attack	0.300000012
+87	0x020c	f32	speed	param_beam	14
+87	0x0210	f32	length_max	param_beam	40
+87	0x0214	f32	ray_check_start_pos_back_length	param_beam	2
+87	0x0218	f32	ground_hit_length_min	param_beam	4
+87	0x021c	f32	unk_1a75dba456	param_beam	0.0599999987
+87	0x0220	f32	radius	param_search_beam	3
+87	0x0228	f32	catch_radius	param_ring	6
+87	0x022c	f32	catch_offset_x1	param_ring	0
+87	0x0230	f32	catch_offset_y1	param_ring	2
+87	0x0234	f32	catch_offset_x2	param_ring	-10
+87	0x0238	f32	catch_offset_y2	param_ring	-2
+87	0x0240	hash40	node	param_ring	0
+87	0x0248	f32	node_offset_x	param_ring	0
+87	0x024c	f32	node_offset_y	param_ring	0
+87	0x0250	i32	rewind_frame	param_ring	3
+87	0x0254	f32	radius	param_ring	19.5
+87	0x0258	f32	scale	param_ring	
+87	0x025c	f32	range	param_ring	12
+87	0x0260	f32	range_hold	param_ring	10
+87	0x02c8	f32	final_start_speed	param_final	1.70000005
+87	0x02cc	f32	final_start_vector	param_final	55
+87	0x02d0	f32	final_start_motion_rate	param_final	0.300000012
+87	0x02d4	i32	disable_pass_frame	param_final	10
+87	0x02d8	i32	final_ready_frame	param_final	12
+87	0x02dc	f32	final_finish_attack_angle_min	param_final	45
+87	0x02e0	f32	final_finish_attack_angle_max	param_final	
+87	0x02e8	hash40	target_motion_kind_	param_final	0
+87	0x02f0	f32	target_motion_start_frame_	param_final	2
+87	0x02f4	f32	target_motion_rate_	param_final	0
+87	0x02f8	f32	target_motion_start_rate_	param_final	0.00999999978
+87	0x0318	i32	catch_reach_stop_frame	param_catch	6
+87	0x031c	i32	catch_reach_frame	param_catch	6
+87	0x0320	i32	catch_reach_deccel_start_frame	param_catch	3
+87	0x0324	f32	catch_reach_deccel	param_catch	2
+87	0x0328	i32	catch_rewind_frame	param_catch	8
+87	0x032c	i32	catch_rewind_deccel_start_frame	param_catch	0
+87	0x0330	f32	catch_rewind_deccel	param_catch	0
+87	0x0334	i32	catch_map_coll_offset_frame	param_catch	15
+87	0x0338	f32	catch_start_map_coll_offset_y	param_catch	7
+87	0x033c	f32	catch_start_map_coll_offset_z	param_catch	21.5
+87	0x0340	i32	catch_dash_reach_frame	param_catch	6
+87	0x0344	i32	catch_dash_reach_deccel_start_frame	param_catch	3
+87	0x0348	f32	catch_dash_reach_deccel	param_catch	2
+87	0x034c	i32	catch_dash_rewind_frame	param_catch	8
+87	0x0350	i32	catch_dash_rewind_deccel_start_frame	param_catch	0
+87	0x0354	f32	catch_dash_rewind_deccel	param_catch	0
+87	0x0358	i32	catch_dash_map_coll_offset_frame	param_catch	11
+87	0x035c	f32	catch_dash_start_map_coll_offset_y	param_catch	7
+87	0x0360	f32	catch_dash_start_map_coll_offset_z	param_catch	
+87	0x0364	i32	catch_turn_reach_frame	param_catch	6
+87	0x0368	i32	catch_turn_reach_deccel_start_frame	param_catch	3
+87	0x036c	f32	catch_turn_reach_deccel	param_catch	2
+87	0x0370	i32	catch_turn_rewind_frame	param_catch	8
+87	0x0374	i32	catch_turn_rewind_deccel_start_frame	param_catch	0
+87	0x0378	f32	catch_turn_rewind_deccel	param_catch	0
+87	0x037c	i32	catch_turn_map_coll_offset_frame	param_catch	15
+87	0x0380	f32	catch_turn_start_map_coll_offset_y	param_catch	7
+87	0x0384	f32	catch_turn_start_map_coll_offset_z	param_catch	
+87	0x0388	i32	catch_pull_frame	param_catch	6
+87	0x038c	f32	catch_pull_imm_distance	param_catch	20
+87	0x0390	f32	catch_map_coll_offset_x	param_catch	5
+88	0x00c8	i32	material_normal_max	param_private	100
+88	0x00cc	i32	material_normal_max_kirby	param_private	20
+88	0x00d0	i32	material_gold_max	param_private	12
+88	0x00d4	i32	material_red_stone_max	param_private	15
+88	0x00d8	i32	material_diamond_max	param_private	5
+88	0x00dc	i32	start_material_grade_1_num	param_private	36
+88	0x00e0	i32	start_material_wood_num	param_private	18
+88	0x00e4	i32	start_material_stone_num	param_private	0
+88	0x00e8	i32	start_material_iron_num	param_private	3
+88	0x00ec	i32	start_material_gold_num	param_private	0
+88	0x00f0	i32	start_material_red_stone_num	param_private	2
+88	0x00f4	i32	start_material_diamond_num	param_private	0
+88	0x00f8	i32	start_material_grade_1_num_kirby	param_private	4
+88	0x00fc	i32	start_material_wood_num_kirby	param_private	2
+88	0x0100	i32	start_material_stone_num_kirby	param_private	0
+88	0x0104	i32	start_material_iron_num_kirby	param_private	1
+88	0x0108	i32	start_material_gold_num_kirby	param_private	0
+88	0x010c	i32	start_material_red_stone_num_kirby	param_private	0
+88	0x0110	i32	start_material_diamond_num_kirby	param_private	0
+88	0x0114	i32	start_homerun_material_grade_1_num	param_private	10
+88	0x0118	i32	start_homerun_material_homerun_wood_num	param_private	10
+88	0x011c	i32	start_homerun_material_homerun_stone_num	param_private	10
+88	0x0120	i32	start_homerun_material_homerun_iron_num	param_private	10
+88	0x0124	i32	start_homerun_material_homerun_gold_num	param_private	1
+88	0x0128	i32	start_homerun_material_homerun_red_stone_num	param_private	1
+88	0x012c	i32	start_homerun_material_homerun_diamond_num	param_private	1
+88	0x0130	i32	craft_weapon_have_count	param_private	60
+88	0x0134	f32	move_weight_speed_min	param_private	0.100000001
+88	0x0138	f32	move_weight_speed_max	param_private	0.800000012
+88	0x013c	f32	move_weight_min	param_private	
+88	0x0140	f32	move_rate_fix	param_private	1
+88	0x0144	f32	move_weight_fix	param_private	1
+88	0x0148	i32	move_weight_comp_frame	param_private	5
+88	0x014c	f32	move_rate_speed_min_walk	param_private	0.300000012
+88	0x0150	f32	move_rate_speed_max_walk	param_private	0.600000024
+88	0x0154	f32	move_rate_min_walk	param_private	0.5
+88	0x0158	f32	move_rate_max_walk	param_private	1
+88	0x015c	f32	move_rate_speed_min_run	param_private	1
+88	0x0160	f32	move_rate_speed_max_run	param_private	1.5
+88	0x0164	f32	move_rate_min_run	param_private	1
+88	0x0168	f32	move_rate_max_run	param_private	1.5
+88	0x016c	f32	move_weight_speed_min_turn_run	param_private	0.200000003
+88	0x0170	f32	move_weight_speed_max_turn_run	param_private	
+88	0x0174	f32	move_weight_min_turn_run	param_private	
+88	0x0178	f32	move_rate_speed_min_turn_run	param_private	
+88	0x017c	f32	move_rate_speed_max_turn_run	param_private	
+88	0x0180	f32	move_rate_min_turn_run	param_private	1
+88	0x0184	f32	move_rate_max_turn_run	param_private	1
+88	0x0188	f32	move_rate_speed_min_jump	param_private	
+88	0x018c	f32	move_rate_speed_max_jump	param_private	0.899999976
+88	0x0190	f32	move_rate_min_jump	param_private	
+88	0x0194	f32	move_rate_max_jump	param_private	1.10000002
+88	0x0198	f32	move_rate_speed_min_fall	param_private	
+88	0x019c	f32	move_rate_speed_max_fall	param_private	
+88	0x01a0	f32	move_rate_min_fall	param_private	0.5
+88	0x01a4	f32	move_rate_max_fall	param_private	1
+88	0x01a8	f32	move_rate_speed_min_damage_fall	param_private	
+88	0x01ac	f32	move_rate_speed_max_damage_fall	param_private	
+88	0x01b0	f32	move_rate_min_damage_fall	param_private	0.5
+88	0x01b4	f32	move_rate_max_damage_fall	param_private	1
+88	0x01b8	f32	move_weight_speed_min_damage	param_private	0.5
+88	0x01bc	f32	move_weight_speed_max_damage	param_private	1.5
+88	0x01c0	f32	move_weight_min_damage	param_private	
+88	0x01c4	f32	move_rate_speed_min_damage	param_private	1
+88	0x01c8	f32	move_rate_speed_max_damage	param_private	3
+88	0x01cc	f32	move_rate_min_damage	param_private	1.25
+88	0x01d0	f32	move_rate_max_damage	param_private	1.75
+88	0x01d4	f32	head_angle_stick_y_min	param_private	
+88	0x01d8	f32	head_angle_speed_min	param_private	1
+88	0x01dc	f32	head_angle_speed_max	param_private	3
+88	0x01e0	f32	head_angle_accel	param_private	
+88	0x01e4	f32	head_angle_min	param_private	10
+88	0x01e8	f32	head_angle_max	param_private	60
+88	0x01ec	f32	head_angle_intp	param_private	0.25
+88	0x01f0	i32	unk_197dfb81ec	param_private	40
+88	0x01f4	f32	have_tool_shoulder_angle	param_private	20
+88	0x01f8	i32	attack_air_lw_interval	param_private	120
+88	0x01fc	i32	attack_air_lw_enable_jump_frame	param_private	5
+88	0x0200	i32	attack_air_lw_attack_end_frame	param_private	30
+88	0x0204	i32	attack_air_lw_attack_end_frame_outside_up	param_private	400
+88	0x0208	i32	unk_188e0b0db2	param_private	1
+88	0x020c	f32	attack_air_lw_ray_check_length	param_private	2.0999999
+88	0x0210	i32	table_entry_frame	param_private	240
+88	0x0214	i32	unk_1de98d9201	param_private	4
+88	0x0218	i32	unk_1f3feb8acd	param_private	18
+88	0x021c	f32	melt_offset_x_front	param_private	9
+88	0x0220	f32	melt_offset_y_front	param_private	-0.00999999978
+88	0x0224	f32	melt_offset_x_back	param_private	-9
+88	0x0228	f32	melt_offset_y_back	param_private	
+88	0x022c	f32	melt_scale	param_private	1
+88	0x0230	f32	fire_offset_x	param_private	14
+88	0x0234	f32	unk_24ad03213f	param_private	7.5
+88	0x0238	f32	unk_24da0411a9	param_private	8
+88	0x023c	f32	catch_pull_speed	param_private	4
+88	0x0240	f32	catch_pull_end_length	param_private	
+88	0x0244	i32	unk_16603cfe0a	param_private	1
+88	0x0248	f32	unk_174ecdb65f	param_private	
+88	0x024c	f32	unk_1a797744d3	param_private	1.20000005
+88	0x0250	f32	unk_1a0e707445	param_private	-15
+88	0x0254	i32	unk_21cb22a6b3	param_private	1
+88	0x0258	i32	landing_high_place_frame	param_private	40
+88	0x025c	i32	jump_mini_frame	param_private	1
+88	0x02f0	f32	speed_x_gg	jostle_data_forge	5
+88	0x02f4	f32	speed_x_ga	jostle_data_forge	5
+88	0x02f8	f32	speed_x_ag	jostle_data_forge	5
+88	0x02fc	f32	speed_x_aa	jostle_data_forge	5
+88	0x0300	f32	speed_z	jostle_data_forge	
+88	0x0304	f32	pos_z_max	jostle_data_forge	0.5
+88	0x0308	f32	center_x	jostle_data_forge	0
+88	0x030c	f32	center_y	jostle_data_forge	6
+88	0x0310	f32	width	jostle_data_forge	5
+88	0x0314	f32	height	jostle_data_forge	7
+88	0x0318	f32	push_speed	jostle_data_forge	5
+88	0x031c	f32	overlap_rate	jostle_data_forge	10
+88	0x0320	u32	shape_type	map_collision_forge	
+88	0x0324	f32	up	map_collision_forge	10
+88	0x0328	f32	down	map_collision_forge	0
+88	0x032c	f32	half_width	map_collision_forge	4
+88	0x0378	f32	speed_x_gg	jostle_data_pushobject	5
+88	0x037c	f32	speed_x_ga	jostle_data_pushobject	5
+88	0x0380	f32	speed_x_ag	jostle_data_pushobject	5
+88	0x0384	f32	speed_x_aa	jostle_data_pushobject	5
+88	0x0388	f32	speed_z	jostle_data_pushobject	
+88	0x038c	f32	pos_z_max	jostle_data_pushobject	0.5
+88	0x0390	f32	center_x	jostle_data_pushobject	0
+88	0x0394	f32	center_y	jostle_data_pushobject	5
+88	0x0398	f32	width	jostle_data_pushobject	7
+88	0x039c	f32	height	jostle_data_pushobject	10
+88	0x03c0	u32	shape_type	map_collision_sword	
+88	0x03c4	f32	center_y	map_collision_sword	2
+88	0x03c8	f32	radius	map_collision_sword	3
+88	0x03cc	u32	shape_type	map_collision_axe	
+88	0x03d0	f32	center_y	map_collision_axe	2
+88	0x03d4	f32	radius	map_collision_axe	3
+88	0x03d8	u32	shape_type	map_collision_pick	
+88	0x03dc	f32	center_y	map_collision_pick	2
+88	0x03e0	f32	radius	map_collision_pick	3
+88	0x03e4	u32	shape_type	map_collision_shovel	
+88	0x03e8	f32	center_y	map_collision_shovel	2
+88	0x03ec	f32	radius	map_collision_shovel	3
+88	0x03f0	u32	shape_type	map_collision_crack	
+88	0x03f4	f32	center_y	map_collision_crack	0
+88	0x03f8	f32	radius	map_collision_crack	0.00100000005
+88	0x03fc	u32	shape_type	map_collision_fire	
+88	0x0400	f32	up	map_collision_fire	2
+88	0x0404	f32	down	map_collision_fire	0
+88	0x0408	f32	half_width	map_collision_fire	1
+88	0x040c	u32	shape_type	map_collision_melt	
+88	0x0410	f32	up	map_collision_melt	2
+88	0x0414	f32	down	map_collision_melt	0
+88	0x0418	f32	half_width	map_collision_melt	1
+88	0x04f8	f32	hp_grade_1	param_pickelobject	8
+88	0x04fc	f32	hp_wood	param_pickelobject	12
+88	0x0500	f32	hp_stone	param_pickelobject	16
+88	0x0504	f32	hp_iron	param_pickelobject	20
+88	0x0508	f32	damage_hit_fighter	param_pickelobject	8
+88	0x050c	i32	damage_hit_fighter_stop_frame	param_pickelobject	1
+88	0x0510	f32	crack_hp_percent	param_pickelobject	90
+88	0x0514	f32	crack_max_hp_percent	param_pickelobject	10
+88	0x0518	i32	life	param_pickelobject	3600
+88	0x051c	i32	flash_start_frame	param_pickelobject	120
+88	0x0520	f32	auto_damage	param_pickelobject	0.0199999996
+88	0x0524	f32	fighter_landing_damage_mul	param_pickelobject	8
+88	0x0528	i32	fighter_landing_damage_mul_frame	param_pickelobject	18
+88	0x052c	i32	crack_level	param_pickelobject	10
+88	0x0530	f32	camera_range_damag_mul_start_rate	param_pickelobject	0.5
+88	0x0534	f32	camera_range_damag_mul_end_rate	param_pickelobject	6.5
+88	0x0538	f32	camera_range_damag_mul_min	param_pickelobject	3
+88	0x053c	f32	camera_range_damag_mul_max	param_pickelobject	20
+88	0x0540	i32	generate_continuous_forbid_frame	param_pickelobject	20
+88	0x0544	f32	replace_hp_range_x_from_owner	param_pickelobject	150
+88	0x0548	f32	replace_hp_range_y_from_owner	param_pickelobject	100
+88	0x054c	f32	replace_hp	param_pickelobject	3
+88	0x0550	i32	damage_attack_stop_frame	param_pickelobject	3
+88	0x0554	i32	jostle_touch_ground_frame	param_pickelobject	1
+88	0x0558	i32	can_update_frame	param_pickelobject	60
+88	0x055c	i32	jostle_up_touch_ground_frame	param_pickelobject	1
+88	0x0560	i32	jostle_up_touch_air_frame	param_pickelobject	60
+88	0x05b0	i32	craft_material_num_diamond	param_craft_data_table	1
+88	0x05b4	i32	craft_material_num_gold	param_craft_data_table	4
+88	0x05b8	i32	craft_material_num_iron	param_craft_data_table	4
+88	0x05bc	i32	craft_material_num_stone	param_craft_data_table	1
+88	0x05c0	i32	craft_material_num_wood	param_craft_data_table	2
+88	0x05c4	i32	repair_material_num_diamond	param_craft_data_table	1
+88	0x05c8	i32	repair_material_num_gold	param_craft_data_table	4
+88	0x05cc	i32	repair_material_num_iron	param_craft_data_table	2
+88	0x05d0	i32	repair_material_num_stone	param_craft_data_table	1
+88	0x05d4	i32	repair_material_num_wood	param_craft_data_table	1
+88	0x05d8	i32	create_table_material_num_diamond	param_craft_data_table	999
+88	0x05dc	i32	create_table_material_num_gold	param_craft_data_table	999
+88	0x05e0	i32	create_table_material_num_iron	param_craft_data_table	1
+88	0x05e4	i32	create_table_material_num_stone	param_craft_data_table	4
+88	0x05e8	i32	create_table_material_num_wood	param_craft_data_table	2
+88	0x05ec	u32	shape_type	map_collision_table	
+88	0x05f0	f32	up	map_collision_table	10
+88	0x05f4	f32	down	map_collision_table	0
+88	0x05f8	f32	half_width	map_collision_table	5
+88	0x05fc	f32	speed_x_gg	jostle_data_table	5
+88	0x0600	f32	speed_x_ga	jostle_data_table	5
+88	0x0604	f32	speed_x_ag	jostle_data_table	5
+88	0x0608	f32	speed_x_aa	jostle_data_table	5
+88	0x060c	f32	speed_z	jostle_data_table	0.100000001
+88	0x0610	f32	pos_z_max	jostle_data_table	0.5
+88	0x0614	f32	center_x	jostle_data_table	0
+88	0x0618	f32	center_y	jostle_data_table	5
+88	0x061c	f32	width	jostle_data_table	6.4000001
+88	0x0620	f32	height	jostle_data_table	10
+88	0x0624	f32	overlap_rate	jostle_data_table	15
+88	0x0628	hash40	joint_id	unk_1cce34a390	0
+88	0x0630	f32	offset_x	unk_1cce34a390	0
+88	0x0634	f32	offset_y	unk_1cce34a390	5
+88	0x0638	f32	width	unk_1cce34a390	10
+88	0x063c	f32	height	unk_1cce34a390	10
+88	0x0640	hash40	joint_id	unk_1b249a0de2	0
+88	0x0648	f32	offset_x	unk_1b249a0de2	0
+88	0x064c	f32	offset_y	unk_1b249a0de2	5
+88	0x0650	f32	width	unk_1b249a0de2	10
+88	0x0654	f32	height	unk_1b249a0de2	10
+88	0x06b8	u32	shape_type	map_collision_trolley	
+88	0x06bc	f32	up	map_collision_trolley	8
+88	0x06c0	f32	down	map_collision_trolley	-1
+88	0x06c4	f32	half_width	map_collision_trolley	6
+88	0x06c8	f32	half_width_fly	map_collision_trolley	4
+88	0x06cc	f32	center_x	area_data_trolley	0
+88	0x06d0	f32	center_y	area_data_trolley	2.5
+88	0x06d4	f32	width	area_data_trolley	10
+88	0x06d8	f32	height	area_data_trolley	5
+88	0x06dc	f32	speed_x_gg	jostle_data_trolley	
+88	0x06e0	f32	speed_x_ga	jostle_data_trolley	
+88	0x06e4	f32	speed_x_ag	jostle_data_trolley	
+88	0x06e8	f32	speed_x_aa	jostle_data_trolley	
+88	0x06ec	f32	speed_z	jostle_data_trolley	0
+88	0x06f0	f32	pos_z_max	jostle_data_trolley	0
+88	0x06f4	f32	center_x	jostle_data_trolley	0
+88	0x06f8	f32	center_y	jostle_data_trolley	5
+88	0x06fc	f32	width	jostle_data_trolley	4.80000019
+88	0x0700	f32	height	jostle_data_trolley	7
+88	0x0704	f32	push_speed	jostle_data_trolley	0.5
+88	0x0708	u32	shape_type	map_collision_rail	
+88	0x070c	f32	up	map_collision_rail	1
+88	0x0710	f32	down	map_collision_rail	0
+88	0x0714	f32	half_width	map_collision_rail	0.5
+88	0x0718	f32	half_width_fly	map_collision_rail	0.5
+88	0x0750	f32	reaction	param_pickelbomb	10
+88	0x0754	f32	power	param_pickelbomb	
+88	0x0758	f32	mul	param_pickelbomb	2
+88	0x075c	f32	ignition	param_pickelbomb	10
+88	0x0760	f32	cost_grade4	param_pickelbomb	
+88	0x0764	i32	life	param_pickelbomb	420
+88	0x0768	i32	lost	param_pickelbomb	30
+88	0x076c	f32	speed_y	param_pickelbomb	2.5
+88	0x0770	f32	gravity_accel	param_pickelbomb	0.5
+88	0x0774	f32	gravity_accel_max	param_pickelbomb	2
+88	0x0778	i32	gravity_frame	param_pickelbomb	10
+88	0x077c	i32	flashing_frame_before_life	param_pickelbomb	200
+88	0x0780	f32	range_x1	param_plate	-4
+88	0x0784	f32	range_x2	param_plate	4
+88	0x0788	f32	range_y1	param_plate	0
+88	0x078c	f32	range_y2	param_plate	6
+88	0x0790	i32	frame	param_plate	600
+88	0x0794	f32	range_stone	param_plate	
+88	0x0798	i32	hit_stop	param_plate	13
+88	0x079c	f32	width	param_plate	10
+88	0x07a0	i32	life	param_stone	600
+88	0x07a4	i32	frame	param_stone	12
+88	0x07a8	f32	width	param_stone	10
+88	0x07c8	u32	shape_type	map_collision_plate	
+88	0x07cc	f32	up	map_collision_plate	1
+88	0x07d0	f32	down	map_collision_plate	0
+88	0x07d4	f32	half_width	map_collision_plate	0.5
+88	0x07d8	u32	shape_type	map_collision_stone	
+88	0x07dc	f32	up	map_collision_stone	1
+88	0x07e0	f32	down	map_collision_stone	0
+88	0x07e4	f32	half_width	map_collision_stone	0.5
+88	0x07e8	f32	rhombus_offset_front	param_final	0
+88	0x07ec	f32	rhombus_offset_back	param_final	0
+88	0x07f0	f32	rhombus_offset_up	param_final	0
+88	0x07f4	i32	rhombus_offset_frame	param_final	10
+88	0x07f8	f32	motion_skip_rate	param_final	0
+88	0x07fc	i32	target_slow_rate	param_final	0
+88	0x0800	f32	target_speed_x	param_final	2
+88	0x0804	f32	target_speed_y	param_final	
+88	0x0808	f32	target_accel_y	param_final	
+88	0x080c	f32	target_brake_x	param_final	0.119999997
+88	0x0810	f32	target_motion_rate	param_final	
+88	0x0814	f32	target_pushfinal_offset_x	param_final	35
+88	0x0818	f32	target_pushfinal_offset_y	param_final	-10
+88	0x081c	i32	target_move_frame	param_final	7
+88	0x0820	hash40	target_move_motion_kind	param_final	0
+88	0x0828	hash40	target_move_motion_kind_air	param_final	0
+88	0x0830	f32	target_dist_offset_x	param_final	1
+88	0x0834	f32	target_dist_offset_y	param_final	7
+88	0x0838	f32	final_start_vector	param_final	20
+88	0x083c	f32	final_start_speed	param_final	4.5
+88	0x0840	hash40	final_start_motion_kind	param_final	0
+88	0x0848	f32	final_start_motion_frame	param_final	3
+88	0x084c	f32	final_start_motion_rate	param_final	1.5
+88	0x0850	i32	final_ready_frame	param_final	15
+88	0x0854	i32	whole_slow_mul	param_final	4
+88	0x0858	f32	finish_attack_angle_min	param_final	
+88	0x085c	f32	finish_attack_angle_max	param_final	
+88	0x0860	f32	near_clip_scene_01	param_final	
+88	0x0864	i32	clear_color_r	param_final	0
+88	0x0868	i32	clear_color_g	param_final	0
+88	0x086c	i32	clear_color_b	param_final	0
+88	0x0870	i32	end_clear_color_r	param_final	255
+88	0x0874	i32	end_clear_color_g	param_final	255
+88	0x0878	i32	end_clear_color_b	param_final	255
+88	0x0880	hash40	target_motion_kind_1	param_final	0
+88	0x0888	f32	target_motion_start_frame_1	param_final	1
+88	0x088c	f32	target_motion_rate_1	param_final	0
+88	0x0890	hash40	target_motion_kind_2	param_final	0
+88	0x0898	f32	target_motion_start_frame_2	param_final	1
+88	0x089c	f32	target_motion_rate_2	param_final	
+88	0x08a0	i32	target_motion_comp_frame	param_final	0
+88	0x08a4	f32	target_motion_skip_rate	param_final	0
+89	0x00b0	f32	attack_f_raycheck_length	param_private	1.39999998
+89	0x00b4	f32	attack_f_raycheck_angle	param_private	270
+89	0x00b8	f32	attack_f_raycheck_length_2	param_private	1.45000005
+89	0x00bc	f32	attack_f_raycheck_angle_2	param_private	-75
+89	0x00c0	f32	attack_f_raycheck_length_3	param_private	1.60000002
+89	0x00c4	f32	attack_f_raycheck_angle_3	param_private	-60
+89	0x00c8	f32	attack_f_raycheck_length_4	param_private	
+89	0x00cc	f32	attack_f_raycheck_angle_4	param_private	255
+89	0x00d0	f32	attack_f_raycheck_length_5	param_private	
+89	0x00d4	f32	attack_f_raycheck_angle_5	param_private	240
+89	0x00d8	f32	unk_1a0f884116	param_private	0.300000012
+89	0x00e0	hash40	attacklw4_ray_check_start_joint_id	param_private	0
+89	0x00e8	f32	attacklw4_ray_check_start_offset_x	param_private	0
+89	0x00ec	f32	attacklw4_ray_check_start_offset_y	param_private	4
+89	0x00f0	f32	attacklw4_ray_check_start_offset_z	param_private	21
+89	0x00f8	hash40	attacklw4_ray_check_end_joint_id	param_private	0
+89	0x0100	f32	attacklw4_ray_check_end_offset_x	param_private	0
+89	0x0104	f32	attacklw4_ray_check_end_offset_y	param_private	-3
+89	0x0108	f32	attacklw4_ray_check_end_offset_z	param_private	25
+89	0x010c	f32	catch_effect_offset_y	param_private	8
+89	0x0110	f32	activate_point_init	param_one_winged	80
+89	0x0114	f32	activate_point_init_hp	param_one_winged	65
+89	0x0118	f32	activate_point_upper_limit	param_one_winged	999
+89	0x011c	i32	start_motion_blend_frame	param_one_winged	0
+89	0x0120	i32	end_motion_blend_frame	param_one_winged	20
+89	0x0124	i32	deactivate_wing_delete_frame	param_one_winged	10
+89	0x0128	i32	flicker_off_frame	param_one_winged	70
+89	0x012c	i32	flicker_on_frame	param_one_winged	70
+89	0x0130	f32	stock_activate_point	param_one_winged	110
+89	0x0134	f32	sudden_death_stock_activate_point	param_one_winged	10
+89	0x0138	f32	unk_13bf8cc716	param_one_winged	10
+89	0x013c	f32	unk_138381f84f	param_one_winged	20
+89	0x0140	f32	unk_1488d13d50	param_one_winged	-15
+89	0x0144	f32	unk_14b4dc0209	param_one_winged	-30
+89	0x0148	f32	unk_1aacedc1bc	param_one_winged	20
+89	0x014c	f32	unk_1579d6ba67	param_one_winged	-5
+89	0x0150	f32	deactivate_point_kill	param_one_winged	50
+89	0x0154	f32	unk_1da9d06c6d	param_one_winged	0.200000003
+89	0x0158	i32	jump_add_count	param_one_winged	1
+89	0x015c	f32	jump_height_mul	param_one_winged	0.850000024
+89	0x0160	f32	attack_power_mul	param_one_winged	1.29999995
+89	0x0164	f32	walk_accel_mul	param_one_winged	1.14999998
+89	0x0168	f32	walk_accel_add	param_one_winged	
+89	0x016c	f32	walk_speed_max_mul	param_one_winged	
+89	0x0170	f32	walk_brake_mul	param_one_winged	
+89	0x0174	f32	dash_speed_mul	param_one_winged	1.20000005
+89	0x0178	f32	run_accel_mul	param_one_winged	
+89	0x017c	f32	run_accel_add	param_one_winged	
+89	0x0180	f32	run_speed_max_mul	param_one_winged	1.25
+89	0x0184	f32	air_accel_x_mul	param_one_winged	
+89	0x0188	f32	air_accel_x_add	param_one_winged	1.10000002
+89	0x018c	f32	air_speed_x_stable_mul	param_one_winged	
+89	0x0190	f32	air_brake_x_mul	param_one_winged	1.04999995
+89	0x0194	f32	air_accel_y_mul	param_one_winged	1.02999997
+89	0x0198	f32	air_speed_y_stable_mul	param_one_winged	
+89	0x019c	i32	item_jump_aerial_frame	param_one_winged	30
+89	0x0230	hash40	ground_jostle_node	param_attack_air_f	0
+89	0x0238	f32	ground_jostle_distance	param_attack_air_f	0.699999988
+89	0x023c	f32	ground_jostle	param_attack_air_f	7
+89	0x0240	f32	after_jump_speed_y	param_attack_air_f	6.9000001
+89	0x0244	f32	after_jump_accel_y	param_attack_air_f	
+89	0x0248	i32	attack_count_limit	param_attack_air_f	3
+89	0x0280	u32	shape_type	map_collision_fire_s	
+89	0x0284	f32	up	map_collision_fire_s	4
+89	0x0288	f32	down	map_collision_fire_s	-4
+89	0x028c	f32	half_width	map_collision_fire_s	4
+89	0x0290	u32	shape_type	map_collision_fire_m	
+89	0x0294	f32	up	map_collision_fire_m	3.5
+89	0x0298	f32	down	map_collision_fire_m	-3.5
+89	0x029c	f32	half_width	map_collision_fire_m	3.5
+89	0x02a0	u32	shape_type	map_collision_fire_l	
+89	0x02a4	f32	up	map_collision_fire_l	2
+89	0x02a8	f32	down	map_collision_fire_l	-2
+89	0x02ac	f32	half_width	map_collision_fire_l	2
+89	0x0310	u32	shape_type	map_collision_flare1	
+89	0x0314	f32	up	map_collision_flare1	1.5
+89	0x0318	f32	down	map_collision_flare1	-3.5
+89	0x031c	f32	half_width	map_collision_flare1	1.5
+89	0x03b0	f32	final_start_speed	param_final	2.5999999
+89	0x03b4	f32	final_start_vector	param_final	65
+89	0x03b8	f32	final_start_motion_rate	param_final	0.5
+89	0x03bc	i32	hit_stop_slow_frame	param_final	25
+89	0x03c0	i32	final_ready_frame	param_final	15
+89	0x03c4	f32	final_finish_attack_angle_min	param_final	
+89	0x03c8	f32	final_finish_attack_angle_max	param_final	
+89	0x03cc	i32	furafura_frame_min	param_final	400
+89	0x03d0	i32	furafura_frame_max	param_final	1200
+89	0x03d4	i32	sleep_frame_min	param_final	520
+89	0x03d8	i32	sleep_frame_max	param_final	1320
+89	0x03dc	i32	stick_reverse_frame_min	param_final	400
+89	0x03e0	i32	stick_reverse_frame_max	param_final	1500
+89	0x03e4	f32	slow_rate	param_final	2
+89	0x03e8	i32	slow_frame_min	param_final	400
+89	0x03ec	i32	slow_frame_max	param_final	1500
+89	0x03f0	i32	flower_frame_min	param_final	400
+89	0x03f4	i32	flower_frame_max	param_final	1800
+89	0x03f8	f32	flower_scale	param_final	20
+89	0x03fc	f32	ray_check_ground	param_final	10
+89	0x0400	f32	ray_check_air	param_final	100
+89	0x0404	f32	target_wait_rate	param_final	0.330000013
+89	0x0408	f32	near_clip_scene_01	param_final	10
+89	0x040c	f32	far_clip_scene_01	param_final	100000
+89	0x0410	f32	near_clip_scene_02	param_final	10
+89	0x0414	f32	far_clip_scene_02	param_final	
+89	0x0418	i32	clear_color_r	param_final	255
+89	0x041c	i32	clear_color_g	param_final	255
+89	0x0420	i32	clear_color_b	param_final	255
+89	0x0424	i32	end_clear_color_r	param_final	255
+89	0x0428	i32	end_clear_color_g	param_final	255
+89	0x042c	i32	end_clear_color_b	param_final	255
+89	0x0430	f32	none	final_probs_ground	20
+89	0x0434	f32	furafura	final_probs_ground	13
+89	0x0438	f32	sleep	final_probs_ground	10
+89	0x043c	f32	reverse	final_probs_ground	10
+89	0x0440	f32	slow	final_probs_ground	10
+89	0x0444	f32	flower	final_probs_ground	10
+89	0x0448	f32	none	final_probs_air	20
+89	0x044c	f32	furafura	final_probs_air	10
+89	0x0450	f32	sleep	final_probs_air	5
+89	0x0454	f32	reverse	final_probs_air	10
+89	0x0458	f32	slow	final_probs_air	10
+89	0x045c	f32	flower	final_probs_air	10
+89	0x0460	f32	none	final_probs_cliff_out	20
+89	0x0464	f32	furafura	final_probs_cliff_out	0
+89	0x0468	f32	sleep	final_probs_cliff_out	0
+89	0x046c	f32	reverse	final_probs_cliff_out	0
+89	0x0470	f32	slow	final_probs_cliff_out	10
+89	0x0474	f32	flower	final_probs_cliff_out	10
+90	0x0098	f32	unk_1a41d4c6ca	param_private	-8
+90	0x009c	f32	unk_1a87710eff	param_private	8
+90	0x00a0	f32	unk_18281fcc1e	param_private	-16
+90	0x00a4	f32	unk_23dc66e163	param_private	-0.5
+90	0x00a8	f32	unk_1c84197c8a	param_private	40
+90	0x00c8	hash40	ground_check_node	param_attack_s4	0
+90	0x00d0	f32	ground_check_node_offset_x	param_attack_s4	0
+90	0x00d4	f32	ground_check_node_offset_y	param_attack_s4	3
+90	0x00d8	f32	ground_check_node_offset_z	param_attack_s4	20
+90	0x00dc	f32	ground_check_distance	param_attack_s4	5
+90	0x0128	u32	shape_type	map_collision_esword	
+90	0x012c	f32	up	map_collision_esword	2
+90	0x0130	f32	down	map_collision_esword	-2
+90	0x0134	f32	half_width	map_collision_esword	2
+90	0x0168	f32	diver_offset_x	param_final	0
+90	0x016c	f32	diver_offset_y	param_final	0
+90	0x0170	f32	final_start_speed	param_final	0.5
+90	0x0174	f32	final_start_vector	param_final	0
+90	0x0178	f32	final_start_speed_air	param_final	1.39999998
+90	0x017c	f32	final_start_vector_air	param_final	72
+90	0x0180	f32	final_start_motion_rate	param_final	0.300000012
+90	0x0184	i32	whole_slow_mul	param_final	4
+90	0x0188	i32	final_ready_frame	param_final	15
+90	0x0190	hash40	final_start_motion_kind	param_final	0
+90	0x0198	hash40	final_start_motion_kind_air	param_final	0
+90	0x01a0	f32	esword_return_start_frame	param_final	90
+90	0x01a4	f32	esword_return_end_frame	param_final	100
+90	0x01a8	hash40	map_coll_joint	param_final	0
+90	0x01b0	f32	map_coll_offset_x	param_final	0
+90	0x01b4	f32	map_coll_offset_y	param_final	30
+90	0x01b8	f32	map_coll_offset_z	param_final	0
+90	0x01bc	i32	map_coll_offset_frame	param_final	30
+90	0x01c0	hash40	target_motion_kind	param_final	0
+90	0x01c8	f32	target_motion_rate	param_final	0.100000001
+90	0x01cc	f32	final_end_target_offset_x	param_final	
+90	0x01d0	f32	final_end_target_offset_y	param_final	10
+90	0x01d4	f32	final_end_cam_ofs_x	param_final	5
+90	0x01d8	f32	final_end_cam_ofs_y	param_final	5
+90	0x01e0	hash40	blazepillar_rumble_kind1	param_final	0
+90	0x01e8	hash40	blazepillar_rumble_kind2	param_final	0
+90	0x0208	u32	shape_type	map_collision_blazepillar	
+90	0x020c	f32	up	map_collision_blazepillar	5
+90	0x0210	f32	down	map_collision_blazepillar	0
+90	0x0214	f32	half_width	map_collision_blazepillar	2
+91	0x0098	f32	foresight_damage_mul	param_private	1
+91	0x009c	i32	foresight_target_slow_rate	param_private	10
+91	0x00a0	i32	foresight_target_pre_slow_frame	param_private	36
+91	0x00a4	i32	foresight_target_post_slow_frame	param_private	20
+91	0x00a8	f32	foresight_target_slow_distance	param_private	60
+91	0x00ac	i32	foresight_disable_frame	param_private	30
+91	0x00b0	i32	foresight_escape_slow_rate	param_private	1
+91	0x00b4	i32	foresight_escape_pre_frame	param_private	5
+91	0x00b8	i32	foresight_escape_pre_xlu_frame	param_private	30
+91	0x00bc	i32	foresight_escape_pre_slow_frame	param_private	30
+91	0x00c0	i32	foresight_escape_post_frame	param_private	0
+91	0x00c4	i32	foresight_escape_post_xlu_frame	param_private	10
+91	0x00c8	i32	foresight_escape_post_slow_frame	param_private	20
+91	0x00cc	i32	foresight_escape_f_slow_rate	param_private	1
+91	0x00d0	i32	foresight_escape_f_pre_frame	param_private	5
+91	0x00d4	i32	foresight_escape_f_pre_xlu_frame	param_private	30
+91	0x00d8	i32	foresight_escape_f_pre_slow_frame	param_private	30
+91	0x00dc	i32	foresight_escape_f_post_frame	param_private	0
+91	0x00e0	i32	foresight_escape_f_post_xlu_frame	param_private	10
+91	0x00e4	i32	foresight_escape_f_post_slow_frame	param_private	20
+91	0x00e8	i32	foresight_escape_b_slow_rate	param_private	1
+91	0x00ec	i32	foresight_escape_b_pre_frame	param_private	6
+91	0x00f0	i32	foresight_escape_b_pre_xlu_frame	param_private	30
+91	0x00f4	i32	foresight_escape_b_pre_slow_frame	param_private	30
+91	0x00f8	i32	foresight_escape_b_post_frame	param_private	0
+91	0x00fc	i32	foresight_escape_b_post_xlu_frame	param_private	10
+91	0x0100	i32	foresight_escape_b_post_slow_frame	param_private	20
+91	0x0104	i32	foresight_escape_air_slow_rate	param_private	1
+91	0x0108	i32	foresight_escape_air_pre_frame	param_private	4
+91	0x010c	i32	foresight_escape_air_pre_xlu_frame	param_private	30
+91	0x0110	i32	foresight_escape_air_pre_slow_frame	param_private	30
+91	0x0114	i32	foresight_escape_air_post_frame	param_private	0
+91	0x0118	i32	foresight_escape_air_post_xlu_frame	param_private	10
+91	0x011c	i32	foresight_escape_air_post_slow_frame	param_private	20
+91	0x0120	i32	foresight_escape_air_slide_slow_rate	param_private	1
+91	0x0124	i32	foresight_escape_air_slide_pre_frame	param_private	3
+91	0x0128	i32	foresight_escape_air_slide_pre_xlu_frame	param_private	30
+91	0x012c	i32	foresight_escape_air_slide_pre_slow_frame	param_private	30
+91	0x0130	i32	foresight_escape_air_slide_post_frame	param_private	0
+91	0x0134	i32	foresight_escape_air_slide_post_xlu_frame	param_private	10
+91	0x0138	i32	foresight_escape_air_slide_post_slow_frame	param_private	20
+91	0x013c	f32	unk_1a41d4c6ca	param_private	-8
+91	0x0140	f32	unk_1a87710eff	param_private	8
+91	0x0144	f32	unk_18281fcc1e	param_private	-16
+91	0x0148	f32	unk_23dc66e163	param_private	-0.5
+91	0x014c	f32	unk_1c84197c8a	param_private	40
+91	0x01f8	u32	shape_type	map_collision_exprosiveshot	
+91	0x01fc	f32	up	map_collision_exprosiveshot	2
+91	0x0200	f32	down	map_collision_exprosiveshot	-2
+91	0x0204	f32	half_width	map_collision_exprosiveshot	2
+91	0x0208	u32	shape_type	map_collision_spreadbullet	
+91	0x020c	f32	up	map_collision_spreadbullet	2
+91	0x0210	f32	down	map_collision_spreadbullet	-2
+91	0x0214	f32	half_width	map_collision_spreadbullet	2
+91	0x0230	f32	diver_offset_x	param_final	0
+91	0x0234	f32	diver_offset_y	param_final	0
+91	0x0238	f32	final_start_speed	param_final	0.5
+91	0x023c	f32	final_start_vector	param_final	0
+91	0x0240	f32	final_start_speed_air	param_final	1.39999998
+91	0x0244	f32	final_start_vector_air	param_final	72
+91	0x0248	f32	final_start_motion_rate	param_final	0.300000012
+91	0x024c	i32	whole_slow_mul	param_final	4
+91	0x0250	i32	final_ready_frame	param_final	15
+91	0x0258	hash40	final_start_motion_kind	param_final	0
+91	0x0260	hash40	final_start_motion_kind_air	param_final	0
+91	0x0268	f32	esword_return_start_frame	param_final	85
+91	0x026c	f32	esword_return_end_frame	param_final	93
+91	0x0270	hash40	target_motion_kind	param_final	0
+91	0x0278	f32	target_motion_rate	param_final	0.100000001
+91	0x027c	f32	finish_attack_angle_min	param_final	
+91	0x0280	f32	finish_attack_angle_max	param_final	
+91	0x0284	f32	meteor_offset_x	param_final	1
+91	0x0288	f32	meteor_offset_y	param_final	11
+91	0x028c	i32	meteor_num	param_final	24
+91	0x0290	i32	meteor_interval	param_final	4
+91	0x0294	f32	meteor_angle1	param_final	0
+91	0x0298	f32	meteor_angle2	param_final	14
+91	0x029c	f32	meteor_angle3	param_final	-14
+91	0x02a0	f32	meteor_angle_range1	param_final	2
+91	0x02a4	f32	meteor_angle_range2	param_final	1
+91	0x02a8	f32	meteor_angle_range3	param_final	1
+91	0x02ac	f32	camera_range	param_final	2
+91	0x02b0	hash40	meteor_rumble_kind	param_final	0
+91	0x02b8	hash40	beam_rumble_kind	param_final	0
+91	0x02d8	u32	shape_type	map_collision_meteor	
+91	0x02dc	f32	center_y	map_collision_meteor	0
+91	0x02e0	f32	radius	map_collision_meteor	1
+91	0x0300	hash40	joint_id	camera_clip_sphere_final	0
+91	0x0308	f32	offset_x	camera_clip_sphere_final	0
+91	0x030c	f32	offset_y	camera_clip_sphere_final	0
+91	0x0310	f32	offset_z	camera_clip_sphere_final	0
+91	0x0314	f32	radius	camera_clip_sphere_final	0
+92	0x0098	i32	unk_1e4ea8f9a7	param_private	4
+92	0x009c	f32	unk_19996b81b6	param_private	1200
+92	0x00a0	i32	pass_cancel_command_frame	param_private	8
+92	0x00a4	f32	rage_damage	param_private	100
+92	0x00a8	f32	rage_hp_rate	param_private	25
+92	0x00ac	f32	rage_hp_min	param_private	5
+92	0x00b0	f32	rage_hp_max	param_private	
+92	0x00b4	f32	rage_power_mul	param_private	1.10000002
+92	0x00b8	i32	rage_before_end_frame	param_private	240
+92	0x00bc	i32	unk_14d3a24bf0	param_private	60
+92	0x00c0	i32	unk_141cdfe228	param_private	48
+92	0x00c4	i32	unk_22ebda867b	param_private	3
+92	0x00c8	f32	reaction_value	param_private	14
+92	0x00cc	i32	attack_air_kinetic_aerial_frame	param_private	18
+92	0x00d0	f32	attack_air_jump_aerial_y	param_private	20
+92	0x00d4	f32	attack_air_speed_x_mul	param_private	1
+92	0x00d8	i32	unk_2b87c7acb0	param_private	30
+92	0x00dc	i32	unk_1a8cf37eed	param_private	3
+92	0x00e0	i32	unk_1a67c4c5ee	param_private	3
+92	0x00e4	i32	unk_1a81ed0eaa	param_private	3
+92	0x00e8	i32	unk_24e76adf16	param_private	3
+92	0x00ec	i32	unk_240c5d6415	param_private	3
+92	0x00f0	i32	unk_24ea74af51	param_private	3
+92	0x00f4	i32	unk_23d290b90f	param_private	3
+92	0x00f8	i32	unk_2339a7020c	param_private	3
+92	0x00fc	i32	unk_23df8ec948	param_private	3
+92	0x0100	i32	unk_283eef37ac	param_private	3
+92	0x0104	i32	unk_2833f147eb	param_private	3
+92	0x0108	i32	unk_225a46a06c	param_private	3
+92	0x010c	i32	unk_225758d02b	param_private	3
+92	0x0110	i32	unk_2bb2c89680	param_private	0
+92	0x0114	i32	unk_2b8897f0a6	param_private	0
+92	0x0118	i32	unk_25b26d0735	param_private	0
+92	0x011c	i32	unk_2588326113	param_private	0
+92	0x0120	i32	attack_stand_6_stop_cliff_frame	param_private	5
+92	0x0124	f32	attack_stand_6_stop_cliff_offset_y	param_private	5
+92	0x0128	f32	attack_squat_2_rebound_distance	param_private	105
+92	0x012c	i32	attack_squat_2_rebound_count	param_private	3
+92	0x0130	f32	attack_squat_2_rebound_speed	param_private	1
+92	0x0134	i32	unk_2748edf655	param_private	22
+92	0x0138	f32	throw_scale_min	param_private	80
+92	0x013c	f32	throw_scale_max	param_private	120
+92	0x0260	f32	move_mul	param_attack_step	1.13
+92	0x0264	i32	hold_frame	param_attack_step	6
+92	0x0268	i32	hold_frame_special	param_attack_step	6
+92	0x026c	i32	cancel_frame	param_attack_step	14
+92	0x0270	i32	dash_to_attack_stand1_frame	param_attack_step	7
+92	0x0274	i32	unk_0c001be4d6	param_attack_step	1
+92	0x0278	f32	start_speed_x_mul_ground	param_attack_rage	0.5
+92	0x027c	f32	start_brake_x_ground	param_attack_rage	0.100000001
+92	0x0280	f32	start_speed_x_mul_air	param_attack_rage	0.5
+92	0x0284	f32	start_brake_x_air	param_attack_rage	0.00999999978
+92	0x0288	f32	start_control_accel_x_mul_air	param_attack_rage	0.5
+92	0x028c	f32	start_control_max_speed_x_mul_air	param_attack_rage	0.5
+92	0x0290	i32	start_stop_y_frame_air	param_attack_rage	0
+92	0x0294	f32	start_accel_y_mul_air	param_attack_rage	0.75
+92	0x0298	f32	start_max_speed_y_mul_air	param_attack_rage	1
+92	0x029c	f32	start_speed_y_air	param_attack_rage	0
+92	0x02a0	f32	start_speed_y_mul_air	param_attack_rage	0.5
+92	0x02a4	f32	start_speed_y_add_air	param_attack_rage	0.300000012
+92	0x02a8	f32	vx0	param_attack_rage	0.25
+92	0x02ac	f32	vx0_add_max	param_attack_rage	0.200000003
+92	0x02b0	f32	jump_vx_max	param_attack_rage	1.25
+92	0x02b4	f32	jump_mv_xf_min	param_attack_rage	0.0199999996
+92	0x02b8	f32	jump_mv_xf_max	param_attack_rage	0.223499998
+92	0x02bc	f32	jump_mv_xf_sub	param_attack_rage	0.000500000024
+92	0x02c0	f32	jump_tgt_xf_min	param_attack_rage	0.0143999998
+92	0x02c4	f32	jump_tgt_xf_max	param_attack_rage	0.131999999
+92	0x02c8	f32	jump_tgt_xf_sub	param_attack_rage	0.000699999975
+92	0x02cc	f32	jump_axf_max	param_attack_rage	1
+92	0x02d0	f32	fall_speed	param_attack_rage	-7.07000017
+92	0x02d4	f32	fall_vx_max	param_attack_rage	1.5
+92	0x02d8	f32	fall_mv_xf_min	param_attack_rage	
+92	0x02dc	f32	fall_mv_xf_max	param_attack_rage	
+92	0x02e0	f32	fall_mv_xf_sub	param_attack_rage	
+92	0x02e4	f32	fall_tgt_xf_min	param_attack_rage	
+92	0x02e8	f32	fall_tgt_xf_max	param_attack_rage	
+92	0x02ec	f32	fall_tgt_xf_sub	param_attack_rage	
+92	0x02f0	f32	fall_axf_max	param_attack_rage	1
+92	0x02f4	i32	fall_pass_floor_frame	param_attack_rage	1
+92	0x02f8	f32	hop_vx0	param_attack_rage	-0.600000024
+92	0x02fc	f32	hop_vy0	param_attack_rage	2
+92	0x0300	f32	mv_xf_max_mul	param_attack_rage	0.600000024
+92	0x0304	f32	vx_max_mul	param_attack_rage	
+92	0x0308	f32	fall_check_dead_offset_y	param_attack_rage	-22
+92	0x030c	f32	jump_check_dead_offset_x	param_attack_rage	10
+92	0x0310	f32	fall_check_dead_offset_x	param_attack_rage	10
+92	0x0314	i32	capture_frame_max	param_attack_rage	100
+92	0x0318	i32	critical_frame	param_attack_rage	36
+92	0x031c	i32	critical_slow_rate	param_attack_rage	4
+92	0x0320	f32	critical_zoom_rate	param_attack_rage	4
+92	0x0324	i32	critical_zoom_in_frame	param_attack_rage	2
+92	0x0328	f32	critical_camera_offset_x	param_attack_rage	0.800000012
+92	0x032c	f32	critical_camera_offset_y	param_attack_rage	0
+92	0x0330	i32	critical_1_on_1	param_attack_rage	1
+92	0x0350	f32	speed	param_blaster	10
+92	0x0354	f32	degree_lw_air	param_blaster	
+92	0x0358	f32	speed_throw	param_blaster	20
+92	0x035c	i32	life_throw	param_blaster	9
+92	0x0360	f32	attack_mul_first_hit	param_blaster	0.75
+92	0x0364	f32	attack_mul_second_hit	param_blaster	0.5
+92	0x0368	f32	shot_effect_offset_y	param_blaster	0
+92	0x036c	f32	shot_effect_offset_z	param_blaster	2
+92	0x0370	i32	ignore_passable_ground_frame	param_blaster	4
+92	0x0374	f32	reflect_effect_angle	param_blaster	45
+92	0x0378	u32	shape_type	map_collision_blaster	
+92	0x037c	f32	up	map_collision_blaster	1
+92	0x0380	f32	down	map_collision_blaster	-1
+92	0x0384	f32	half_width	map_collision_blaster	1
+92	0x03d0	f32	final_start_vector	param_final	60
+92	0x03d4	f32	final_start_speed	param_final	1.5
+92	0x03d8	hash40	final_start_motion_kind	param_final	0
+92	0x03e0	f32	final_start_vector_air	param_final	
+92	0x03e4	f32	final_start_speed_air	param_final	1.5
+92	0x03e8	hash40	final_start_motion_kind_air	param_final	0
+92	0x03f0	f32	final_start_motion_frame	param_final	3
+92	0x03f4	f32	final_start_motion_rate	param_final	0.5
+92	0x03f8	f32	fall_check_dead_offset_x	param_final	
+92	0x03fc	i32	whole_slow_mul	param_final	2
+92	0x0400	i32	attack_frame	param_final	120
+92	0x0404	f32	finish_attack_angle_min	param_final	40
+92	0x0408	f32	finish_attack_angle_max	param_final	
+92	0x0410	f32	wing_r1_angle_speed	param_blasterwing	0
+92	0x0414	f32	wing_r1_angle_max	param_blasterwing	0
+92	0x0418	f32	wing_r2_angle_speed	param_blasterwing	0
+92	0x041c	f32	wing_r2_angle_max	param_blasterwing	0
+92	0x0420	f32	wing_r3_angle_speed	param_blasterwing	0
+92	0x0424	f32	wing_r3_angle_max	param_blasterwing	0
+92	0x0428	f32	wing_l1_angle_speed	param_blasterwing	0
+92	0x042c	f32	wing_l1_angle_max	param_blasterwing	0
+92	0x0430	f32	wing_l2_angle_speed	param_blasterwing	0
+92	0x0434	f32	wing_l2_angle_max	param_blasterwing	0
+92	0x0438	f32	wing_l3_angle_speed	param_blasterwing	0
+92	0x043c	f32	wing_l3_angle_max	param_blasterwing	0
+92	0x0440	i32	rotate_start_frame	param_blasterwing	120
+92	0x0444	i32	effect_interval	param_blasterhead	4
+92	0x0448	f32	effect_margin	param_blasterhead	4
+92	0x044c	f32	effect_distance_max	param_blasterhead	15
+92	0x0450	f32	effect_check_y	param_blasterhead	2
+93	0x00b0	f32	attack_air_n_hit_speed_y	param_private	1
+93	0x00b4	f32	attack_air_n2_hit_speed_y	param_private	1
+93	0x00b8	i32	attack_air_n_combo_max	param_private	3
+93	0x00bc	f32	combo_attack_ari_n2_end	param_private	42
+93	0x00c0	f32	combo_attack_ari_n3_end	param_private	36
+93	0x00c4	f32	attack_air_f_hit_speed_y	param_private	1
+93	0x00c8	f32	attack_air_f2_hit_speed_y	param_private	1
+93	0x00cc	i32	attack_air_f_combo_max	param_private	3
+93	0x00d0	f32	combo_attack_ari_f2_end	param_private	
+93	0x00d4	f32	combo_attack_ari_f3_end	param_private	
+93	0x00d8	f32	unk_1b5041cfb5	param_private	10
+93	0x00dc	f32	unk_1b2746ff23	param_private	11
+93	0x00e0	f32	unk_1b989845bd	param_private	13
+93	0x00e4	f32	unk_1bef9f752b	param_private	14
+93	0x00e8	f32	attack_air_hit_speed_x_mul	param_private	0.349999994
+93	0x00ec	f32	attack_air_hit_accel_x_mul	param_private	0.75
+93	0x00f0	f32	attack_air_hit_speed_max_x_mul	param_private	0.649999976
+93	0x0158	u32	shape_type	map_collision_fire	
+93	0x015c	f32	up	map_collision_fire	1.60000002
+93	0x0160	f32	down	map_collision_fire	-1.60000002
+93	0x0164	f32	half_width	map_collision_fire	
+93	0x0168	u32	shape_type	map_collision_ice	
+93	0x016c	f32	up	map_collision_ice	1.39999998
+93	0x0170	f32	down	map_collision_ice	-1.39999998
+93	0x0174	f32	half_width	map_collision_ice	
+93	0x0178	u32	shape_type	map_collision_thunder	
+93	0x017c	f32	up	map_collision_thunder	1.20000005
+93	0x0180	f32	down	map_collision_thunder	-1.20000005
+93	0x0184	f32	half_width	map_collision_thunder	
+93	0x01e8	f32	beam_offset_x	param_final	15
+93	0x01ec	f32	beam_offset_y	param_final	8.5
+93	0x01f0	f32	hole_ray_check_length	param_final	2.5
+93	0x01f4	f32	hole_ground_offset_x	param_final	-3
+93	0x01f8	f32	hole_ground_offset_y	param_final	8
+93	0x01fc	f32	hole_air_offset_x	param_final	-3
+93	0x0200	f32	hole_air_offset_y	param_final	-20
+93	0x0204	f32	target_dead_damage	param_final	100
+93	0x0208	f32	target_dead_damage_charge_final	param_final	
+93	0x020c	f32	finish_attack_degree	param_final	50
+93	0x0210	f32	zoom_in_offset_x_ground	param_final	0
+93	0x0214	f32	zoom_in_offset_y_ground	param_final	17.5
+93	0x0218	f32	zoom_in_offset_x_air	param_final	0
+93	0x021c	f32	zoom_in_offset_y_air	param_final	20
+93	0x0220	i32	rebound_start_air	param_final	30
+93	0x0224	f32	zoom_in_view_angle	param_final	90
+93	0x0228	i32	inhale_frame	param_final	30
+93	0x022c	i32	inhale_frame_hole	param_final	30
+93	0x0230	i32	inhale_frame_beam	param_final	30
+93	0x0234	f32	inhale_offset_x1_ground	param_final	0
+93	0x0238	f32	inhale_offset_y1_ground	param_final	18.5
+93	0x023c	f32	inhale_offset_x2_ground	param_final	-6
+93	0x0240	f32	inhale_offset_y2_ground	param_final	15.5
+93	0x0244	f32	inhale_offset_x3_ground	param_final	6
+93	0x0248	f32	inhale_offset_y3_ground	param_final	15.5
+93	0x024c	f32	inhale_offset_x1_air	param_final	0
+93	0x0250	f32	inhale_offset_y1_air	param_final	23
+93	0x0254	f32	inhale_offset_x2_air	param_final	-6
+93	0x0258	f32	inhale_offset_y2_air	param_final	20
+93	0x025c	f32	inhale_offset_x3_air	param_final	6
+93	0x0260	f32	inhale_offset_y3_air	param_final	20
+93	0x0264	f32	inhale_speed	param_final	10
+93	0x0268	f32	inhale_brake	param_final	1.29999995
+93	0x026c	f32	inhale_speed_min	param_final	0.800000012
+93	0x0270	f32	inhale_scale	param_final	0.280000001
+93	0x0278	hash40	unk_224f071bc7	param_final	0
+93	0x0280	f32	unk_234f83c209	param_final	5
+93	0x0284	f32	unk_22ab2f9827	param_final	0.370000005
+93	0x0288	i32	target_num	param_final	3
+93	0x0290	f32	speed	param_beam	19
+93	0x0294	f32	distance	param_beam	9
+93	0x0298	f32	distance_end	param_beam	0.5
+93	0x029c	f32	distance_min	param_beam	3.5
+93	0x02a0	f32	distance_max	param_beam	7
+93	0x02a4	f32	offset_x	param_beam	-3
+93	0x02a8	f32	offset_y	param_beam	8.5
+93	0x02ac	i32	expansion_frame	param_hole	13
+93	0x02b0	i32	life	param_hole	30
+93	0x02b4	f32	radius	param_hole	35
+93	0x02b8	f32	pull_offset_x_ground	param_hole	0
+93	0x02bc	f32	pull_offset_y_ground	param_hole	15
+93	0x02c0	f32	pull_offset_x_air	param_hole	0
+93	0x02c4	f32	pull_offset_y_air	param_hole	22
+93	0x02c8	f32	pull_speed	param_hole	
+93	0x02cc	i32	vanish_frame	param_hole	15
+93	0x02d0	f32	scale_max	param_hole	1
+93	0x02d4	f32	scale_min	param_hole	1
+93	0x02d8	f32	offset_y	param_hole	0
+93	0x02dc	u32	shape_type	map_collision_beam	
+93	0x02e0	f32	up	map_collision_beam	0.5
+93	0x02e4	f32	down	map_collision_beam	-0.5
+93	0x02e8	f32	half_width	map_collision_beam	4
+93	0x02ec	u32	shape_type	map_collision_hole	
+93	0x02f0	f32	up	map_collision_hole	0.100000001
+93	0x02f4	f32	down	map_collision_hole	-0.100000001
+93	0x02f8	f32	half_width	map_collision_hole	0.200000003
+93	0x02fc	f32	center_y	camera_range_hole	0
+93	0x0300	f32	front	camera_range_hole	6
+93	0x0304	f32	back	camera_range_hole	-2
+93	0x0308	f32	up	camera_range_hole	6
+93	0x030c	f32	down	camera_range_hole	-2

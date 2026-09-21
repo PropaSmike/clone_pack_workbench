@@ -113,6 +113,11 @@ def css_registration(state: dict, suffix: str = "") -> str:
         lines.append("        disp_order: SignedByteType::Optional(Some(%d)), // position on the select screen" % order)
     lines += [
         "        color_num: UnsignedByteType::Overwrite(%s), // number of costumes" % costumes,
+        "        shop_item_tag: Hash40Type::Overwrite(hash40(%s-1%s)), // the base's DLC fields hide the entry; clear them" % (q, q),
+        "        alt_chara_id: Hash40Type::Overwrite(hash40(%s-1%s))," % (q, q),
+        "        save_no: SignedByteType::Overwrite(0),",
+        "        is_dlc: BoolType::Overwrite(false),",
+        "        is_patch: BoolType::Overwrite(false),",
         "        extra_index_maps: UnsignedByteMap::Overwrite(indices),",
         "        extra_hash_maps: Hash40Map::Overwrite(hashes),",
         "        ..Default::default()",

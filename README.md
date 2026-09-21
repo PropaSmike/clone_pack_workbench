@@ -204,8 +204,10 @@ model means none of the base's hat. Animations, cameras and sound files are
 borrowed one by one, so a voice bank without its `.tonelabel` gets the base's,
 and the crowd chant is the base's until you ship `vc_<clone>_cheer_cNN`. A
 costume the pack has no file for takes it from the nearest costume below that
-has it. Past `c07` the base's `c00` is borrowed. A base that owns a
-`finalsmash/` tree is fine: the engine loads it for the clone.
+has it. Past `c07` the base's `c00` is borrowed. What cannot carry another
+name is loaded from the base by the engine at match load: a `finalsmash/`
+tree, Joker's cut-in effect under `append/effect/`, and the Final Smash
+movies of Joker, Hero, Sephiroth and Steve under `prebuilt:/movie/`.
 
 ## lint_clone_pack.py
 

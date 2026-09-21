@@ -643,7 +643,8 @@ def build(base: str, clone: str, shipped=frozenset(), colors=None,
     census.mirror()
     LAST_NOTES[:] = [
         f"{count} file(s) under {head}/ that {base}'s groups load cannot carry the "
-        f"clone's name and are left out"
+        f"clone's name and are left out; the engine loads them from {base}'s own "
+        f"groups at match load"
         for head, count in sorted(census.left_out.items())]
     return census.config()
 

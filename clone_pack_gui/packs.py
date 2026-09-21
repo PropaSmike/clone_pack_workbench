@@ -8,6 +8,8 @@ import os
 import re
 from pathlib import Path
 
+from .emit import engine_param_lines
+
 from . import backups
 
 FIGHTER = "fighter"
@@ -35,13 +37,17 @@ STAGE_KEYS = ("place", "display_name", "id_name", "forms", "ships_battle_tree",
 STAGE_ENGINE_KEYS = ("place", "display_name", "id_name", "forms", "ships_battle_tree",
                      "series", "disp_order", "donor", "resource_place", "bgm",
                      "bgm_setting_no", "bgm_selector")
+FIGHTER_KEYS = ("name", "base", "display_name", "costumes", "color_start", "series",
+                "disp_order", "narration", "staffroll", "css", "ui_chara", "fighter_kind_name",
+                "owns_param_resources")
+FIGHTER_MANIFEST = "fighter.toml"
 
 
 def detect_kinds(folder: Path) -> list[str]:
     """Every kind this folder ships. One pack may carry a fighter, an item and a stage."""
     folder = Path(folder)
     found = []
-    for kind, manifest in ((FIGHTER, None), (ITEM, "item.toml"), (STAGE, "stage.toml")):
+    for kind, manifest in ((FIGHTER, FIGHTER_MANIFEST), (ITEM, "item.toml"), (STAGE, "stage.toml")):
         if (folder / kind).is_dir() or (manifest and (folder / manifest).is_file()):
             found.append(kind)
     return found
@@ -54,7 +60,233 @@ def detect(folder: Path) -> str:
 
 
 def manifest_name(kind: str) -> str | None:
-    return {ITEM: "item.toml", STAGE: "stage.toml"}.get(kind)
+    return {ITEM: "item.toml", STAGE: "stage.toml", FIGHTER: FIGHTER_MANIFEST}.get(kind)
+
+
+def header_of(line: str) -> str | None:
+    """The table a header line opens, `[[article]]` and `[kirby]` alike, else None."""
+    text = strip_comment(line).strip()
+    if text.startswith("[[") and text.endswith("]]"):
+        return "[[%s]]" % text[2:-2].strip()
+    if text.startswith("[") and text.endswith("]"):
+        return "[%s]" % text[1:-1].strip()
+    return None
+
+
+def split_sections(lines: list[str]) -> tuple[list[str], list[tuple[str, list[str]]]]:
+    """The lines before the first table header, then (header, lines) per table."""
+    head: list[str] = []
+    sections: list[tuple[str, list[str]]] = []
+    for line in lines:
+        header = header_of(line)
+        if header:
+            sections.append((header, []))
+        elif sections:
+            sections[-1][1].append(line)
+        else:
+            head.append(line)
+    return head, sections
+
+
+def weapon_short_name(owner: str, const: str) -> str:
+    """`WEAPON_KIND_SIMON_CROSS` with owner simon is `cross`."""
+    prefix = "WEAPON_KIND_%s_" % owner.upper()
+    if const.upper().startswith(prefix):
+        return const[len(prefix):].lower()
+    if const.upper().startswith("WEAPON_KIND_"):
+        return const[len("WEAPON_KIND_"):].lower()
+    return const.lower()
+
+
+def fighter_manifest_values(state: dict) -> dict:
+    """The fighter.toml keys a fighter part holds, in the names the engine reads."""
+    values: dict = {}
+    resource = state.get("resource_name") or ""
+    if resource:
+        values["name"] = resource
+    base = state.get("base_resource_name") or state.get("base_fighter") or ""
+    if base:
+        values["base"] = base
+    for key in ("display_name", "series", "narration", "ui_chara", "fighter_kind_name"):
+        if state.get(key):
+            values[key] = state[key]
+    if isinstance(state.get("color_count"), int) and state["color_count"] > 0:
+        values["costumes"] = state["color_count"]
+    if isinstance(state.get("color_start"), int) and state["color_start"] > 0:
+        values["color_start"] = state["color_start"]
+    if isinstance(state.get("disp_order"), int):
+        values["disp_order"] = state["disp_order"]
+    if state.get("staffroll"):
+        values["staffroll"] = True
+    if state.get("own_css"):
+        values["css"] = False
+    if state.get("owns_param_resources"):
+        values["owns_param_resources"] = True
+    return values
+
+
+def fighter_article_lines(articles) -> list[str]:
+    """One [[article]] table per source the pack names, minted from its weapon."""
+    out: list[str] = []
+    for article in articles or ():
+        owner = article.get("owner")
+        weapon = article.get("weapon")
+        name = article.get("name")
+        if not (owner and weapon and name):
+            continue
+        out += ["", "[[article]]", "%-13s = %s" % ("name", format_value(name)),
+                "%-13s = %s" % ("from", format_value("%s/%s" % (owner, weapon_short_name(owner, weapon))))]
+        if article.get("kirby_copy"):
+            out.append("%-13s = %s" % ("kirby", "true"))
+    return out
+
+
+def fighter_kirby_lines(state: dict, existing: list[str] | None) -> list[str]:
+    """The [kirby] table: what the panel knows, over the lines already there."""
+    values: dict = {}
+    statuses = state.get("kirby_statuses")
+    if isinstance(statuses, int) and statuses > 0:
+        values["statuses"] = statuses
+    if state.get("kirby_copy_full_model"):
+        values["full_model"] = True
+    if not values and not existing:
+        return []
+    lines, _ = merge_lines(list(existing or []), values, ("statuses", "full_model"))
+    return ["", "[kirby]"] + [line for line in lines if line.strip()]
+
+
+def write_fighter_manifest(path: Path, state: dict) -> list[str]:
+    """fighter.toml from a fighter part: the flat keys in the head, the articles
+    the panel lists as [[article]] tables, [kirby] merged, every other table
+    ([params], [[kirby.motion]], ...) kept as written."""
+    path = Path(path)
+    values = fighter_manifest_values(state)
+    lines = (path.read_text(encoding="utf-8", errors="replace").splitlines()
+             if path.is_file() else [])
+    head, sections = split_sections(lines)
+    fighter_lines = []
+    others = []
+    kirby_existing = None
+    param_lines = engine_param_lines(state)
+    for header, body in sections:
+        if header == "[fighter]":
+            fighter_lines += body
+        elif header == "[[article]]":
+            continue
+        elif header == "[kirby]":
+            kirby_existing = body
+        elif header in ("[params]", "[params.mul]") and param_lines:
+            continue
+        else:
+            others.append((header, body))
+    head, written = merge_lines(head + fighter_lines, values, FIGHTER_KEYS)
+    while head and not head[-1].strip():
+        head.pop()
+    out = list(head)
+    out += fighter_article_lines(state.get("articles"))
+    out += fighter_kirby_lines(state, kirby_existing)
+    out += param_lines
+    for header, body in others:
+        out += ["", header] + body
+    text = "\n".join(out).rstrip("\n") + "\n"
+    backups.keep(path)
+    path.write_text(text, encoding="utf-8", newline="\n")
+    return sorted(written)
+
+
+def write_item_tables(path: Path, table_lines: list[str]) -> bool:
+    """Replace the [common] and [owner_params] tables of a flat item.toml with
+    these lines, keeping the flat keys and every other line. A file with
+    [[item]] blocks is left alone, since a table would belong to one block."""
+    path = Path(path)
+    if not path.is_file():
+        return False
+    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    if any(is_header(line, "item") for line in lines):
+        return False
+    head, sections = split_sections(lines)
+    kept = [(header, body) for header, body in sections
+            if header not in ("[common]", "[owner_params]", "[item.common]", "[item.owner_params]")]
+    while head and not head[-1].strip():
+        head.pop()
+    out = list(head) + list(table_lines)
+    for header, body in kept:
+        out += ["", header] + body
+    text = "\n".join(out).rstrip("\n") + "\n"
+    backups.keep(path)
+    path.write_text(text, encoding="utf-8", newline="\n")
+    return True
+
+
+def read_fighter_manifests(path: Path) -> list[dict]:
+    """Every fighter a fighter.toml declares: one flat, or one per [[fighter]]."""
+    path = Path(path)
+    if not path.is_file():
+        return []
+    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    head, blocks = split_blocks(lines, "fighter")
+    if not blocks:
+        found = fighter_manifest_from_lines(lines)
+        return [found] if found else []
+    out = []
+    for block in blocks:
+        found = fighter_manifest_from_lines(
+            [line.replace("[[fighter.", "[[").replace("[fighter.", "[") for line in block])
+        if found:
+            out.append(found)
+    return out
+
+
+def read_fighter_manifest(path: Path) -> dict:
+    found = read_fighter_manifests(path)
+    return found[0] if found else {}
+
+
+def fighter_manifest_from_lines(lines: list[str]) -> dict:
+    """The flat fighter keys and the [[article]] tables of a fighter.toml, in the
+    panel's names, so a pack written by hand loads into the window."""
+    head, sections = split_sections(lines)
+    values = parse_lines(head)
+    articles = []
+    for header, body in sections:
+        if header == "[fighter]":
+            values.update(parse_lines(body))
+        elif header == "[[article]]":
+            article = parse_lines(body)
+            source = str(article.get("from") or "")
+            owner, _, weapon = source.partition("/")
+            if article.get("name") and owner and weapon:
+                articles.append({"owner": owner,
+                                 "weapon": "WEAPON_KIND_%s_%s" % (owner.upper(), weapon.upper()),
+                                 "name": article["name"],
+                                 "kirby_copy": bool(article.get("kirby"))})
+        elif header == "[kirby]":
+            kirby = parse_lines(body)
+            if isinstance(kirby.get("statuses"), int):
+                values["kirby_statuses"] = kirby["statuses"]
+            if kirby.get("full_model"):
+                values["kirby_copy_full_model"] = True
+    state: dict = {}
+    if values.get("name"):
+        state["resource_name"] = values["name"]
+    if values.get("base"):
+        state["base_resource_name"] = values["base"]
+    if isinstance(values.get("costumes"), int):
+        state["color_count"] = values["costumes"]
+    if isinstance(values.get("color_count"), int):
+        state["color_count"] = values["color_count"]
+    if isinstance(values.get("color_start"), int):
+        state["color_start"] = values["color_start"]
+    for key in ("display_name", "series", "narration", "ui_chara", "fighter_kind_name",
+                "disp_order", "staffroll", "owns_param_resources", "kirby_statuses",
+                "kirby_copy_full_model"):
+        if key in values:
+            state[key] = values[key]
+    if "css" in values:
+        state["own_css"] = values["css"] is False
+    if articles:
+        state["articles"] = articles
+    return state
 
 
 def manifest_table(kind_or_path) -> str:
@@ -350,6 +582,104 @@ def costumes(folder: Path, tree: str, resource: str) -> list[int]:
             if path.is_dir() and path.name[1:].isdigit() and len(path.name) <= 4:
                 found.add(int(path.name[1:]))
     return sorted(found)
+
+
+NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
+NAME_TEXT_SUFFIXES = {".toml", ".json", ".xmsbt", ".prcxml", ".xml"}
+NAME_BINARY_SUFFIXES = {".nro", ".prc", ".nus3bank", ".nus3audio", ".eff", ".bntx"}
+TREE_OF_KIND = {FIGHTER: "fighter", ITEM: "item", STAGE: "stage"}
+
+
+def name_pattern(name: str) -> re.Pattern:
+    """The name the way the game's paths and labels carry it: on its own between
+    characters that are not letters or digits (fighter/wawa/, vc_wawa_c00,
+    nam_chr1_00_wawa, ui_chara_wawa), or run into the dNN of a Kirby copy
+    animation (wawad00specialn.nuanmb). wawaman is another name."""
+    escaped = re.escape(name)
+    return re.compile(r"(?<![a-z0-9])%s(?![a-z0-9])|(?<![a-z0-9])%s(?=d\d\d[a-z])"
+                      % (escaped, escaped))
+
+
+def read_text_any(path: Path) -> tuple[str, str]:
+    """A text file and the encoding it was in; xmsbt is UTF-16 with a mark."""
+    raw = path.read_bytes()
+    if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"):
+        return raw.decode("utf-16"), "utf-16"
+    return raw.decode("utf-8"), "utf-8"
+
+
+def rename_plan(folder: Path, old: str, new: str) -> dict:
+    """Everything in the pack that carries the old name. moves: (from, to) for
+    every file and directory whose own name holds it, deepest first so a file
+    moves before its folder does. edits: the text files that mention it
+    (config.json, the manifests, the saved state, msg_name.xmsbt, prcxml).
+    stuck: binary files that hold it and need a rebuild or a hand edit."""
+    folder = Path(folder)
+    pattern = name_pattern(old)
+    moves, edits, stuck = [], [], []
+    for path in sorted(folder.rglob("*"), key=lambda entry: len(entry.parts), reverse=True):
+        relative = path.relative_to(folder)
+        if path.is_file():
+            suffix = path.suffix.lower()
+            if suffix in NAME_TEXT_SUFFIXES:
+                try:
+                    text, _ = read_text_any(path)
+                except UnicodeDecodeError:
+                    text = ""
+                if pattern.search(text):
+                    edits.append(relative)
+            elif suffix in NAME_BINARY_SUFFIXES and pattern.search(
+                    path.read_bytes().decode("latin-1")):
+                stuck.append(relative)
+        if pattern.search(path.name):
+            moves.append((relative, relative.with_name(pattern.sub(new, path.name))))
+    edits.sort()
+    stuck.sort()
+    return {"old": old, "new": new, "moves": moves, "edits": edits, "stuck": stuck}
+
+
+def rename_refusal(folder: Path, kind: str, old: str, new: str, vanilla) -> str:
+    """Why this rename must not happen, or an empty string."""
+    tree = TREE_OF_KIND[kind]
+    if not NAME_RE.match(new or ""):
+        return "the new name must be lowercase letters, digits and underscores, starting with a letter"
+    if new == old:
+        return "the new name is the old one"
+    if new in set(vanilla):
+        return "%s is a name the game already uses" % new
+    if not (Path(folder) / tree / old).is_dir():
+        return "%s/%s is not in this pack" % (tree, old)
+    if (Path(folder) / tree / new).exists():
+        return "%s/%s already exists" % (tree, new)
+    return ""
+
+
+def apply_rename(folder: Path, plan: dict) -> list[str]:
+    """Edit the text files first (each kept in backups), then move deepest
+    first. Returns one line per change, and one per file left alone."""
+    folder = Path(folder)
+    pattern = name_pattern(plan["old"])
+    new = plan["new"]
+    lines = []
+    for relative in plan["edits"]:
+        path = folder / relative
+        text, encoding = read_text_any(path)
+        changed, count = pattern.subn(new, text)
+        backups.keep(path, folder)
+        path.write_bytes(changed.encode(encoding))
+        lines.append("edited %s (%d)" % (relative.as_posix(), count))
+    for source, target in plan["moves"]:
+        path = folder / source
+        destination = folder / target
+        if destination.exists():
+            lines.append("left %s alone: %s already exists" % (source.as_posix(), target.name))
+            continue
+        path.rename(destination)
+        lines.append("renamed %s -> %s" % (source.as_posix(), target.name))
+    for relative in plan["stuck"]:
+        lines.append("%s still holds '%s' inside: rebuild it or edit it by hand"
+                     % (relative.as_posix(), plan["old"]))
+    return lines
 
 
 def messages(folder: Path) -> dict:

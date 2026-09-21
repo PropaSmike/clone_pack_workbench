@@ -14,7 +14,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
-from . import backups, emit, guide, packs, prc
+from . import backups, emit, guide, optimize, packs, prc
 from .catalog import (Catalog, OWNER_SURFACE, VL_SURFACE, is_float_field,
                       is_label_field, is_name_field)
 
@@ -53,6 +53,10 @@ def import_tool(name: str):
         return None
 
 
+NAMED_KEYS = ("resource_name", "place", "ui_chara", "fighter_kind_name", "display_name",
+              "agent_name", "ui_id", "id_name")
+
+
 class Workbench(ttk.Frame):
     """The whole window. Panels read and write self.state and call self.log."""
 
@@ -73,10 +77,11 @@ class Workbench(ttk.Frame):
         self.master.columnconfigure(0, weight=1)
         self.master.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
-        self.rowconfigure(1, weight=3)
-        self.rowconfigure(2, weight=1)
+        self.rowconfigure(1, weight=1)
 
         self._build_top()
+        self.split = ttk.PanedWindow(self, orient="vertical")
+        self.split.grid(row=1, column=0, sticky="nsew")
         self._build_tabs()
         self._build_log()
         self.master.bind("<F1>", lambda _: self.show_guide())
@@ -99,7 +104,7 @@ class Workbench(ttk.Frame):
         ttk.Button(bar, text="Backups", command=self.show_backups).grid(row=0, column=5)
 
         kinds = ttk.Frame(bar)
-        kinds.grid(row=1, column=0, columnspan=5, sticky="w", pady=(6, 0))
+        kinds.grid(row=1, column=0, columnspan=6, sticky="w", pady=(6, 0))
         ttk.Label(kinds, text="Working on").pack(side="left", padx=(0, 6))
         self.kind_buttons = {}
         for value in KINDS:
@@ -109,10 +114,11 @@ class Workbench(ttk.Frame):
             self.kind_buttons[value] = button
         ttk.Button(kinds, text="Add this part to the pack",
                    command=self.add_kind).pack(side="left", padx=(10, 0))
-        ttk.Label(kinds, textvariable=self.status).pack(side="left", padx=12)
+        status = ttk.Label(kinds, textvariable=self.status, justify="left")
+        status.pack(side="left", padx=12)
 
         parts = ttk.Frame(bar)
-        parts.grid(row=2, column=0, columnspan=5, sticky="w", pady=(6, 0))
+        parts.grid(row=2, column=0, columnspan=6, sticky="w", pady=(6, 0))
         ttk.Label(parts, text="Part").pack(side="left", padx=(0, 6))
         self.part_var = tk.StringVar()
         self.part_box = ttk.Combobox(parts, textvariable=self.part_var, width=30,
@@ -122,22 +128,26 @@ class Workbench(ttk.Frame):
         ttk.Button(parts, text="New part", command=self.new_part).pack(side="left", padx=4)
         ttk.Button(parts, text="Remove part",
                    command=self.remove_part).pack(side="left")
-        ttk.Label(parts, text="a pack may hold several fighters, items or stages; "
-                             "each is a part with its own settings",
-                  foreground="#555").pack(side="left", padx=12)
+        about = ttk.Label(parts, text="a pack may hold several fighters, items or stages; "
+                                      "each is a part with its own settings",
+                          foreground="#555", justify="left")
+        about.pack(side="left", padx=12)
+        wrap_within(bar, [status, about])
 
     def _build_tabs(self) -> None:
-        self.tabs = ttk.Notebook(self)
-        self.tabs.grid(row=1, column=0, sticky="nsew")
+        self.tabs = ttk.Notebook(self.split)
+        self.split.add(self.tabs, weight=4)
         self.identity = IdentityPanel(self.tabs, self)
         self.files = FilesPanel(self.tabs, self)
         self.params = ParamsPanel(self.tabs, self)
         self.lint = LintPanel(self.tabs, self)
+        self.optimize = OptimizePanel(self.tabs, self)
         self.rust = RustPanel(self.tabs, self)
         self.help_tab = ttk.Frame(self.tabs)
         for panel, label in ((self.identity, "Identity"), (self.files, "Files"),
                              (self.params, "Parameters"), (self.lint, "Lint"),
-                             (self.rust, "Rust"), (self.help_tab, "Help")):
+                             (self.optimize, "Optimize"), (self.rust, "Rust"),
+                             (self.help_tab, "Help")):
             self.tabs.add(panel, text=label)
         self.last_tab = str(self.identity)
         self.tabs.bind("<<NotebookTabChanged>>", self.tab_changed)
@@ -162,11 +172,11 @@ class Workbench(ttk.Frame):
         self.guide = guide.GuideWindow(self.master, tools_root())
 
     def _build_log(self) -> None:
-        frame = ttk.LabelFrame(self, text="Output", padding=4)
-        frame.grid(row=2, column=0, sticky="nsew", pady=(8, 0))
+        frame = ttk.LabelFrame(self.split, text="Output", padding=4)
+        self.split.add(frame, weight=1)
         frame.columnconfigure(0, weight=1)
         frame.rowconfigure(0, weight=1)
-        self.log_text = tk.Text(frame, height=8, wrap="word")
+        self.log_text = tk.Text(frame, height=5, wrap="word")
         self.log_text.grid(row=0, column=0, sticky="nsew")
         scroll = ttk.Scrollbar(frame, orient="vertical", command=self.log_text.yview)
         scroll.grid(row=0, column=1, sticky="ns")
@@ -259,10 +269,13 @@ class Workbench(ttk.Frame):
         self.sections = self.scan(folder)
         saved = packs.read_state(folder)
         for kind in packs.KINDS:
-            self.merge_parts(kind, saved[kind])
+            self.adopt_strays(kind, *self.merge_parts(kind, saved[kind]))
             manifest = packs.manifest_name(kind)
             if manifest and (folder / manifest).is_file():
-                declared = packs.read_manifests(folder / manifest)
+                if kind == packs.FIGHTER:
+                    declared = packs.read_fighter_manifests(folder / manifest)
+                else:
+                    declared = packs.read_manifests(folder / manifest)
                 self.merge_parts(kind, declared)
                 self.log("read %s%s" % (manifest, " (%d parts)" % len(declared)
                                         if len(declared) > 1 else ""))
@@ -278,6 +291,7 @@ class Workbench(ttk.Frame):
         self.files.refresh()
         self.rust.refresh()
         self.lint.clear()
+        self.optimize.clear()
 
     def reload(self) -> None:
         if self.folder:
@@ -305,19 +319,47 @@ class Workbench(ttk.Frame):
         self.identity.set_item_candidates(self.item_candidates)
         return sections
 
-    def merge_parts(self, kind: str, parts: list) -> None:
+    def merge_parts(self, kind: str, parts: list) -> tuple[list, set]:
         """Fold these parts into the kind's list, by name; a nameless part joins
         the first part that has no name yet, so a saved file and a manifest that
-        describe the same clone stay one part."""
+        describe the same clone stay one part. Returns the parts that matched
+        nothing and were appended, and the ids of the parts that were matched."""
         known = self.sections[kind]
+        strays, matched = [], set()
         for part in parts:
             name = packs.identity(part, kind)
             for existing in known:
                 if packs.identity(existing, kind) == name:
                     existing.update(part)
+                    matched.add(id(existing))
                     break
             else:
-                known.append(dict(part))
+                stray = dict(part)
+                known.append(stray)
+                strays.append(stray)
+        return strays, matched
+
+    def adopt_strays(self, kind: str, strays: list, matched: set) -> None:
+        """A saved part whose name ships nothing joins the first part found on
+        disk that has no saved state of its own: the disk names the clone, the
+        file keeps the rules. A pack with one fighter and a stale name in
+        clone_pack_gui.json is one fighter, not two."""
+        parts = self.sections[kind]
+        for stray in strays:
+            for existing in parts:
+                if existing is stray or existing in strays or id(existing) in matched:
+                    continue
+                if not packs.identity(existing, kind):
+                    continue
+                for key, value in stray.items():
+                    if key not in NAMED_KEYS:
+                        existing.setdefault(key, value)
+                matched.add(id(existing))
+                parts.remove(stray)
+                self.log("    clone_pack_gui.json describes %s '%s', which ships "
+                         "nothing here; its settings now belong to '%s'"
+                         % (kind, packs.identity(stray, kind), packs.identity(existing, kind)))
+                break
 
     def part(self, kind: str) -> dict:
         """The part of that kind being worked on; a kind always has at least one."""
@@ -406,6 +448,37 @@ class Workbench(ttk.Frame):
         self.mark_present()
         self.files.refresh()
 
+    def vanilla_names(self, kind: str) -> list[str]:
+        return {packs.FIGHTER: self.catalog.fighter_dirs, packs.ITEM: self.catalog.item_dirs,
+                packs.STAGE: self.catalog.stage_places}[kind]()
+
+    def rename_part(self, kind: str, old: str, new: str, confirm=None) -> bool:
+        """Rename what the pack ships for one part, then read the pack again.
+        confirm(plan) may say no once the plan is known."""
+        if not self.require_folder():
+            return False
+        refusal = packs.rename_refusal(self.folder, kind, old, new, self.vanilla_names(kind))
+        if refusal:
+            self.log("not renamed: " + refusal)
+            return False
+        plan = packs.rename_plan(self.folder, old, new)
+        if confirm is not None and not confirm(plan):
+            self.log("rename of %s to %s cancelled" % (old, new))
+            return False
+        self.log("renaming %s to %s: %d path(s), %d text file(s)"
+                 % (old, new, len(plan["moves"]), len(plan["edits"])))
+        for line in packs.apply_rename(self.folder, plan):
+            self.log("    " + line)
+        self.log_kept()
+        self.open_folder(self.folder)
+        for index, part in enumerate(self.sections[kind]):
+            if packs.identity(part, kind) == new:
+                self.kind.set(kind)
+                self.index[kind] = index
+                self.show_kind()
+                break
+        return True
+
     def merge_needed(self, clone: str) -> bool:
         """Whether config.json holds entries that belong to other parts of this pack."""
         module = import_tool("make_clone_pack")
@@ -463,6 +536,126 @@ class Workbench(ttk.Frame):
         self.log_kept()
 
 
+def wrap_within(container: tk.Misc, labels, margin: int = 12) -> None:
+    """Wrap each label to the width left of it inside the container, again on
+    every resize, so a hint or a note never runs past the window's edge."""
+    def fit() -> None:
+        width = container.winfo_width()
+        if width <= 1:
+            return
+        for label in labels:
+            left = label.winfo_rootx() - container.winfo_rootx()
+            if 0 <= left < width:
+                label.configure(wraplength=max(160, width - left - margin))
+    container.bind("<Configure>", lambda _: container.after_idle(fit), add="+")
+    for label in labels:
+        label.bind("<Configure>", lambda _: container.after_idle(fit), add="+")
+
+
+class RenameDialog(tk.Toplevel):
+    """Old name to new name for one kind: the names on disk to pick from, the
+    name typed on the form as the default new one."""
+
+    def __init__(self, parent: tk.Misc, kind: str, on_disk, guess: str, new: str, done):
+        super().__init__(parent)
+        self.title("Rename the %s's files" % kind)
+        self.resizable(False, False)
+        self.done = done
+        self.old = tk.StringVar(value=guess)
+        self.new = tk.StringVar(value=new)
+        body = ttk.Frame(self, padding=12)
+        body.grid(sticky="nsew")
+        ttk.Label(body, text="Name on disk").grid(row=0, column=0, sticky="w", pady=2)
+        ttk.Combobox(body, textvariable=self.old, values=list(on_disk), width=28,
+                     state="readonly" if on_disk else "normal").grid(row=0, column=1, pady=2)
+        ttk.Label(body, text="New name").grid(row=1, column=0, sticky="w", pady=2)
+        entry = ttk.Entry(body, textvariable=self.new, width=30)
+        entry.grid(row=1, column=1, pady=2)
+        ttk.Label(body, text="every folder, file, label and manifest line that carries "
+                            "the old name takes the new one; a plugin.nro is reported, "
+                            "not changed", foreground="#555", wraplength=360,
+                  justify="left").grid(row=2, column=0, columnspan=2, sticky="w", pady=(6, 8))
+        buttons = ttk.Frame(body)
+        buttons.grid(row=3, column=0, columnspan=2, sticky="e")
+        ttk.Button(buttons, text="Rename", command=self.confirm).pack(side="left", padx=(0, 6))
+        ttk.Button(buttons, text="Cancel", command=self.destroy).pack(side="left")
+        entry.focus_set()
+        entry.bind("<Return>", lambda _: self.confirm())
+        self.bind("<Escape>", lambda _: self.destroy())
+        self.transient(parent.winfo_toplevel())
+        self.grab_set()
+
+    def confirm(self) -> None:
+        old, new = self.old.get().strip(), self.new.get().strip()
+        self.destroy()
+        self.done(old, new)
+
+
+class Scrolled(ttk.Frame):
+    """A frame whose contents scroll when the window is shorter than they are:
+    build into .body, and the bar appears only while it is needed."""
+
+    def __init__(self, parent: tk.Misc):
+        super().__init__(parent)
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        background = ttk.Style().lookup("TFrame", "background") or None
+        self.canvas = tk.Canvas(self, highlightthickness=0, borderwidth=0,
+                                background=background)
+        self.canvas.grid(row=0, column=0, sticky="nsew")
+        self.bar = ttk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.bar.grid(row=0, column=1, sticky="ns")
+        self.canvas.configure(yscrollcommand=self.bar.set)
+        self.body = ttk.Frame(self.canvas)
+        self.window = self.canvas.create_window((0, 0), window=self.body, anchor="nw")
+        self.body.bind("<Configure>", lambda _: self.fit())
+        self.canvas.bind("<Configure>", self.resized)
+        self.canvas.bind("<Enter>", lambda _: self.arm())
+        self.canvas.bind("<Leave>", lambda _: self.disarm())
+
+    def resized(self, event) -> None:
+        self.canvas.itemconfigure(self.window, width=event.width)
+        self.fit()
+
+    def fit(self) -> None:
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        if self.overflows():
+            self.bar.grid()
+        else:
+            self.bar.grid_remove()
+            self.canvas.yview_moveto(0)
+        self.after_idle(self.settle)
+
+    def settle(self) -> None:
+        """The canvas sizes the body lazily; a width set during its own resize
+        event can be missed, so it is set again once the event is over."""
+        width = self.canvas.winfo_width()
+        if width > 1 and self.body.winfo_width() != width:
+            self.canvas.itemconfigure(self.window, width=width)
+
+    def overflows(self) -> bool:
+        return self.body.winfo_reqheight() > self.canvas.winfo_height()
+
+    def arm(self) -> None:
+        self.canvas.bind_all("<MouseWheel>", self.wheel)
+        self.canvas.bind_all("<Button-4>", self.wheel)
+        self.canvas.bind_all("<Button-5>", self.wheel)
+
+    def disarm(self) -> None:
+        for sequence in ("<MouseWheel>", "<Button-4>", "<Button-5>"):
+            self.canvas.unbind_all(sequence)
+
+    def wheel(self, event) -> None:
+        if isinstance(event.widget, (tk.Text, tk.Listbox, ttk.Treeview, ttk.Combobox)):
+            return
+        if not self.overflows():
+            return
+        if getattr(event, "num", None) == 4 or getattr(event, "delta", 0) > 0:
+            self.canvas.yview_scroll(-1, "units")
+        else:
+            self.canvas.yview_scroll(1, "units")
+
+
 class Fields:
     """A row per key: label, entry or combobox, and the tk variable behind it."""
 
@@ -470,7 +663,13 @@ class Fields:
         self.parent = parent
         self.vars: dict[str, tk.Variable] = {}
         self.widgets: dict[str, tk.Misc | None] = {}
+        self.hints: list[ttk.Label] = []
         self.row = 0
+
+    def hint(self, text: str) -> None:
+        label = ttk.Label(self.parent, text=text, foreground="#555", justify="left")
+        label.grid(row=self.row, column=2, sticky="w", padx=8)
+        self.hints.append(label)
 
     def entry(self, key: str, label: str, width: int = 28, hint: str = "") -> None:
         variable = tk.StringVar()
@@ -480,8 +679,7 @@ class Fields:
         ttk.Entry(self.parent, textvariable=variable, width=width).grid(
             row=self.row, column=1, sticky="w", pady=2)
         if hint:
-            ttk.Label(self.parent, text=hint, foreground="#555").grid(
-                row=self.row, column=2, sticky="w", padx=8)
+            self.hint(hint)
         self.row += 1
 
     def choice(self, key: str, label: str, values, width: int = 26, hint: str = "") -> None:
@@ -493,8 +691,7 @@ class Fields:
         box.grid(row=self.row, column=1, sticky="w", pady=2)
         self.widgets[key] = box
         if hint:
-            ttk.Label(self.parent, text=hint, foreground="#555").grid(
-                row=self.row, column=2, sticky="w", padx=8)
+            self.hint(hint)
         self.row += 1
 
     def flag(self, key: str, label: str, hint: str = "") -> None:
@@ -503,8 +700,7 @@ class Fields:
         ttk.Checkbutton(self.parent, text=label, variable=variable).grid(
             row=self.row, column=1, sticky="w", pady=2)
         if hint:
-            ttk.Label(self.parent, text=hint, foreground="#555").grid(
-                row=self.row, column=2, sticky="w", padx=8)
+            self.hint(hint)
         self.row += 1
 
     def buttons(self, pairs) -> None:
@@ -571,6 +767,11 @@ class IdentityPanel(ttk.Frame):
     def __init__(self, parent: tk.Misc, app: Workbench):
         super().__init__(parent, padding=10)
         self.app = app
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        self.scroll = Scrolled(self)
+        self.scroll.grid(row=0, column=0, sticky="nsew")
+        self.scroll.body.columnconfigure(0, weight=1)
         self.frames: dict[str, ttk.Frame] = {}
         self.fields: dict[str, Fields] = {}
         self.articles: list[dict] = []
@@ -581,6 +782,8 @@ class IdentityPanel(ttk.Frame):
         self._build_fighter()
         self._build_item()
         self._build_stage()
+        for kind, frame in self.frames.items():
+            wrap_within(frame, self.fields[kind].hints)
         self.show(packs.FIGHTER)
         for fields in self.fields.values():
             fields.watch(self.changed)
@@ -607,8 +810,9 @@ class IdentityPanel(ttk.Frame):
         self.app.rust.refresh()
 
     def _frame(self, kind: str) -> Fields:
-        frame = ttk.Frame(self)
+        frame = ttk.Frame(self.scroll.body)
         frame.grid(row=0, column=0, sticky="nsew")
+        frame.columnconfigure(2, weight=1)
         self.frames[kind] = frame
         fields = Fields(frame)
         self.fields[kind] = fields
@@ -628,11 +832,22 @@ class IdentityPanel(ttk.Frame):
         fields.entry("color_start", "First costume", width=6)
         fields.entry("color_count", "Costumes", width=6,
                      hint="how many the clone has; past what the pack ships, c00 is reused")
+        fields.entry("display_name", "Name label", hint="fighter.toml: the nam_chr*_00_<x> label suffix in msg_name.xmsbt; blank = the name")
+        fields.entry("series", "Series", hint="fighter.toml: ui_series_id, such as mario")
+        fields.entry("disp_order", "CSS position", width=6, hint="fighter.toml: -1 hides it")
+        fields.entry("narration", "Announcer call",
+                     hint="fighter.toml: vc_narration_characall_<name>, blank uses the base's")
+        fields.flag("staffroll", "Ships its own staff roll texture",
+                    hint="fighter.toml: standard/staffroll/texture/standard_staffroll_<name>.nutexb")
+        fields.flag("own_css", "Plugin keeps its CSK and ParamConfig code",
+                    hint="a one-slot mod's plugin: its add_chara_db_entry_info publishes the row (Manifest: own_css(), fighter.toml: css = false) and its param_config::update_* set the vl.prc values; the Rust tab shows both with the clone's names")
+        fields.entry("kirby_statuses", "Kirby copy statuses", width=6,
+                     hint="fighter.toml: how many status kinds Kirby's copy needs; the engine picks the numbers")
         fields.flag("owns_param_resources", "Ships its own vl.prc and params")
         fields.flag("kirby_copy_full_model", "Kirby wears the whole body, not a cap")
         fields.choice("kirby_copy_donor", "Kirby copy donor",
                       [""] + [name for _, name in catalog.fighter_bases()],
-                      hint="whose copy model your clone borrows")
+                      hint="whose copy model your clone borrows; blank takes the base's own hat")
         fields.entry("kirby_copy_suffix", "Copy suffix", hint="default fitkirby")
         fields.choice("kirby_copy_motion_donor", "Copy motion donor",
                       [""] + [name for _, name in catalog.fighter_bases()])
@@ -671,9 +886,11 @@ class IdentityPanel(ttk.Frame):
         articles.columnconfigure(3, weight=1)
 
         fields.buttons((
+            ("Write fighter.toml", self.write_fighter_toml),
             ("Write config.json", self.write_fighter_config),
             ("Save descriptor", self.save_descriptor),
             ("Show Rust", lambda: self.app.tabs.select(self.app.rust)),
+            ("Rename files", self.rename_files),
         ))
 
     def _build_item(self) -> None:
@@ -704,14 +921,16 @@ class IdentityPanel(ttk.Frame):
             self.spawn_vars[source] = variable
             ttk.Checkbutton(sources, text=source, variable=variable).grid(
                 row=0, column=index, padx=4, sticky="w")
-        ttk.Label(sources, text="the weight alone makes it appear on the stage; tick "
-                                "the containers it can also come out of",
-                  foreground="#555").grid(row=1, column=0, columnspan=5, sticky="w",
-                                          pady=(4, 0))
+        note = ttk.Label(sources, text="the weight alone makes it appear on the stage; "
+                                       "tick the containers it can also come out of",
+                         foreground="#555", justify="left")
+        note.grid(row=1, column=0, columnspan=5, sticky="w", pady=(4, 0))
+        fields.hints.append(note)
         fields.flag("declare_shipped", "Declare the files this pack ships (--pack-dir)")
         fields.buttons((
             ("Write item.toml", self.write_item_toml),
             ("Write config.json", self.write_item_config),
+            ("Rename files", self.rename_files),
         ))
 
     def _build_stage(self) -> None:
@@ -757,7 +976,38 @@ class IdentityPanel(ttk.Frame):
             ("Write stage.toml", self.write_stage_toml),
             ("Write config.json", self.write_stage_config),
             ("Stamp sound bank id", self.stamp_bank),
+            ("Rename files", self.rename_files),
         ))
+
+    def rename_files(self) -> None:
+        """Rename the part's folders, files and labels from the name on disk to
+        the name on the form, after a look at what that touches."""
+        if not self.app.require_folder():
+            return
+        kind = self.app.kind.get()
+        self.collect(quiet=True)
+        typed = packs.identity(self.app.state, kind)
+        on_disk = packs.own_names(self.app.folder, packs.TREE_OF_KIND[kind],
+                                  self.app.vanilla_names(kind))
+        if not on_disk:
+            self.app.log("nothing to rename: the pack ships no %s of its own" % kind)
+            return
+        others = {packs.identity(part, kind) for part in self.app.sections[kind]
+                  if part is not self.app.state}
+        free = [name for name in on_disk if name not in others]
+        guess = free[0] if len(free) == 1 else (typed if typed in on_disk else on_disk[0])
+
+        def confirm(plan: dict) -> bool:
+            stuck = "".join("\n  %s" % path.as_posix() for path in plan["stuck"])
+            return messagebox.askyesno(
+                TITLE, "Rename %s to %s?\n\n%d folders and files renamed, %d text files "
+                       "edited.%s" % (plan["old"], plan["new"], len(plan["moves"]),
+                                      len(plan["edits"]),
+                                      "\n\nStill carry the old name inside and need a "
+                                      "rebuild or a hand edit:" + stuck if stuck else ""))
+
+        RenameDialog(self, kind, on_disk, guess, typed if typed != guess else "",
+                     lambda old, new: self.app.rename_part(kind, old, new, confirm))
 
     def set_item_candidates(self, names) -> None:
         """Offer every item tree the pack ships, since a pack may hold several."""
@@ -792,6 +1042,7 @@ class IdentityPanel(ttk.Frame):
                 frame.grid()
             else:
                 frame.grid_remove()
+        self.scroll.after_idle(self.scroll.fit)
 
     def load(self) -> None:
         """Fill every form from its own section, so the parts cannot cross."""
@@ -854,6 +1105,7 @@ class IdentityPanel(ttk.Frame):
                     values[key] = int(values.get(key) or (0 if key == "color_start" else 8))
                 except ValueError:
                     values.pop(key, None)
+            whole_numbers(values, ("disp_order", "kirby_statuses"))
         elif kind == packs.ITEM:
             text = values.pop("base_item", "")
             name, number = split_choice(text)
@@ -1025,6 +1277,46 @@ class IdentityPanel(ttk.Frame):
             out.append(values)
         return out
 
+    def write_fighter_toml(self) -> None:
+        """fighter.toml is the registration of a pack with no plugin: the engine
+        reads it at boot. A plugin registers from the Manifest on the Rust tab
+        instead; if both exist the file is read first and wins."""
+        if not self.app.require_folder():
+            return
+        self.collect()
+        state = dict(self.app.part(packs.FIGHTER))
+        if not state.get("resource_name"):
+            messagebox.showinfo(TITLE, "Give the fighter a resource name first.")
+            return
+        if not (state.get("base_resource_name") or state.get("base_fighter")):
+            messagebox.showinfo(TITLE, "Pick the base fighter first.")
+            return
+        if len(self.app.sections[packs.FIGHTER]) > 1:
+            self.app.log("fighter.toml: several fighters in one pack need [[fighter]] blocks; "
+                         "the window writes the current one flat, so put each fighter in "
+                         "its own pack folder or edit the file by hand")
+        written = packs.write_fighter_manifest(self.app.folder / packs.FIGHTER_MANIFEST, state)
+        self.app.log("fighter.toml: wrote %s" % ", ".join(written))
+        self.app.log("    the engine registers the fighter from this file at boot; a pack "
+                     "with a plugin registers from the Manifest on the Rust tab instead, "
+                     "and a plugin that also registers gets this file's kind back")
+        engine_rules, config_rules = emit.split_rules(state)
+        if state.get("own_css"):
+            if engine_rules:
+                self.app.log("    [params]: %d rule(s) the game reads past ParamConfig "
+                             "(fighter_param, param_motion, common, param_thrown); the engine "
+                             "applies them" % len(engine_rules))
+            if config_rules:
+                self.app.log("    %d vl.prc rule(s) are not in fighter.toml: they are the plugin's "
+                             "param_config::update_* calls (Rust tab)" % len(config_rules))
+            self.app.log("    css = false: the plugin publishes the CSS row through CSK "
+                         "(register_css_entry on the Rust tab)")
+        elif engine_rules or config_rules:
+            self.app.log("    [params]: %d rule(s); the engine applies them all"
+                         % (len(engine_rules) + len(config_rules)))
+        self.app.save_state()
+        self.app.log_kept()
+
     def write_item_toml(self) -> None:
         if not self.app.require_folder():
             return
@@ -1037,11 +1329,16 @@ class IdentityPanel(ttk.Frame):
         self.app.log("item.toml: wrote %s%s" % (
             ", ".join(written),
             " for %d items" % len(parts) if len(parts) > 1 else ""))
+        if len(parts) == 1:
+            tables = emit.item_table_lines(self.app.part(packs.ITEM))
+            if tables and packs.write_item_tables(self.app.folder / "item.toml", tables):
+                self.app.log("item.toml: wrote %s from the Parameters tab; an engine "
+                             "without fighter.toml support ignores those tables"
+                             % ", ".join(line for line in tables if line.startswith("[")))
         if len(parts) > 1:
             self.app.log("    two or more items in one item.toml need an engine newer "
                          "than 0.2.1-beta.1; that engine skips the whole file. For it, "
-                         "keep one item per pack folder or register them from the "
-                         "Rust tab")
+                         "keep one item per pack folder")
         self.app.save_state()
         self.app.log_kept()
 
@@ -1111,7 +1408,9 @@ class FilesPanel(ttk.Frame):
         self.text.grid(row=1, column=0, sticky="nsew", pady=(6, 0))
         scroll = ttk.Scrollbar(self, orient="vertical", command=self.text.yview)
         scroll.grid(row=1, column=1, sticky="ns")
-        self.text.configure(yscrollcommand=scroll.set)
+        across = ttk.Scrollbar(self, orient="horizontal", command=self.text.xview)
+        across.grid(row=2, column=0, sticky="ew")
+        self.text.configure(yscrollcommand=scroll.set, xscrollcommand=across.set)
 
     def refresh(self) -> None:
         self.text.delete("1.0", "end")
@@ -1279,24 +1578,26 @@ class ParamsPanel(ttk.Frame):
         self.rowconfigure(1, weight=3)
 
         row = ttk.Frame(self)
-        row.grid(row=2, column=0, columnspan=6, sticky="w")
-        ttk.Label(row, text="Field").pack(side="left")
-        self.field_box = ttk.Entry(row, textvariable=self.field, width=32)
-        self.field_box.pack(side="left", padx=4)
-        ttk.Label(row, text="Operation").pack(side="left", padx=(8, 2))
+        row.grid(row=2, column=0, columnspan=6, sticky="ew")
+        row.columnconfigure(1, weight=3)
+        row.columnconfigure(5, weight=2)
+        ttk.Label(row, text="Field").grid(row=0, column=0, sticky="w")
+        self.field_box = ttk.Entry(row, textvariable=self.field, width=18)
+        self.field_box.grid(row=0, column=1, sticky="ew", padx=4)
+        ttk.Label(row, text="Operation").grid(row=0, column=2, sticky="w", padx=(8, 2))
         self.operation_box = ttk.Combobox(row, textvariable=self.operation, width=6,
                                           values=("Set", "Mul"))
-        self.operation_box.pack(side="left")
-        ttk.Label(row, text="Value").pack(side="left", padx=(8, 2))
-        self.value_box = ttk.Combobox(row, textvariable=self.value, width=26)
-        self.value_box.pack(side="left")
+        self.operation_box.grid(row=0, column=3, sticky="w")
+        ttk.Label(row, text="Value").grid(row=0, column=4, sticky="w", padx=(8, 2))
+        self.value_box = ttk.Combobox(row, textvariable=self.value, width=12)
+        self.value_box.grid(row=0, column=5, sticky="ew")
         self.integer = tk.BooleanVar()
         self.free_type = ttk.Checkbutton(row, text="Whole number", variable=self.integer)
-        self.free_type.pack(side="left", padx=(8, 0))
+        self.free_type.grid(row=0, column=6, sticky="w", padx=(8, 0))
         self.add_button = ttk.Button(row, text="Add", command=self.add_rule)
-        self.add_button.pack(side="left", padx=8)
+        self.add_button.grid(row=0, column=7, padx=8)
         self.remove_button = ttk.Button(row, text="Remove", command=self.remove_rule)
-        self.remove_button.pack(side="left")
+        self.remove_button.grid(row=0, column=8)
         self.controls = (self.add_button, self.remove_button, self.field_box,
                          self.operation_box, self.value_box, self.free_type,
                          self.search_box)
@@ -1343,9 +1644,9 @@ class ParamsPanel(ttk.Frame):
         self.rule_list.grid(row=4, column=0, columnspan=6, sticky="nsew", pady=6)
         self.rule_list.on_select(self.rule_chosen)
         self.rowconfigure(4, weight=2)
-        self.note = ttk.Label(self, text="", foreground="#555", wraplength=900,
-                              justify="left")
+        self.note = ttk.Label(self, text="", foreground="#555", justify="left")
         self.note.grid(row=5, column=0, columnspan=6, sticky="nw")
+        wrap_within(self, [self.note])
         self.refresh_fields()
 
     def show(self, kind: str) -> None:
@@ -1611,7 +1912,10 @@ class ParamsPanel(ttk.Frame):
             changed = sum(1 for value in self.extra.values() if value[3])
             return ("%d of %d params from your prc files under fighter/%s/param, with "
                     "the value each holds. Click one, set a value, Add. A slash means "
-                    "param/field. %s"
+                    "param/field. With a plugin that keeps its ParamConfig code these "
+                    "are param_config::update_* calls on the Rust tab, with the clone's "
+                    "kind; without one they are .param(..) on the Manifest, or "
+                    "fighter.toml's [params]. %s"
                     % (shown, len(self.rows), resource,
                        "%d value(s) differ from the game's default (Vanilla column) "
                        "and are green." % changed if changed else
@@ -1645,7 +1949,9 @@ class ParamsPanel(ttk.Frame):
         if table == "param_thrown":
             return ("Where a held or thrown body sits: %d rule(s). A whole vector takes "
                     "Mul only; a single component takes Set or Mul. offset* is your "
-                    "clone holding, held_offset* is your clone being held." % shown)
+                    "clone holding, held_offset* is your clone being held. Read by the "
+                    "game past ParamConfig: .param(\"param_thrown.<key>\", ..) on the "
+                    "Manifest or fighter.toml's [params], never ParamConfig." % shown)
         if table == "item_common":
             path = self.values_file.get().strip()
             if self.extra:
@@ -1662,12 +1968,20 @@ class ParamsPanel(ttk.Frame):
         if table == "common":
             return ("%d of %d fields from the six per-fighter files (common, item, "
                     "etc, power_up, effect, sound); the File box picks one. Change "
-                    "values that work together as a set (shield_max with shield_reset)."
+                    "values that work together as a set (shield_max with shield_reset). "
+                    "Read by the game past ParamConfig: .param(\"common.<field>\", ..) on "
+                    "the Manifest or fighter.toml's [params], never ParamConfig."
                     % (shown, len(self.rows)))
         if table == "param_motion":
-            return ("%d of %d fields: dodge, roll and air dodge timings."
+            return ("%d of %d fields: dodge, roll and air dodge timings. Read by the "
+                    "game past ParamConfig: .param(\"param_motion.<field>\", ..) on the "
+                    "Manifest or fighter.toml's [params], never ParamConfig."
                     % (shown, len(self.fields)))
-        return "%d of %d fields. A rule applies to every costume." % (shown, len(self.fields))
+        return ("%d of %d fields. A rule applies to every costume. The game reads these "
+                "past ParamConfig (FighterParamAccessor2 and straight from the row), so "
+                "they are .param(..) on the Manifest or fighter.toml's [params]; the "
+                "engine applies them and pushes them to ParamConfig too."
+                % (shown, len(self.fields)))
 
     def choose_field(self, _event=None) -> None:
         selection = self.field_list.selection()
@@ -1897,6 +2211,100 @@ class LintPanel(ttk.Frame):
                                             for level in LEVELS))
 
 
+OPTIMIZE_COLUMNS = (
+    ("target", "Costume file", 380, "w"),
+    ("source", "Takes the bytes of", 300, "w"),
+    ("size", "Size", 80, "e"),
+)
+
+
+class OptimizePanel(ttk.Frame):
+    """The pack made smaller: a costume's file that equals a lower costume's is
+    taken out and config.json points its name at the lower costume's file."""
+
+    def __init__(self, parent: tk.Misc, app: Workbench):
+        super().__init__(parent, padding=10)
+        self.app = app
+        self.found: dict | None = None
+        self.planned: dict | None = None
+        self.kept: list = []
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(2, weight=1)
+        bar = ttk.Frame(self)
+        bar.grid(row=0, column=0, sticky="ew")
+        ttk.Button(bar, text="Scan", command=self.scan).pack(side="left")
+        self.apply_button = ttk.Button(bar, text="Apply", command=self.apply, state="disabled")
+        self.apply_button.pack(side="left", padx=4)
+        self.summary = ttk.Label(self, text="", justify="left")
+        self.summary.grid(row=1, column=0, sticky="w", pady=(8, 4))
+        self.sheet = Sheet(self, OPTIMIZE_COLUMNS, height=12)
+        self.sheet.grid(row=2, column=0, sticky="nsew")
+        self.note = ttk.Label(self, foreground="#555", justify="left", text=(
+            "A costume's file with the same bytes as a lower costume's twin (model, "
+            "motion, camera, sound bank, Kirby hat) ships once: the copy leaves the pack "
+            "(kept in backups) and config.json's share-to-added points its name at the "
+            "lower costume's file, which the game then loads for both. .marker files, "
+            "manifests and the plugin are never touched; a name config.json already "
+            "aliases is left as it is. Empty folders go too."))
+        self.note.grid(row=3, column=0, sticky="w", pady=(6, 0))
+        wrap_within(self, [self.summary, self.note])
+
+    def clear(self) -> None:
+        self.found = self.planned = None
+        self.kept = []
+        self.sheet.clear()
+        self.summary.configure(text="Scan to see what the pack ships twice.")
+        self.apply_button.configure(state="disabled")
+
+    def config(self) -> dict:
+        path = self.app.folder / "config.json" if self.app.folder else None
+        if path is None or not path.is_file():
+            return {}
+        try:
+            loaded = json.loads(path.read_text(encoding="utf-8"))
+        except ValueError:
+            return {}
+        return loaded if isinstance(loaded, dict) else {}
+
+    def scan(self) -> None:
+        if not self.app.require_folder():
+            return
+        self.sheet.clear()
+        self.found = optimize.scan(self.app.folder)
+        self.planned, self.kept, notes = optimize.plan_config(self.config(), self.found["duplicates"])
+        for note in notes:
+            self.app.log("    optimize: " + note)
+        total = sum(size for _, _, size in self.kept)
+        for target, source, size in self.kept:
+            self.sheet.append({"target": target, "source": source, "size": optimize.human(size)})
+        self.summary.configure(text=(
+            "%d of %d costume-owned files are copies of a lower costume's: %s to take out"
+            ", %d empty folder(s)." % (len(self.kept), self.found["looked"], optimize.human(total),
+                                        len(self.found["empty"]))))
+        self.apply_button.configure(state="normal" if self.kept or self.found["empty"] else "disabled")
+        self.app.log("optimize: %d duplicate(s) in %d costume-owned file(s), %s; %d empty folder(s)"
+                     % (len(self.kept), self.found["looked"], optimize.human(total),
+                        len(self.found["empty"])))
+
+    def apply(self, confirm=None) -> bool:
+        if self.found is None or self.planned is None:
+            return False
+        if confirm is None:
+            confirm = lambda: messagebox.askyesno(
+                TITLE, "Take %d file(s) out of the pack and share their names through "
+                       "config.json? Each is copied to backups first."
+                       % len(self.kept))
+        if not confirm():
+            return False
+        for line in optimize.apply(self.app.folder, self.planned, self.kept, self.found["empty"]):
+            self.app.log("    " + line)
+        self.app.log_kept()
+        self.app.files.refresh()
+        self.app.lint.clear()
+        self.scan()
+        return True
+
+
 class RustPanel(ttk.Frame):
     """The plugin source the Identity and Parameters tabs describe."""
 
@@ -1909,13 +2317,15 @@ class RustPanel(ttk.Frame):
         bar.grid(row=0, column=0, sticky="ew")
         ttk.Button(bar, text="Refresh", command=self.refresh).pack(side="left")
         ttk.Button(bar, text="Copy", command=self.copy).pack(side="left", padx=4)
-        ttk.Button(bar, text="Save as registration.rs",
+        ttk.Button(bar, text="Save as lib.rs",
                    command=self.save).pack(side="left")
         self.text = tk.Text(self, wrap="none", height=24)
         self.text.grid(row=1, column=0, sticky="nsew", pady=(6, 0))
         scroll = ttk.Scrollbar(self, orient="vertical", command=self.text.yview)
         scroll.grid(row=1, column=1, sticky="ns")
-        self.text.configure(yscrollcommand=scroll.set)
+        across = ttk.Scrollbar(self, orient="horizontal", command=self.text.xview)
+        across.grid(row=2, column=0, sticky="ew")
+        self.text.configure(yscrollcommand=scroll.set, xscrollcommand=across.set)
 
     def parts(self) -> list[str]:
         """What the pack ships, plus the part being worked on and any part described."""
@@ -1929,35 +2339,17 @@ class RustPanel(ttk.Frame):
                 if part.get("resource_name") or part.get("base_kind") is not None]
 
     def source(self) -> str:
-        """Every part of the pack that needs code, in one file's worth of order.
-        With several parts of a kind, each function carries the part's name."""
+        """One file for every part of the pack that takes code."""
         parts = self.parts()
-        blocks = []
-        if packs.FIGHTER in parts:
-            fighters = self.described(packs.FIGHTER)
-            for fighter in fighters:
-                suffix = emit.suffix(fighter) if len(fighters) > 1 else ""
-                blocks.append(emit.plugin_source(fighter, suffix))
-        if packs.ITEM in parts:
-            items = [dict(part) for part in self.described(packs.ITEM)]
-            for item in items:
-                suffix = emit.suffix(item) if len(items) > 1 else ""
-                if not item.get("base_item") and item.get("base_kind") is not None:
-                    item["base_item"] = self.app.catalog.item_name(int(item["base_kind"]))
-                blocks.append(emit.item_registration(item, suffix))
-                blocks.append(emit.item_common_calls(item, suffix))
-                blocks.append(emit.item_owner_param_calls(item, suffix))
-                blocks.append(emit.item_generate_calls(item, suffix))
-                spawn = emit.spawn_note(item)
-                if spawn:
-                    blocks.append("A pack with no plugin gets the same spawns from "
-                                  "item.toml:\n\n" + spawn)
+        fighters = self.described(packs.FIGHTER) if packs.FIGHTER in parts else []
+        items = self.described(packs.ITEM) if packs.ITEM in parts else []
+        text = emit.plugin_source(fighters, items)
+        if text:
+            return text
         if packs.STAGE in parts:
-            blocks.append("A stage needs no code: stage.toml and config.json are "
-                          "enough. Add a plugin.nro only for behaviour stage.toml "
-                          "cannot describe.\n")
-        text = "\n".join(block for block in blocks if block)
-        return text or "Nothing to emit yet.\n"
+            return ("A stage needs no code: stage.toml and config.json are enough. "
+                    "Add a plugin.nro only for behaviour stage.toml cannot describe.\n")
+        return "Nothing to emit yet.\n"
 
     def refresh(self) -> None:
         self.text.delete("1.0", "end")
@@ -1971,7 +2363,7 @@ class RustPanel(ttk.Frame):
     def save(self) -> None:
         if not self.app.require_folder():
             return
-        path = self.app.folder / "registration.rs"
+        path = self.app.folder / "lib.rs"
         backups.keep(path, self.app.folder)
         path.write_text(self.source(), encoding="utf-8", newline="\n")
         self.app.log("wrote %s" % path)
@@ -1981,8 +2373,10 @@ class RustPanel(ttk.Frame):
 def run(folder: str | None = None) -> int:
     """Open the window."""
     root = tk.Tk()
-    root.geometry("1060x820")
-    root.minsize(900, 640)
+    width = min(1060, root.winfo_screenwidth() - 40)
+    height = min(820, root.winfo_screenheight() - 100)
+    root.geometry("%dx%d" % (width, height))
+    root.minsize(720, 480)
     Workbench(root, folder)
     root.mainloop()
     return 0

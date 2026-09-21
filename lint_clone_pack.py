@@ -9,6 +9,14 @@ import os
 import re
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+try:
+    import fighter_manifest
+except ImportError:
+    fighter_manifest = None
+
+WORK_ID_TERM_RE = re.compile(r"(FIGHTER_[A-Z0-9_]*INSTANCE_WORK_ID_(?:INT|FLOAT|FLAG)_TERM)\s*\+\s*(\d+)")
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -23,6 +31,21 @@ def _beside(*relative):
 
 
 DEFAULT_ARC_INDEX = os.environ.get("SSBU_ARC_INDEX") or _beside("arc_index")
+
+
+def load_vanilla_dirs(arc_index):
+    """Every directory data.arc loads files by, and the target of each link,
+    from arc_dir_files.tsv; None without the file."""
+    table = os.path.join(arc_index, "arc_dir_files.tsv")
+    if not os.path.exists(table):
+        return None
+    dirs = {}
+    with open(table, encoding="utf8", errors="replace") as handle:
+        for line in handle:
+            cells = line.rstrip("\n").split("\t")
+            if len(cells) >= 4:
+                dirs[cells[0]] = (int(cells[1]), cells[3])
+    return dirs
 
 
 def load_vanilla_paths(arc_index):
@@ -48,6 +71,103 @@ def costume_of(path):
         if 3 <= len(part) <= 4 and part[0] == "c" and part[1:].isdigit():
             return part
     return None
+
+
+def check_fighter_manifest(mod_dir, shipped, vanilla):
+    """fighter.toml against the folders: every article it names has files, the
+    costume count matches what the body model ships, and the base is a fighter."""
+    findings = []
+    path = os.path.join(mod_dir, "fighter.toml")
+    if not os.path.isfile(path):
+        return findings
+    if fighter_manifest is None:
+        return [("WARN", "fighter.toml is present but fighter_manifest.py is not beside "
+                         "this script, so it was not checked")]
+    try:
+        fighters = fighter_manifest.read(path)
+    except fighter_manifest.ManifestError as error:
+        return [("ERROR", f"fighter.toml {error}; the engine registers nothing from it")]
+    except OSError as error:
+        return [("ERROR", f"fighter.toml: {error}")]
+    for fighter in fighters:
+        name = fighter.get("resource_name") or fighter.get("name")
+        base = fighter.get("base_resource_name") or fighter.get("base")
+        if vanilla is not None and not any(
+                p.startswith(f"fighter/{base}/") for p in vanilla):
+            findings.append(("ERROR", f"fighter.toml: base {base!r} is not a fighter in "
+                                      "data.arc"))
+        if not any(p.startswith(f"fighter/{name}/") for p in shipped):
+            findings.append(("WARN", f"fighter.toml: nothing is shipped under fighter/{name}/; "
+                                     "the clone will be all borrowed files"))
+        body = set()
+        for p in shipped:
+            m = re.match(rf"fighter/{re.escape(name)}/model/body/c(\d{{2,3}})/", p)
+            if m:
+                body.add(int(m.group(1)))
+        costumes = fighter.get("costumes", 8)
+        start = fighter.get("color_start", 0)
+        if body:
+            past = sorted(c for c in body if c < start or c >= start + costumes)
+            if past:
+                findings.append(("WARN", f"fighter.toml: costumes {start}..{start + costumes - 1} "
+                                         f"but the body model ships c{past[0]:02}"
+                                         + (f" and {len(past) - 1} more" if len(past) > 1 else "")
+                                         + "; those costumes are unreachable"))
+        for article in fighter["articles"]:
+            owner = "kirby" if article.get("kirby") else name
+            folder = f"fighter/{owner}/model/{article.get('name')}/"
+            if not any(p.startswith(folder) for p in shipped):
+                findings.append(("WARN", f"fighter.toml: article {article.get('name')!r} has no "
+                                         f"files under {folder}; its model is the source's"))
+        kirby = fighter.get("kirby")
+        if kirby and kirby.get("statuses", 0) > 0 and not any(
+                p.startswith(f"fighter/{name}/model/kirbycopy/") or
+                p.startswith(f"fighter/kirby/model/copy_{name}_") for p in shipped):
+            findings.append(("WARN", "fighter.toml: [kirby] declares statuses but no copy model is "
+                                     "shipped under fighter/%s/model/kirbycopy/ or "
+                                     "fighter/kirby/model/copy_%s_*" % (name, name)))
+        if fighter.get("staffroll") and not any(
+                p == f"standard/staffroll/texture/standard_staffroll_{name}.nutexb"
+                for p in shipped):
+            findings.append(("ERROR", "fighter.toml: staffroll = true but "
+                                      f"standard/staffroll/texture/standard_staffroll_{name}.nutexb "
+                                      "is not shipped"))
+        if fighter.get("jingle"):
+            findings.append(("WARN", "fighter.toml: jingle is accepted by the engine but not "
+                                     "served yet; the base's victory theme plays"))
+        if fighter.get("css") is False and not os.path.isfile(os.path.join(mod_dir, "plugin.nro")):
+            findings.append(("ERROR", "fighter.toml: css = false says the plugin publishes the CSS "
+                                      "row through CSK, but there is no plugin.nro; the fighter "
+                                      "would have no row"))
+    return findings
+
+
+def check_work_ids(mod_dir):
+    """Custom work ids past a base's _TERM in the pack's Rust source: a clone's
+    instance arrays are the base's size, and Mecha overran them."""
+    findings = []
+    source = os.path.join(mod_dir, "src")
+    if not os.path.isdir(source):
+        return findings
+    seen = set()
+    for root, _, names in os.walk(source):
+        for name in names:
+            if not name.endswith(".rs"):
+                continue
+            path = os.path.join(root, name)
+            try:
+                with open(path, encoding="utf8", errors="replace") as handle:
+                    text = handle.read()
+            except OSError:
+                continue
+            for term, offset in WORK_ID_TERM_RE.findall(text):
+                if (term, offset) in seen:
+                    continue
+                seen.add((term, offset))
+                findings.append(("WARN", f"{os.path.relpath(path, mod_dir)} uses {term} + {offset}: "
+                                         "a clone's work arrays are its base's size, so a custom "
+                                         "id past _TERM writes into whatever follows the array"))
+    return findings
 
 
 def lint(mod_dir, arc_index, cross_color_resources=()):
@@ -202,12 +322,130 @@ def lint(mod_dir, arc_index, cross_color_resources=()):
                 f"{directory} has no new-dir-infos-base entry and ships none of its own files",
             ))
 
+    findings.extend(lint_shares(config, shipped, vanilla))
+    findings.extend(lint_added_dirs(added_dirs, bases, dir_files, load_vanilla_dirs(arc_index)))
+    findings.extend(lint_effects(added_dirs, dir_files, shipped, shared_targets))
     findings.extend(lint_camera_slots(dir_files, added_dirs, bases, shipped))
     findings.extend(lint_camera_coverage(dir_files, bases, shipped))
     findings.extend(lint_article_lvd_names(shipped))
     findings.extend(lint_item_pack(mod_dir, added_dirs, bases, dir_files, shipped,
                                    resolved_share_targets))
     findings.extend(lint_undeclared_shipped(added_dirs, dir_files, shipped))
+    findings.extend(check_fighter_manifest(mod_dir, shipped, vanilla))
+    findings.extend(check_work_ids(mod_dir))
+    return findings
+
+
+def lint_shares(config, shipped, vanilla):
+    """A share is a new name for an existing file's data. ARCropolis points a
+    target the pack ships back at the source, so the shipped bytes never load;
+    a source that exists nowhere makes it skip the entry, so the target never
+    exists and every group naming it drops it."""
+    findings = []
+    for section in ("share-to-vanilla", "share-to-added"):
+        for source, targets in config.get(section, {}).items():
+            targets = targets if isinstance(targets, list) else [targets]
+            if source not in shipped and (vanilla is None or source not in vanilla):
+                findings.append((
+                    "ERROR",
+                    f"{section}: source {source} is neither in data.arc nor in this pack; "
+                    f"ARCropolis skips it and {len(targets)} target(s) never exist",
+                ))
+            for target in targets:
+                if target in shipped:
+                    findings.append((
+                        "ERROR",
+                        f"{section}: {target} is shipped by this pack AND listed as a target "
+                        f"of {source}; ARCropolis points it at the source and the shipped "
+                        "file never loads. Drop the share or the file",
+                    ))
+                if target == source:
+                    findings.append(("ERROR", f"{section}: {source} is shared to itself"))
+    return findings
+
+
+def lint_added_dirs(added_dirs, bases, dir_files, vanilla_dirs):
+    """Every new directory needs a parent that exists, a base link needs a
+    directory that exists, and a linked directory cannot also hold files."""
+    findings = []
+    known = set(added_dirs) | set(bases)
+    for directory, target in sorted(bases.items()):
+        if directory in added_dirs:
+            findings.append((
+                "ERROR",
+                f"{directory} is both in new-dir-infos and linked to {target} in "
+                "new-dir-infos-base; keep one",
+            ))
+        if dir_files.get(directory):
+            findings.append((
+                "ERROR",
+                f"{directory} is linked to {target} but new-dir-files gives it "
+                f"{len(dir_files[directory])} member(s); a linked directory loads the "
+                "target's files, so put them in the directory that owns them",
+            ))
+        if vanilla_dirs is not None and target not in vanilla_dirs and target not in known:
+            findings.append((
+                "ERROR",
+                f"{directory} is linked to {target}, which is not a directory data.arc "
+                "loads and this pack does not add; ARCropolis skips the link",
+            ))
+    if vanilla_dirs is None:
+        return findings
+    for directory in sorted(known):
+        parent = directory_of(directory)
+        if not parent or parent in known or parent in vanilla_dirs:
+            continue
+        if costume_of(parent.rsplit("/", 1)[-1]) is None:
+            continue
+        findings.append((
+            "ERROR",
+            f"{directory} is added under {parent}, which is neither in data.arc nor "
+            "declared; ARCropolis creates it with no files and the game walks an "
+            "empty costume directory into a fault. Declare the parent or drop the child",
+        ))
+    return findings
+
+
+def lint_effects(added_dirs, dir_files, shipped, shared_targets):
+    """A clone's effects are effect/fighter/<clone>/ef_<clone>.eff and the
+    models beside it, loaded whatever the costume; one-slot names are for
+    vanilla slots and an effect model in one costume group only is missing
+    for the others."""
+    findings = []
+    clones = {d.split("/")[1] for d in added_dirs if d.startswith("fighter/") and d.count("/") >= 2}
+    costume_groups = collections.defaultdict(list)
+    for group in dir_files:
+        parts = group.split("/")
+        if len(parts) == 3 and parts[0] == "fighter" and costume_of(parts[2]):
+            costume_groups[parts[1]].append(group)
+    for clone in sorted(clones):
+        prefix = f"effect/fighter/{clone}/"
+        main = f"{prefix}ef_{clone}.eff"
+        one_slot = sorted(p for p in shipped if p.startswith(prefix)
+                          and re.fullmatch(rf"ef_{re.escape(clone)}_c\d+\.eff", p[len(prefix):]))
+        if one_slot and main not in shipped and main not in shared_targets:
+            findings.append((
+                "ERROR",
+                f"{one_slot[0]} is a one-slot effect name; the engine loads {main}, which "
+                "this pack neither ships nor shares. Rename the c00 file (one-slot "
+                "effects are a vanilla-slot plugin, a clone has one effect file)",
+            ))
+        groups = costume_groups.get(clone, [])
+        if len(groups) < 2:
+            continue
+        where = collections.defaultdict(set)
+        for group in groups:
+            for member in dir_files[group]:
+                if member.startswith(prefix + "model/") or member == main:
+                    where[member].add(group)
+        for member, holders in sorted(where.items()):
+            if len(holders) != len(groups):
+                findings.append((
+                    "WARN",
+                    f"{member} is in {len(holders)} of {len(groups)} costume groups of "
+                    f"{clone}; the game loads effect files with whichever costume is "
+                    "picked, so declare it in every cNN group",
+                ))
     return findings
 
 
@@ -247,6 +485,7 @@ def read_item_tomls(mod_dir):
         return None
     blocks = [{}]
     headed = False
+    table = "item"
     with io.open(path, encoding="utf8", errors="replace") as handle:
         for line in handle:
             line = line.split("#", 1)[0].strip()
@@ -254,6 +493,12 @@ def read_item_tomls(mod_dir):
                 if headed or blocks[0]:
                     blocks.append({})
                 headed = True
+                table = "item"
+                continue
+            if line.startswith("[") and line.endswith("]"):
+                table = line.strip("[]").strip().split(".")[-1]
+                continue
+            if table != "item":
                 continue
             found = re.match(r'^(\w+)\s*=\s*"?([^"\s]+)"?', line)
             if found:

@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 from pathlib import Path
 
 from .emit import engine_param_lines
@@ -20,7 +21,12 @@ KINDS = (FIGHTER, ITEM, STAGE)
 
 STATE_FILE = "clone_pack_gui.json"
 NON_ASSET_SUFFIXES = {"yml", "yaml", "lua", "md", "txt", "json", "toml", "py",
-                      "gitkeep", "nro", "zip", "bak"}
+                      "gitkeep", "nro", "zip", "bak", "prcxml", "xmsbt", "msbt",
+                      "stprmxml", "stdatxml", "prcx", "xml", "png", "jpg", "jpeg",
+                      "psd", "7z", "rar", "ini"}
+PATCH_FOLDER_SUFFIXES = (".nus3audio", ".nus3bank")
+COSTUME_NAME_RE = re.compile(r"_c(\d{2,3})(?=[_.])")
+ADDED_SLOT_LEFTOVERS = ("ui/param/database/ui_chara_db.prcxml",)
 COLOR_RE = re.compile(r"/c(\d{2,3})(?=/|$)")
 LABEL_RE = re.compile(r'label="([^"]+)"\s*>\s*<text>(.*?)</text>', re.S)
 COPY_RE = re.compile(r"^copy_(.+?)_(.+)$")
@@ -467,7 +473,9 @@ def write_manifests(path: Path, sections: list[dict], order=()) -> list[str]:
 
 
 def shipped_files(folder: Path) -> list[str]:
-    """Arc paths this pack ships, the same set the generator declares."""
+    """Arc paths this pack ships, the same set the generator declares: no
+    patches (prcxml, xmsbt, tones inside a `<bank>.nus3audio/` folder), no
+    dot-prefixed paths (ARCropolis skips them), no sources or pictures."""
     folder = Path(folder)
     found = []
     for root, _, names in os.walk(folder):
@@ -476,8 +484,11 @@ def shipped_files(folder: Path) -> list[str]:
             if suffix in NON_ASSET_SUFFIXES:
                 continue
             relative = Path(root, name).relative_to(folder).as_posix()
-            if "/" in relative:
-                found.append(relative)
+            parts = relative.split("/")
+            if "/" not in relative or any(part.startswith(".") for part in parts) \
+                    or any(part.lower().endswith(PATCH_FOLDER_SUFFIXES) for part in parts[:-1]):
+                continue
+            found.append(relative)
     return sorted(found)
 
 
@@ -582,6 +593,184 @@ def costumes(folder: Path, tree: str, resource: str) -> list[int]:
             if path.is_dir() and path.name[1:].isdigit() and len(path.name) <= 4:
                 found.add(int(path.name[1:]))
     return sorted(found)
+
+
+def vanilla_slot_names(folder: Path, tree: str, vanilla) -> list[str]:
+    """Vanilla owners whose own body this pack ships under their own name: an
+    added-slot moveset, the shape every community pack has before it becomes
+    a clone. `fighter/kirby` holding only `copy_*` hats does not count."""
+    root = Path(folder) / tree
+    if not root.is_dir():
+        return []
+    return sorted(entry.name for entry in root.iterdir()
+                  if entry.is_dir() and entry.name in set(vanilla)
+                  and ((entry / "model" / "body").is_dir() or (entry / "motion" / "body").is_dir()))
+
+
+def body_costumes(folder: Path, resource: str) -> list[int]:
+    """The costume numbers of the fighter's body model, the reference every
+    other part of the pack is numbered against; every cNN under the fighter
+    when no body is shipped."""
+    root = Path(folder) / FIGHTER / resource / "model" / "body"
+    found = set()
+    if root.is_dir():
+        for entry in root.iterdir():
+            if entry.is_dir() and entry.name[1:].isdigit() and 3 <= len(entry.name) <= 4:
+                found.add(int(entry.name[1:]))
+    return sorted(found) or costumes(folder, FIGHTER, resource)
+
+
+def costume_paths(folder: Path, resource: str):
+    """(relative path, number, kind) for every path of this fighter's that
+    carries a costume: `cNN` directories under its trees, its camera, its
+    Kirby copy models and body animations, and `_cNN` in the names of its
+    sound banks, one-slot effects and trail textures. kind is "dir" or
+    "file"."""
+    folder = Path(folder)
+    found = []
+    dir_roots = [Path(FIGHTER, resource), Path("camera", FIGHTER, resource)]
+    kirby = folder / FIGHTER / "kirby"
+    for tree in ("model", "motion"):
+        for entry in (kirby / tree).glob("copy_%s_*" % resource) if (kirby / tree).is_dir() else []:
+            dir_roots.append(entry.relative_to(folder))
+    if (kirby / "motion" / (resource + "body")).is_dir():
+        dir_roots.append(Path(FIGHTER, "kirby", "motion", resource + "body"))
+    effect = folder / "effect" / FIGHTER / resource
+    if effect.is_dir():
+        for entry in effect.iterdir():
+            if entry.is_dir() and re.fullmatch(r"trail_c\d{2,3}", entry.name):
+                found.append((entry.relative_to(folder).as_posix(),
+                              int(entry.name.rsplit("_c", 1)[1]), "dir"))
+        for entry in effect.rglob("*"):
+            if entry.is_file() and COSTUME_NAME_RE.search(entry.name) \
+                    and (entry.name.startswith("ef_%s_" % resource) or entry.parent.name == "trail"):
+                found.append((entry.relative_to(folder).as_posix(),
+                              int(COSTUME_NAME_RE.search(entry.name).group(1)), "file"))
+    for root in dir_roots:
+        base = folder / root
+        if not base.is_dir():
+            continue
+        for entry in base.rglob("c[0-9][0-9]*"):
+            relative = entry.relative_to(folder).as_posix()
+            if entry.is_dir() and entry.name[1:].isdigit() and 3 <= len(entry.name) <= 4 \
+                    and not any(part.startswith(".") for part in relative.split("/")):
+                found.append((relative, int(entry.name[1:]), "dir"))
+    for bank, prefix in (("fighter", "se_"), ("fighter_voice", "vc_")):
+        base = folder / "sound" / "bank" / bank
+        if not base.is_dir():
+            continue
+        for entry in base.iterdir():
+            if (entry.is_file() or entry.name.lower().endswith(PATCH_FOLDER_SUFFIXES)) \
+                    and entry.name.startswith(prefix + resource + "_") \
+                    and COSTUME_NAME_RE.search(entry.name):
+                found.append((entry.relative_to(folder).as_posix(),
+                              int(COSTUME_NAME_RE.search(entry.name).group(1)), "file"))
+    return sorted(set(found))
+
+
+def renumbered(relative: str, kind: str, new: int) -> str:
+    """The same path with its costume replaced."""
+    head, _, name = relative.rpartition("/")
+    if kind == "dir":
+        name = re.sub(r"^(trail_)?c\d{2,3}$", lambda m: "%sc%02d" % (m.group(1) or "", new), name)
+    else:
+        name = COSTUME_NAME_RE.sub("_c%02d" % new, name, count=1)
+    return head + "/" + name if head else name
+
+
+def renumber_plan(folder: Path, resource: str) -> dict:
+    """Move the fighter's costumes to c00, c01, ... in the order the body ships
+    them: the engine's select screen offers costumes from c00, so a pack at
+    c120-c127 (every added-slot moveset) must become c00-c07 before it can
+    load. moves: (from, to) in the order to apply; kept: paths already in
+    range that the body does not number; unmapped: numbers past the range
+    that nothing maps, left alone; blocked: moves whose target exists;
+    effect: the one-slot effect copied to the main name, if any; leftovers:
+    added-slot files a clone must not ship."""
+    folder = Path(folder)
+    body = body_costumes(folder, resource)
+    mapping = {old: rank for rank, old in enumerate(body)}
+    moves, kept, unmapped, blocked = [], [], [], []
+    targets = set()
+    for relative, number, kind in sorted(costume_paths(folder, resource), key=lambda t: (t[1], t[0])):
+        if number in mapping:
+            new = mapping[number]
+            if new == number:
+                continue
+            target = renumbered(relative, kind, new)
+            if (folder / target).exists() and target not in targets:
+                blocked.append((relative, target))
+            else:
+                moves.append((relative, target))
+                targets.add(target)
+        elif number < len(mapping):
+            kept.append(relative)
+        else:
+            unmapped.append(relative)
+    effect = None
+    main = Path("effect", FIGHTER, resource, "ef_%s.eff" % resource)
+    if not (folder / main).is_file():
+        slots = sorted(((folder / "effect" / FIGHTER / resource).glob("ef_%s_c*.eff" % resource)
+                        if (folder / "effect" / FIGHTER / resource).is_dir() else []),
+                       key=lambda path: (int(COSTUME_NAME_RE.search(path.name).group(1))
+                                         if COSTUME_NAME_RE.search(path.name) else 0, path.name))
+        if slots:
+            effect = (slots[0].relative_to(folder).as_posix(), main.as_posix())
+    leftovers = [name for name in ADDED_SLOT_LEFTOVERS if (folder / name).is_file()]
+    return {"resource": resource, "mapping": mapping, "moves": moves, "kept": kept,
+            "unmapped": unmapped, "blocked": blocked, "effect": effect,
+            "leftovers": leftovers}
+
+
+def apply_renumber(folder: Path, plan: dict) -> list[str]:
+    """Copy the one-slot effect to the main name, move the paths lowest
+    costume first (targets are always lower than sources, so nothing is
+    overwritten), keep and remove the leftovers, and set the manifest's and
+    the saved state's first costume to 0. config.json is not touched: write
+    it again."""
+    folder = Path(folder)
+    lines = []
+    if plan.get("effect"):
+        source, target = plan["effect"]
+        shutil.copy2(folder / source, folder / target)
+        lines.append("copied %s to %s (the engine loads the main name)" % (source, target))
+    for source, target in plan["moves"]:
+        destination = folder / target
+        if destination.exists():
+            lines.append("left %s alone: %s already exists" % (source, target))
+            continue
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        (folder / source).rename(destination)
+        lines.append("moved %s -> %s" % (source, target))
+    for source, target in plan["blocked"]:
+        lines.append("left %s alone: %s already exists" % (source, target))
+    for relative in plan["unmapped"]:
+        lines.append("left %s alone: no body costume maps its number" % relative)
+    for name in plan.get("leftovers", []):
+        backups.remove(folder / name, folder)
+        lines.append("removed %s (a clone's select screen row comes from the manifest "
+                     "or the plugin)" % name)
+    resource = plan["resource"]
+    manifest = folder / FIGHTER_MANIFEST
+    if manifest.is_file():
+        text = manifest.read_text(encoding="utf-8")
+        edited = re.sub(r"(?m)^\s*color_start\s*=.*\n?", "", text)
+        if edited != text:
+            backups.keep(manifest, folder)
+            manifest.write_text(edited, encoding="utf-8", newline="\n")
+            lines.append("dropped color_start from %s" % FIGHTER_MANIFEST)
+    sections = read_state(folder)
+    changed = False
+    for part in sections.get(FIGHTER, []):
+        if part.get("resource_name") == resource and part.get("color_start"):
+            part["color_start"] = 0
+            changed = True
+    if changed:
+        write_state(folder, sections)
+        lines.append("first costume set to 0 in %s" % STATE_FILE)
+    if plan["moves"] or plan.get("effect"):
+        lines.append("write config.json again: it still names the old costumes")
+    return lines
 
 
 NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
@@ -775,6 +964,14 @@ def scan(folder: Path, fighters=(), items=(), places=()) -> dict:
     notes: list[str] = []
 
     own_fighters = own_names(folder, FIGHTER, fighters)
+    slot_fighters = vanilla_slot_names(folder, FIGHTER, fighters)
+    found["vanilla_slot"] = slot_fighters
+    for resource in slot_fighters:
+        numbers = costumes(folder, FIGHTER, resource)
+        notes.append("fighter/%s is %s's own tree%s: an added-slot moveset. Rename files "
+                     "gives it the clone's name, then Renumber costumes moves it to c00"
+                     % (resource, resource,
+                        " at c%02d to c%02d" % (numbers[0], numbers[-1]) if numbers else ""))
     for resource in own_fighters:
         part = {"resource_name": resource, "declare_shipped": True}
         numbers = costumes(folder, FIGHTER, resource)
@@ -782,6 +979,14 @@ def scan(folder: Path, fighters=(), items=(), places=()) -> dict:
             part["color_start"] = numbers[0]
             part["color_count"] = numbers[-1] - numbers[0] + 1
             notes.append("costumes c%02d to c%02d" % (numbers[0], numbers[-1]))
+            if numbers[0] != 0 or len(numbers) != part["color_count"]:
+                notes.append("%s's costumes do not run from c00 without a gap; the select "
+                             "screen offers c00 to c%02d, so use Renumber costumes before "
+                             "writing config.json" % (resource, len(numbers) - 1))
+        for name in ADDED_SLOT_LEFTOVERS:
+            if (folder / name).is_file():
+                notes.append("%s is an added-slot leftover that patches the base's row; "
+                             "Renumber costumes removes it" % name)
         base = base_from_config(config, FIGHTER, resource, fighters)
         if base:
             part["base_resource_name"] = base
@@ -799,7 +1004,7 @@ def scan(folder: Path, fighters=(), items=(), places=()) -> dict:
             if len(middle) >= 4 and (len(own_fighters) == 1 or middle[2] == resource):
                 part.setdefault("ui_chara", "ui_chara_%s" % middle[2])
                 break
-        if (folder / FIGHTER / resource / "param").is_dir():
+        if any((folder / FIGHTER / resource / "param").glob("*.prc")):
             part["owns_param_resources"] = True
             notes.append("ships its own param tree")
         names = articles_on_disk(folder, resource)

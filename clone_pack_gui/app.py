@@ -470,11 +470,52 @@ class Workbench(ttk.Frame):
         for line in packs.apply_rename(self.folder, plan):
             self.log("    " + line)
         self.log_kept()
+        converted = kind == packs.FIGHTER and old in self.vanilla_names(kind)
         self.open_folder(self.folder)
         for index, part in enumerate(self.sections[kind]):
             if packs.identity(part, kind) == new:
                 self.kind.set(kind)
                 self.index[kind] = index
+                if converted and not part.get("base_resource_name"):
+                    part["base_resource_name"] = old
+                    number = self.catalog.kind_of_fighter(old)
+                    if number is not None:
+                        part["base_kind"] = number
+                    self.log("%s was %s's own tree, so %s is its base now" % (new, old, old))
+                self.show_kind()
+                break
+        if converted:
+            self.log("next: Renumber costumes (an added-slot moveset sits at c%s and the "
+                     "select screen starts at c00), then Write fighter.toml and Write "
+                     "config.json; the old plugin.nro hooks %s by kind and needs a rebuild "
+                     "from the Rust tab" % ("NN", old))
+        return True
+
+    def renumber_part(self, resource: str, confirm=None) -> bool:
+        """Move a fighter's costumes to c00, c01, ... then read the pack again.
+        confirm(plan) may say no once the plan is known."""
+        if not self.require_folder():
+            return False
+        if not (self.folder / packs.FIGHTER / resource).is_dir():
+            self.log("nothing to renumber: fighter/%s is not in this pack" % resource)
+            return False
+        plan = packs.renumber_plan(self.folder, resource)
+        if not plan["moves"] and not plan["effect"] and not plan["leftovers"]:
+            self.log("%s already runs from c00 with nothing left over" % resource)
+            return False
+        if confirm is not None and not confirm(plan):
+            self.log("renumbering of %s cancelled" % resource)
+            return False
+        self.log("renumbering %s: %d path(s) moved" % (resource, len(plan["moves"])))
+        for line in packs.apply_renumber(self.folder, plan):
+            self.log("    " + line)
+        self.log_kept()
+        self.open_folder(self.folder)
+        for index, part in enumerate(self.sections[packs.FIGHTER]):
+            if packs.identity(part, packs.FIGHTER) == resource:
+                self.kind.set(packs.FIGHTER)
+                self.index[packs.FIGHTER] = index
+                part["color_start"] = 0
                 self.show_kind()
                 break
         return True
@@ -891,6 +932,7 @@ class IdentityPanel(ttk.Frame):
             ("Save descriptor", self.save_descriptor),
             ("Show Rust", lambda: self.app.tabs.select(self.app.rust)),
             ("Rename files", self.rename_files),
+            ("Renumber costumes", self.renumber_costumes),
         ))
 
     def _build_item(self) -> None:
@@ -989,6 +1031,10 @@ class IdentityPanel(ttk.Frame):
         typed = packs.identity(self.app.state, kind)
         on_disk = packs.own_names(self.app.folder, packs.TREE_OF_KIND[kind],
                                   self.app.vanilla_names(kind))
+        if kind == packs.FIGHTER:
+            on_disk += [name for name in packs.vanilla_slot_names(
+                self.app.folder, packs.TREE_OF_KIND[kind], self.app.vanilla_names(kind))
+                if name not in on_disk]
         if not on_disk:
             self.app.log("nothing to rename: the pack ships no %s of its own" % kind)
             return
@@ -1008,6 +1054,48 @@ class IdentityPanel(ttk.Frame):
 
         RenameDialog(self, kind, on_disk, guess, typed if typed != guess else "",
                      lambda old, new: self.app.rename_part(kind, old, new, confirm))
+
+    def renumber_costumes(self) -> None:
+        """Move the fighter's costumes to c00..: the select screen the engine
+        publishes starts at c00, and every added-slot moveset starts higher."""
+        if not self.app.require_folder():
+            return
+        self.collect(quiet=True)
+        resource = packs.identity(self.app.state, packs.FIGHTER)
+        on_disk = packs.own_names(self.app.folder, packs.FIGHTER,
+                                  self.app.vanilla_names(packs.FIGHTER))
+        if resource not in on_disk:
+            if not on_disk:
+                self.app.log("nothing to renumber: the pack ships no fighter of its own "
+                             "(Rename files first if it is an added-slot moveset)")
+                return
+            resource = on_disk[0]
+
+        def confirm(plan: dict) -> bool:
+            numbers = sorted(plan["mapping"])
+            lines = ["Move %s's costumes c%02d to c%02d onto c00 to c%02d?" % (
+                resource, numbers[0], numbers[-1], len(numbers) - 1),
+                "", "%d folder(s) and file(s) move (model, motion, camera, Kirby copy, "
+                    "sound banks, one-slot effects, trails)." % len(plan["moves"])]
+            if plan["effect"]:
+                lines.append("%s is copied to %s, the name the engine loads."
+                             % (plan["effect"][0].rsplit("/", 1)[-1],
+                                plan["effect"][1].rsplit("/", 1)[-1]))
+            for name in plan["leftovers"]:
+                lines.append("%s is removed (kept in Backups): it patches the base's "
+                             "select screen row." % name)
+            if plan["unmapped"]:
+                lines.append("Left alone, no body costume has their number: %s%s"
+                             % (", ".join(plan["unmapped"][:3]),
+                                " and %d more" % (len(plan["unmapped"]) - 3)
+                                if len(plan["unmapped"]) > 3 else ""))
+            if plan["blocked"]:
+                lines.append("Left alone, their target exists: %s"
+                             % ", ".join(source for source, _ in plan["blocked"][:3]))
+            lines += ["", "config.json is not changed: write it again afterwards."]
+            return messagebox.askyesno(TITLE, "\n".join(lines))
+
+        self.app.renumber_part(resource, confirm)
 
     def set_item_candidates(self, names) -> None:
         """Offer every item tree the pack ships, since a pack may hold several."""

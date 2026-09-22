@@ -14,6 +14,11 @@ try:
     import fighter_manifest
 except ImportError:
     fighter_manifest = None
+try:
+    from make_clone_pack import is_asset
+except ImportError:
+    def is_asset(path):
+        return True
 
 WORK_ID_TERM_RE = re.compile(r"(FIGHTER_[A-Z0-9_]*INSTANCE_WORK_ID_(?:INT|FLOAT|FLAG)_TERM)\s*\+\s*(\d+)")
 
@@ -215,16 +220,26 @@ def lint(mod_dir, arc_index, cross_color_resources=()):
                         "it will be taken from the fighter that owns it",
                     ))
 
-    if vanilla is not None:
-        for group, files in dir_files.items():
-            for path in files:
-                if path not in shipped and path not in vanilla and path not in shared_targets:
-                    if not any(path.startswith(d.rsplit("/", 1)[0]) for d in added_dirs):
-                        findings.append((
-                            "WARN",
-                            f"{group} declares {path}, which is neither shipped nor in data.arc "
-                            "(ARCropolis logs it at discovery and skips it)",
-                        ))
+    phantom = collections.defaultdict(list)
+    for group, files in dir_files.items():
+        for path in files:
+            reason = patch_reason(path)
+            if path in shipped and reason:
+                findings.append((
+                    "ERROR",
+                    f"{group} declares {path}, {reason}, so the file is never provided and "
+                    "the group never finishes loading; leave it out of new-dir-files",
+                ))
+            elif vanilla is not None and path not in shipped and path not in vanilla \
+                    and path not in shared_targets:
+                phantom[group].append(path)
+    for group, paths in sorted(phantom.items()):
+        findings.append((
+            "ERROR",
+            f"{group} declares {len(paths)} file(s) that are neither shipped, in data.arc "
+            f"nor a share target, e.g. {paths[0]}; the group never finishes loading "
+            "(a stale entry from a config written for other files?)",
+        ))
 
     cross_color_resources = set(cross_color_resources)
     per_dir = collections.defaultdict(lambda: collections.defaultdict(set))
@@ -323,6 +338,8 @@ def lint(mod_dir, arc_index, cross_color_resources=()):
             ))
 
     findings.extend(lint_shares(config, shipped, vanilla))
+    findings.extend(lint_costume_range(mod_dir, dir_files, added_dirs, bases, vanilla))
+    findings.extend(lint_added_slot_leftovers(mod_dir, dir_files, added_dirs, shipped, vanilla))
     findings.extend(lint_added_dirs(added_dirs, bases, dir_files, load_vanilla_dirs(arc_index)))
     findings.extend(lint_effects(added_dirs, dir_files, shipped, shared_targets))
     findings.extend(lint_camera_slots(dir_files, added_dirs, bases, shipped))
@@ -333,6 +350,151 @@ def lint(mod_dir, arc_index, cross_color_resources=()):
     findings.extend(lint_undeclared_shipped(added_dirs, dir_files, shipped))
     findings.extend(check_fighter_manifest(mod_dir, shipped, vanilla))
     findings.extend(check_work_ids(mod_dir))
+    return findings
+
+
+PATCH_SUFFIXES = (".prcxml", ".xmsbt", ".msbt", ".stprmxml", ".stdatxml")
+PATCH_FOLDER_SUFFIXES = (".nus3audio", ".nus3bank")
+
+
+def patch_reason(path):
+    """Why ARCropolis would never serve this path as a file, or an empty string."""
+    parts = path.split("/")
+    if any(part.startswith(".") for part in parts):
+        return "which starts a component with a dot (ARCropolis skips it at discovery)"
+    if any(part.lower().endswith(PATCH_FOLDER_SUFFIXES) for part in parts[:-1]):
+        return "which sits inside a sound bank patch folder"
+    if path.lower().endswith(PATCH_SUFFIXES):
+        return "which is a patch file (applied to the file it is named after, never loaded)"
+    return ""
+
+
+def vanilla_owners(vanilla, tree):
+    """Every name that has a vanilla `<tree>/<name>/` directory."""
+    if vanilla is None:
+        return set()
+    prefix = tree + "/"
+    return {path.split("/")[1] for path in vanilla
+            if path.startswith(prefix) and path.count("/") > 1}
+
+
+def clone_fighters(dir_files, added_dirs, vanilla_fighters):
+    """The fighters this pack adds, each with its costume numbers from the
+    `fighter/<name>/cNN` groups."""
+    found = collections.defaultdict(set)
+    for group in set(dir_files) | set(added_dirs):
+        parts = group.split("/")
+        if len(parts) == 3 and parts[0] == "fighter" and parts[1] not in vanilla_fighters \
+                and costume_of(parts[2]) == parts[2]:
+            found[parts[1]].add(int(parts[2][1:]))
+    return {name: sorted(numbers) for name, numbers in found.items()}
+
+
+def manifest_fighters(mod_dir):
+    """fighter.toml's fighters by name, or an empty dict without the file or
+    the parser."""
+    path = os.path.join(mod_dir, "fighter.toml")
+    if not os.path.isfile(path) or fighter_manifest is None:
+        return {}
+    try:
+        fighters = fighter_manifest.read(path)
+    except (fighter_manifest.ManifestError, OSError):
+        return {}
+    return {fighter.get("resource_name") or fighter.get("name"): fighter for fighter in fighters}
+
+
+def lint_costume_range(mod_dir, dir_files, added_dirs, bases, vanilla):
+    """The select screen offers costumes c00 to c(N-1): the engine's CSS row
+    sets color_start_index to 0 whatever fighter.toml says, and every one of
+    those costumes needs a `fighter/<name>/cNN` group with a body model, or
+    the match load waits forever. Every added-slot moveset starts at c08 or
+    higher, so this is the first thing to check on a converted pack."""
+    findings = []
+    fighters = vanilla_fighters = vanilla_owners(vanilla, "fighter")
+    manifests = manifest_fighters(mod_dir)
+    for clone, groups in sorted(clone_fighters(dir_files, added_dirs, fighters).items()):
+        manifest = manifests.get(clone)
+        if manifest:
+            start = manifest.get("color_start", 0)
+            count = manifest.get("costumes", 8)
+            if start:
+                level = "WARN" if manifest.get("css") is False else "ERROR"
+                findings.append((
+                    level,
+                    f"fighter.toml: {clone} has color_start = {start}; the engine's select "
+                    "screen row starts at c00 whatever the manifest says, so its costumes "
+                    "would ask for groups that do not exist. Renumber the pack to c00 "
+                    "(Renumber costumes) and drop color_start"
+                    + (" (a plugin's own CSK row can carry color_start_index, unproven "
+                       "with this engine)" if level == "WARN" else ""),
+                ))
+            own_row = manifest.get("css") is False
+            expected = list(range(start, start + count)) if own_row else list(range(count))
+        else:
+            expected = list(range(len(groups)))
+        missing = [c for c in expected if c not in groups]
+        if missing:
+            findings.append((
+                "ERROR",
+                f"the select screen offers {clone} costume(s) "
+                f"{', '.join('c%02d' % c for c in missing[:4])}"
+                f"{' and more' if len(missing) > 4 else ''} but config.json adds no "
+                f"fighter/{clone}/cNN group for them (its groups are c{groups[0]:02d} to "
+                f"c{groups[-1]:02d}); the match never finishes loading. Renumber the pack "
+                "so its costumes start at c00 and write config.json again",
+            ))
+        base = None
+        for own, target in bases.items():
+            if own.startswith(f"fighter/{clone}/") and target.startswith("fighter/"):
+                base = target.split("/")[1]
+                break
+        if vanilla is None or base is None \
+                or f"fighter/{base}/model/body/c00/model.numdlb" not in vanilla:
+            continue
+        bodyless = [c for c in groups
+                    if f"fighter/{clone}/model/body/c{c:02d}/model.numdlb"
+                    not in dir_files.get(f"fighter/{clone}/c{c:02d}", [])]
+        if bodyless:
+            findings.append((
+                "ERROR",
+                f"fighter/{clone}/c{bodyless[0]:02d}"
+                f"{' and %d more' % (len(bodyless) - 1) if len(bodyless) > 1 else ''} "
+                "has no body model.numdlb among its members (a Kirby hat or another part "
+                "numbered differently from the body?); the fighter has no model to build",
+            ))
+    return findings
+
+
+def lint_added_slot_leftovers(mod_dir, dir_files, added_dirs, shipped, vanilla):
+    """Files an added-slot moveset ships that harm a clone pack: the
+    ui_chara_db patch gives the BASE costumes whose files were renamed away,
+    and vanilla item files replace that item for everyone."""
+    findings = []
+    fighters = vanilla_owners(vanilla, "fighter")
+    if not clone_fighters(dir_files, added_dirs, fighters):
+        return findings
+    patch = "ui/param/database/ui_chara_db.prcxml"
+    if patch in shipped:
+        findings.append((
+            "ERROR",
+            f"{patch} is shipped; it patches the base fighter's select screen row by "
+            "index (costumes, portraits) and points the base at costume folders this "
+            "pack renamed, so the base hangs on them. A clone's row comes from "
+            "fighter.toml or the plugin's CSK call: delete the file",
+        ))
+    items = vanilla_owners(vanilla, "item")
+    if items:
+        touched = sorted({path.split("/")[1] for path in shipped
+                          if path.startswith("item/") and path.count("/") > 2
+                          and path.split("/")[1] in items
+                          and f"item/{path.split('/')[1]}" not in added_dirs})
+        if touched:
+            findings.append((
+                "WARN",
+                f"item/{touched[0]}{' and %d more' % (len(touched) - 1) if len(touched) > 1 else ''}"
+                " is a vanilla item's tree: those files replace the item for every fighter, "
+                "clone or not. A clone's own item is an item.toml part with its own name",
+            ))
     return findings
 
 
@@ -430,6 +592,14 @@ def lint_effects(added_dirs, dir_files, shipped, shared_targets):
                 "this pack neither ships nor shares. Rename the c00 file (one-slot "
                 "effects are a vanilla-slot plugin, a clone has one effect file)",
             ))
+        elif one_slot and main not in shipped:
+            findings.append((
+                "WARN",
+                f"{one_slot[0]}{' and %d more' % (len(one_slot) - 1) if len(one_slot) > 1 else ''}"
+                f" is a one-slot effect name the engine never loads; {main} is shared from "
+                "the base, so the pack's effects are the base's. Copy the lowest one to "
+                f"{main} (Renumber costumes does this)",
+            ))
         groups = costume_groups.get(clone, [])
         if len(groups) < 2:
             continue
@@ -462,7 +632,7 @@ def lint_undeclared_shipped(added_dirs, dir_files, shipped):
     missing = sorted(
         path for path in shipped
         if any(path.startswith(namespace + "/") for namespace in namespaces)
-        and path not in declared
+        and path not in declared and is_asset(path)
     )
     if not missing:
         return []
@@ -716,6 +886,7 @@ def lint_camera_coverage(dir_files, bases, shipped):
         return findings
     base = base_names.pop()
     expected = table[base]
+    grouped = collections.OrderedDict()
     for directory in sorted(dir_files):
         match = real_re.match(directory)
         if not match:
@@ -727,20 +898,21 @@ def lint_camera_coverage(dir_files, bases, shipped):
         }
         if not present:
             continue
+        head, costume = directory.rsplit("/", 1)
         missing = sorted(expected - present)
         if missing:
-            findings.append((
-                "INFO",
-                f"{directory} ships {len(present)}/{len(expected)} of {base}'s camera "
-                f"animations; {', '.join(missing)} will fall back to {base}",
-            ))
+            key = ("INFO", head, f"ships {len(present & expected)}/{len(expected)} of {base}'s camera "
+                                 f"animations; {', '.join(missing)} will fall back to {base}")
+            grouped.setdefault(key, []).append(costume)
         extra = sorted(present - expected)
         if extra:
-            findings.append((
-                "WARN",
-                f"{directory} ships {', '.join(extra)}, which {base} does not have - "
-                f"nothing will ever ask for it (docs/camera_animations.tsv)",
-            ))
+            key = ("WARN", head, f"ships {', '.join(extra)}, which {base} does not have - "
+                                 "nothing will ever ask for it (docs/camera_animations.tsv)")
+            grouped.setdefault(key, []).append(costume)
+    for (level, head, text), costumes in grouped.items():
+        where = costumes[0] if len(costumes) == 1 else f"{costumes[0]} to {costumes[-1]}" \
+            if len(costumes) > 2 else " and ".join(costumes)
+        findings.append((level, f"{head}/{where} {text}"))
     return findings
 
 def main():

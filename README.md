@@ -67,6 +67,36 @@ only (`wawa` never touches `wawaman`). Files that hold the name inside their
 bytes (`plugin.nro`, `.eff`, `.bntx`, `.prc`, sound banks) are listed, not
 changed: rebuild the plugin with the new name, edit the others by hand.
 
+**Renumber costumes** moves a fighter's costumes onto c00, c01, ... in the
+order its body model ships them. The select screen the engine publishes
+starts at c00, so a pack at c120 to c127 asks for folders that do not exist
+and the match never finishes loading. Every folder and file that carries the
+costume moves (model, motion, camera, Kirby copy, `_cNN` sound banks,
+one-slot effects, trails); the lowest one-slot effect is copied to
+`ef_<name>.eff`, the name the engine loads; `ui/param/database/ui_chara_db.prcxml`
+goes to Backups (it patches the base's own row); the manifest and the saved
+state drop their first costume. `config.json` is not touched: write it again.
+
+## Converting an added-slot moveset
+
+Every moveset made for a vanilla slot ships its files under the base's own
+name (`fighter/ganon/...`) at costumes the base does not have, with a
+`<name>.marker` in each `model/body/cNN`, eight `ef_ganon_cNN.eff`, a
+reslotter `config.json` and often a `ui_chara_db.prcxml`. The window says so
+when it opens the folder. In this order:
+
+- **Rename files** first: pick the base's name on disk, type the clone's.
+  The base becomes the clone's base on the Identity tab.
+- **Renumber costumes** second.
+- **Write fighter.toml**, then **Write config.json**. Entries of the old
+  `config.json` named after the base are dropped, not merged.
+- Last, rebuild the plugin from the Rust tab: the old `plugin.nro` hooks the
+  base by kind and its marker files, and is left alone.
+
+A `fighter/<name>/param/vl.prcxml` is not declared (it is a patch, never a
+file); whether ARCropolis applies it to the clone's borrowed `vl.prc` is not
+proven, so ship a `vl.prc` when the values matter.
+
 **Files**: what the folder ships against what `config.json` declares.
 
 **Parameters**: pick a table, click a field, type a value, Add. Which syntax
@@ -226,9 +256,18 @@ declared files, costumes, Kirby copies, cameras, and for each item that
 the way ARCropolis does: a target the pack also ships is an error (your file
 never loads), so is a source that exists nowhere, a link to a directory that
 does not exist, a linked directory given members, and a costume directory
-that exists only as the parent of a link. A one-slot effect name
-(`ef_<clone>_c00.eff`) with no `ef_<clone>.eff` is an error; an effect model
-missing from some costume groups is a warning. A `fighter.toml` is read with
+that exists only as the parent of a link. A member that is neither shipped,
+in data.arc nor a share target is an error (the group never finishes
+loading), and so is a member ARCropolis never serves as a file: a `.prcxml`
+or `.xmsbt`, a tone inside a `<bank>.nus3audio/` folder, a dot-prefixed path.
+The select screen offers costumes c00 to c(N-1): a fighter whose groups start
+higher, or has a gap, or a `color_start` in `fighter.toml`, is an error, and
+so is a costume group with no body `model.numdlb`. A shipped
+`ui_chara_db.prcxml` is an error in a clone pack; a vanilla item's files are a
+warning. A one-slot effect name (`ef_<clone>_c00.eff`) with no
+`ef_<clone>.eff` is an error, one beside a borrowed `ef_<clone>.eff` a
+warning (the pack's effects are not loaded); an effect model missing from
+some costume groups is a warning. A `fighter.toml` is read with
 the engine's rules (an unknown key or table is an error with its line) and
 checked against the folders: the base is a fighter, every `[[article]]` has
 its files, the costume count covers the body model, a `[kirby]` table has a

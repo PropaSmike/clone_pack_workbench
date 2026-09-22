@@ -138,7 +138,10 @@ VANILLA_COLORS = 8
 DEFAULT_COLORS = list(range(VANILLA_COLORS))
 FIGHTER_OWNED_TREES = ("finalsmash",)
 
-NON_ASSET_SUFFIXES = {"yml", "yaml", "lua", "md", "txt", "json", "toml", "py", "gitkeep"}
+NON_ASSET_SUFFIXES = {"yml", "yaml", "lua", "md", "txt", "json", "toml", "py", "gitkeep",
+                      "prcxml", "xmsbt", "msbt", "stprmxml", "stdatxml", "prcx", "xml",
+                      "png", "jpg", "jpeg", "psd", "zip", "7z", "rar", "bak", "ini", "nro"}
+PATCH_FOLDER_SUFFIXES = (".nus3audio", ".nus3bank")
 
 COLOR_RE = re.compile(r"/c(\d{2,3})(?=/|$)")
 SOUND_COLOR_RE = re.compile(r"_c(\d{2,3})(\.[^/]+)$")
@@ -247,7 +250,14 @@ def retarget(path: str, base: str, clone: str, color: int | None = None,
 
 
 def is_asset(path: str) -> bool:
-    if any(".bak" in part for part in path.split("/")[:-1]):
+    """A file ARCropolis will serve as itself: not a patch (prcxml, xmsbt, a
+    tone inside a `<bank>.nus3audio/` folder), not a dot-prefixed path it
+    skips, not a source or picture left in the tree."""
+    parts = path.split("/")
+    if any(part.startswith(".") for part in parts):
+        return False
+    if any(".bak" in part or part.lower().endswith(PATCH_FOLDER_SUFFIXES)
+           for part in parts[:-1]):
         return False
     return path.rsplit(".", 1)[-1].lower() not in NON_ASSET_SUFFIXES
 
@@ -366,6 +376,10 @@ class Census:
         self.origin: dict[str, str] = {}
         self.kinds_of: dict[str, list[str]] = {}
         self.own = own_paths(shipped, clone)
+        self.out_of_range = sorted(path for path in self.own
+                                   if color_of(path) is not None
+                                   and color_of(path) not in self.colors)
+        self.own -= set(self.out_of_range)
         self.sets: dict[str, dict[int, list[tuple[str, str]]]] = collections.defaultdict(
             lambda: collections.defaultdict(list))
         self.left_out: dict[str, int] = collections.Counter()
@@ -646,6 +660,13 @@ def build(base: str, clone: str, shipped=frozenset(), colors=None,
         f"clone's name and are left out; the engine loads them from {base}'s own "
         f"groups at match load"
         for head, count in sorted(census.left_out.items())]
+    if census.out_of_range:
+        first, last = census.colors[0], census.colors[-1]
+        LAST_NOTES.append(
+            f"{len(census.out_of_range)} shipped file(s) sit at costumes outside "
+            f"c{first:02d} to c{last:02d} and are not declared, e.g. "
+            f"{census.out_of_range[0]}; renumber the pack so every part uses the "
+            "same costumes")
     return census.config()
 
 
@@ -813,24 +834,30 @@ def owns(path: str, clone: str) -> bool:
     return re.search(r"(^|[/_])%s([/_.]|$)" % re.escape(clone), path) is not None
 
 
-def merge(existing: dict, generated: dict, clone: str) -> dict:
-    """This clone's entries come from `generated`; everything else is kept.
+def merge(existing: dict, generated: dict, clone: str, stale=()) -> dict:
+    """This clone's entries come from `generated`; everything else is kept,
+    except entries named after a name in `stale` (the base the clone was
+    converted from: a reslotter config's `fighter/<base>/c120` groups name
+    files that were renamed away and would never finish loading).
 
     A section the generator left empty is not touched at all, so a hand written
     `share-to-added` survives. The result is sorted, so writing the fighter and
     the item of one pack in either order gives the same file.
     """
+    def mine(path: str) -> bool:
+        return owns(path, clone) or any(owns(path, name) for name in stale)
+
     result: dict = {key: value for key, value in existing.items()}
     for key in SECTION_LISTS:
         if not generated.get(key):
             continue
-        kept = [path for path in (result.get(key) or []) if not owns(path, clone)]
+        kept = [path for path in (result.get(key) or []) if not mine(path)]
         result[key] = sorted(set(kept) | set(generated[key]))
     for key in SECTION_OWN_KEYS:
         if not generated.get(key):
             continue
         section = {name: value for name, value in (result.get(key) or {}).items()
-                   if not owns(name, clone)}
+                   if not mine(name)}
         section.update(generated[key])
         result[key] = {name: section[name] for name in sorted(section)}
     for key in SECTION_SHARES:
@@ -839,10 +866,10 @@ def merge(existing: dict, generated: dict, clone: str) -> dict:
         section = {}
         for source, targets in (result.get(key) or {}).items():
             if isinstance(targets, list):
-                rest = [target for target in targets if not owns(target, clone)]
+                rest = [target for target in targets if not mine(target)]
                 if rest:
                     section[source] = rest
-            elif not owns(str(targets), clone):
+            elif not mine(str(targets)):
                 section[source] = targets
         for source, targets in generated[key].items():
             if isinstance(targets, list) and isinstance(section.get(source), list):
@@ -855,20 +882,27 @@ def merge(existing: dict, generated: dict, clone: str) -> dict:
     return result
 
 
-def foreign_entries(config: dict, clone: str) -> int:
-    """How many entries in a config belong to content other than this clone."""
-    total = 0
+def foreign_entries(config: dict, clone: str, stale=()) -> int:
+    """How many entries in a config belong to content other than this clone,
+    entries named after a name in `stale` not counted (see `merge`)."""
+    return len(entries_owned_by(config, lambda path: not owns(path, clone)
+                                and not any(owns(path, name) for name in stale)))
+
+
+def entries_owned_by(config: dict, wanted) -> list[str]:
+    """The config entries (directories, keys, share targets) `wanted` accepts."""
+    found = []
     for key in SECTION_LISTS:
-        total += sum(1 for path in (config.get(key) or []) if not owns(path, clone))
+        found += [path for path in (config.get(key) or []) if wanted(path)]
     for key in SECTION_OWN_KEYS:
-        total += sum(1 for name in (config.get(key) or {}) if not owns(name, clone))
+        found += [name for name in (config.get(key) or {}) if wanted(name)]
     for key in SECTION_SHARES:
         for targets in (config.get(key) or {}).values():
             if isinstance(targets, list):
-                total += sum(1 for target in targets if not owns(target, clone))
-            elif not owns(str(targets), clone):
-                total += 1
-    return total
+                found += [target for target in targets if wanted(target)]
+            elif wanted(str(targets)):
+                found.append(str(targets))
+    return found
 
 
 def color_range(start, count, shipped_colors) -> list[int]:
@@ -1054,8 +1088,14 @@ def emit(config: dict, args) -> int:
     kept = 0
     if args.merge and args.out and Path(args.out).is_file():
         existing = json.loads(Path(args.out).read_text(encoding="utf-8"))
-        kept = foreign_entries(existing, args.clone)
-        config = merge(existing, config, args.clone)
+        stale = (args.base,) if args.kind == "fighter" and args.base else ()
+        dropped = entries_owned_by(existing, lambda path: any(owns(path, n) for n in stale))
+        if dropped:
+            print(f"dropped {len(dropped)} stale entry(s) named after {args.base} "
+                  f"(e.g. {dropped[0]}); a clone's config never adds the base's own "
+                  "directories")
+        kept = foreign_entries(existing, args.clone, stale)
+        config = merge(existing, config, args.clone, stale)
     text = json.dumps(config, indent=2) + "\n"
     if args.out:
         Path(args.out).write_text(text, encoding="utf-8")

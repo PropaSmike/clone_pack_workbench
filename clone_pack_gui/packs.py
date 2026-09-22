@@ -843,6 +843,29 @@ def rename_refusal(folder: Path, kind: str, old: str, new: str, vanilla) -> str:
     return ""
 
 
+def folder_summary(paths, limit: int = 6) -> list[str]:
+    """These paths as a few lines: a folder holding several of them becomes one
+    line with a count, and anything past `limit` lines becomes a last line
+    saying how much was left out. A list of 76 UI textures does not fit in a
+    message box."""
+    groups: dict[str, list[str]] = {}
+    for path in paths:
+        text = path.as_posix() if isinstance(path, Path) else str(path).replace("\\", "/")
+        head, _, name = text.rpartition("/")
+        groups.setdefault(head, []).append(name)
+    lines = []
+    for head, names in groups.items():
+        if len(names) == 1:
+            lines.append("%s/%s" % (head, names[0]) if head else names[0])
+        else:
+            lines.append("%s/ (%d files)" % (head, len(names)))
+    if len(lines) > limit:
+        hidden = sum(len(names) for names in list(groups.values())[limit:])
+        lines = lines[:limit] + ["and %d more in %d other folder(s)"
+                                 % (hidden, len(lines) - limit)]
+    return lines
+
+
 def apply_rename(folder: Path, plan: dict) -> list[str]:
     """Edit the text files first (each kept in backups), then move deepest
     first. Returns one line per change, and one per file left alone."""
@@ -865,9 +888,10 @@ def apply_rename(folder: Path, plan: dict) -> list[str]:
             continue
         path.rename(destination)
         lines.append("renamed %s -> %s" % (source.as_posix(), target.name))
-    for relative in plan["stuck"]:
-        lines.append("%s still holds '%s' inside: rebuild it or edit it by hand"
-                     % (relative.as_posix(), plan["old"]))
+    if plan["stuck"]:
+        lines.append("%d file(s) still hold '%s' inside: rebuild or hand edit"
+                     % (len(plan["stuck"]), plan["old"]))
+        lines += ["    " + line for line in folder_summary(plan["stuck"], limit=12)]
     return lines
 
 

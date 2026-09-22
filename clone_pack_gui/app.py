@@ -1044,13 +1044,15 @@ class IdentityPanel(ttk.Frame):
         guess = free[0] if len(free) == 1 else (typed if typed in on_disk else on_disk[0])
 
         def confirm(plan: dict) -> bool:
-            stuck = "".join("\n  %s" % path.as_posix() for path in plan["stuck"])
-            return messagebox.askyesno(
-                TITLE, "Rename %s to %s?\n\n%d folders and files renamed, %d text files "
-                       "edited.%s" % (plan["old"], plan["new"], len(plan["moves"]),
-                                      len(plan["edits"]),
-                                      "\n\nStill carry the old name inside and need a "
-                                      "rebuild or a hand edit:" + stuck if stuck else ""))
+            message = ["Rename %s to %s?" % (plan["old"], plan["new"]), "",
+                       "%d folders and files renamed, %d text file(s) edited."
+                       % (len(plan["moves"]), len(plan["edits"]))]
+            if plan["stuck"]:
+                message += ["", "%d file(s) still carry the old name inside and need a "
+                                "rebuild or a hand edit:" % len(plan["stuck"])]
+                message += ["  " + line for line in packs.folder_summary(plan["stuck"])]
+                message.append("The Output tab lists them after the rename.")
+            return messagebox.askyesno(TITLE, "\n".join(message))
 
         RenameDialog(self, kind, on_disk, guess, typed if typed != guess else "",
                      lambda old, new: self.app.rename_part(kind, old, new, confirm))

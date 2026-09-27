@@ -1,0 +1,432 @@
+space	slot	name	constant	ints	floats	ret	impls	note
+fighter	0	INITIALIZE	INITIALIZE	2	0	u64	74	
+fighter	1	EVENT_LISTENER_INITIALIZE	EVENT_LISTENER_INITIALIZE	2	0	u64	10	
+fighter	2	UNK2	UNK2	2	0	u64	3	
+fighter	3	SOME_FUNC_SETTER	SOME_FUNC_SETTER	2	0	u64	15	
+fighter	4	RESET_1	RESET_1	2	0	mixed	57	
+fighter	5	RESET_2	RESET_2	2	0	u64	47	
+fighter	6	RESET_3	RESET_3	2	0	u64	3	maybe not sure, just used for m2 and snake
+fighter	7	ON_DEATH	ON_DEATH	3	0	u64	79	
+fighter	8	ON_REBIRTH2	ON_REBIRTH2	2	0	u64	34	
+fighter	9	ON_FRAME_1	ON_FRAME_1	2	0	u64	2	
+fighter	10	ON_FRAME_2	ON_FRAME_2	2	0	u64	72	
+fighter	11	ON_FRAME_3	ON_FRAME_3	2	0	u64	7	
+fighter	12	ON_FRAME_4	ON_FRAME_4	2	0	u64	12	
+fighter	13	ON_FRAME_5	ON_FRAME_5	2	0	u64	69	
+fighter	14	UNK14	UNK14	4	0	f64	4	
+fighter	15	SOME_KIRBY_RELATED	SOME_KIRBY_RELATED	2	0	u64	2	
+fighter	16	MOUTH_BREATHERS_OBJECT_RESET	MOUTH_BREATHERS_OBJECT_RESET	2	0	u64	5	DDD and kirby related
+fighter	17	ON_PRE_DAMAGE	ON_PRE_DAMAGE	2	0	u64	2	only ever used by snake, it runs right before going into a damage status it seems
+fighter	18	ON_FRAME_6	ON_FRAME_6	2	0	u64	10	
+fighter	19	ON_FRAME_7	ON_FRAME_7	2	0	u64	34	
+fighter	20	ON_FRAME_8	ON_FRAME_8	2	0	u64	5	
+fighter	21	ON_PAUSE	ON_PAUSE	2	0	u64	7	runs once on pause
+fighter	22	ON_PAUSE_FRAME	ON_PAUSE_FRAME	2	0	u64	2	its an on frame while paused
+fighter	23	ON_UNPAUSE	ON_UNPAUSE	2	0	u64	6	runs once on unpause
+fighter	24	ON_MATCH_GO	ON_MATCH_GO	3	0	u64	2	it runs once when the announcer says GO
+fighter	25	ON_DEATH_RESET_1	ON_DEATH_RESET_1	3	0	u64	23	
+fighter	26	ON_DEATH_RESET_2	ON_DEATH_RESET_2	2	0	u64	3	
+fighter	27	ON_FRAME_9	ON_FRAME_9	2	0	u64	7	
+fighter	28	ON_FRAME_10	ON_FRAME_10	2	0	u64	4	
+fighter	29	ON_FRAME_11	ON_FRAME_11	2	0	u64	9	
+fighter	30	ON_STATUS_CHANGE	ON_STATUS_CHANGE	2	0	u64	7	
+fighter	31	ON_SITUATION_CHANGE	ON_SITUATION_CHANGE	3	0	u64	11	
+fighter	32	UNK32	UNK32	2	0	u64	2	
+fighter	33	UNK33	UNK33	3	0	u64	3	
+fighter	34	UNK34	UNK34	0	0	void	1	
+fighter	35	UNK35	UNK35	4	0	u64	2	
+fighter	36	ON_ATTACK	ON_ATTACK	3	1	u64	61	
+fighter	37	UNK37	UNK37	3	0	u64	9	
+fighter	38	UNK38	UNK38	7	0	u64	4	
+fighter	39	UNK39	UNK39	5	1	u64	3	
+fighter	40	UNK40	UNK40	3	0	u64	6	
+fighter	41	ON_ATTACK_EVENT	ON_ATTACK_EVENT	3	0	u64	54	
+fighter	42	UNK42	UNK42	2	0	u64	2	
+fighter	43	UNK43	UNK43	2	0	u64	72	apparently this removes the hammer and the kart from the victory screen for koopajr?
+fighter	44	UNK44	UNK44	3	0	u32	5	
+fighter	45	SECOND_SITUATION_CALLBACK	SECOND_SITUATION_CALLBACK	3	0	u64	51	
+fighter	46	ON_LINK_EVENT	ON_LINK_EVENT	3	0	u64	75	
+fighter	47	UNK47	UNK47	2	0	u64	2	
+fighter	48	ON_SEARCH	ON_SEARCH	3	0	u64	32	
+fighter	49	SOME_KIRBY_EVENT	SOME_KIRBY_EVENT	3	0	u64	22	
+fighter	50	ON_SHIELD_COLLISION	ON_SHIELD_COLLISION	3	0	u64	21	
+fighter	51	SHIELD_LR_AND_COUNTER_STATUS	SHIELD_LR_AND_COUNTER_STATUS	3	0	u32	20	
+fighter	52	UNK52	UNK52	3	0	u64	3	
+fighter	53	UNK53	UNK53	3	0	u64	22	shield related but usure what its doing
+fighter	54	UNK54	UNK54	3	0	u64	15	
+fighter	55	ON_SHIELD	ON_SHIELD	3	0	u32	22	aka on reflection
+fighter	56	UNK56	UNK56	3	0	u64	5	
+fighter	57	UNK57	UNK57	2	0	u32	4	
+fighter	58	ON_NOTIFY_EVENT_MSC_CMD	ON_NOTIFY_EVENT_MSC_CMD	3	2	u64	48	
+fighter	59	ON_CHANGE_MOTION	ON_CHANGE_MOTION	3	0	u64	37	
+fighter	60	UNK60	UNK60	3	0	u64	5	
+fighter	61	UNK61	UNK61	3	0	u64	7	
+fighter	62	UNK62	UNK62	3	0	u64	8	
+fighter	63	UNK63	UNK63	3	0	u32	2	
+fighter	64	UNK64	UNK64	2	0	u64	2	
+fighter	65	UNK65	UNK65	3	0	u64	3	
+fighter	66	ON_GRABBED	ON_GRABBED	3	0	u64	21	triggers once a grabbox connects, it also seems to make you immune to being grabbed if the return value isn't 1
+fighter	67	UNK67	UNK67	2	0	u32	7	
+fighter	68	ON_DAMAGE	ON_DAMAGE	3	0	mixed	44	
+fighter	69	UNK69	UNK69	3	0	f64	5	
+fighter	70	UNK70	UNK70	2	0	u64	2	
+fighter	71	UNK71	UNK71	3	0	u64	5	
+fighter	72	UNK72	UNK72	2	1	u64	3	
+fighter	73	UNK73	UNK73	3	0	u64	10	
+fighter	74	UNK74	UNK74	2	0	u64	6	
+fighter	75	UNK75	UNK75	3	0	u64	15	
+fighter	76	UNK76	UNK76	3	0	u64	4	
+fighter	77	UNK77	UNK77	3	0	u64	7	
+fighter	78	UNK78	UNK78	3	0	u64	2	
+fighter	79	UNK79	UNK79	3	0	u64	2	
+fighter	80	UNK80	UNK80	5	0	u32	8	
+fighter	81	UNK81	UNK81	3	0	u64	2	
+fighter	82	UNK82	UNK82	2	0	u64	2	
+fighter	83	UNK83	UNK83	2	0	u64	5	
+fighter	84	UNK84	UNK84	3	0	mixed	4	
+fighter	85	UNK85	UNK85	2	0	u64	56	
+fighter	86	UNK86	UNK86	2	0	u64	2	
+fighter	87	UNK87	UNK87	3	0	u64	2	
+fighter	88	UNK88	UNK88	3	0	u64	12	
+fighter	89	UNK89	UNK89	2	0	u64	2	
+fighter	90	UNK90	UNK90	0	0	u32	3	
+fighter	91	UNK91	UNK91	3	0	u64	2	
+fighter	92	UNK92	UNK92	3	0	u64	3	
+fighter	93	UNK93	UNK93	0	0	u32	1	
+fighter	94	UNK94	UNK94	4	0	u64	4	
+fighter	95	ON_REBIRTH	ON_REBIRTH	2	0	u64	3	
+fighter	96	UNK96	UNK96	2	0	u64	5	
+fighter	97	UNK97	UNK97	2	0	u32	2	
+fighter	98	UNK98	UNK98	2	0	u64	7	
+fighter	99	UNK99	UNK99	2	0	u64	3	
+fighter	100	UNK100	UNK100	3	0	u64	2	
+fighter	101	ON_STATUS_TRANSITION	ON_STATUS_TRANSITION	3	0	u32	7	
+fighter	102	UNK102	UNK102	4	0	u64	6	
+fighter	103	UNK103	UNK103	2	0	u64	5	
+fighter	104	UNK104	UNK104	2	0	u64	4	
+fighter	105	UNK105	UNK105	4	0	u64	3	
+fighter	106	UNK106	UNK106	4	0	u64	3	
+fighter	107	UNK107	UNK107	4	0	u64	2	
+fighter	108	UNK108	UNK108	2	0	u32	5	
+fighter	109	UNK109	UNK109	2	0	u64	10	
+fighter	110	UNK110	UNK110	2	0	u64	10	
+fighter	111	UNK111	UNK111	5	0	u64	4	
+fighter	112	UNK112	UNK112	2	0	u64	5	
+fighter	113	UNK113	UNK113	2	0	u64	5	
+fighter	114	UNK114	UNK114	2	0	u64	6	
+fighter	115	UNK115	UNK115	3	0	u32	4	
+fighter	116	UNK116	UNK116	8	0	f64	2	
+fighter	117	UNK117	UNK117	2	0	u32	3	
+fighter	118	UNK118	UNK118	2	0	u64	4	
+fighter	119	UNK119	UNK119	3	0	u64	2	
+fighter	120	UNK120	UNK120	3	0	u64	2	
+fighter	121	UNK121	UNK121	0	0	void	1	
+fighter	122	UNK122	UNK122	3	0	u64	2	something knockout voice related?
+fighter	123	UNK123	UNK123	8	8	u64	2	
+fighter	124	UNK124	UNK124	2	1	u64	3	
+fighter	125	UNK125	UNK125	2	0	u64	2	
+fighter	126	UNK126	UNK126	2	0	u64	3	
+fighter	127	UNK127	UNK127	3	0	u32	2	
+fighter	128	UNK128	UNK128	3	0	mixed	4	
+fighter	129	UNK129	UNK129	3	0	mixed	4	
+fighter	130	UNK130	UNK130	3	0	u64	3	
+fighter	131	UNK131	UNK131	5	1	u64	4	might be on status end or on motion end for pacman
+fighter	132	UNK132	UNK132	2	0	u64	2	literally the same function as 133 but less args i am so confused kys sakurai
+fighter	133	UNK133	UNK133	2	0	u64	2	stubbed, shared to everyone except popo and nana
+fighter	134	UNK134	UNK134	5	0	u64	2	has a whole 5 params, sets 3,4 and 5 to 0 then returns 0, shared for every character except hero
+fighter	135	UNK135	UNK135	3	0	u64	2	stubbed, shared for every character except hero
+fighter	136	UNK136	UNK136	2	0	u32	2	returns true, shared for every character except master
+fighter	137	UNK137	UNK137	3	0	u32	2	returns true, shared for every character except elight
+fighter	138	ON_GRAB	ON_GRAB	3	0	u32	2	shared for every character, returns the function's third argument (idk what it is tho) except for demon
+fighter	139	UNK139	UNK139	2	0	u32	2	returns false, shared for every character
+fighter	140	SORA_EVENT_1	SORA_EVENT_1	5	0	u32	2	returns false, shared for every character except sora
+fighter	141	SORA_EVENT_2	SORA_EVENT_2	5	0	u32	2	returns false, shared for every character except sora
+fighter	142	SORA_EVENT_3	SORA_EVENT_3	5	0	u32	2	returns false, shared for every character except sora
+fighter	143	RETRUNS_NUMBER_2	RETRUNS_NUMBER_2	3	0	u32	2	shared across the entire cast except sora it , returns 2
+fighter	144	RETURN_IN_X3	RETURN_IN_X3	8	3	u64	3	shared across the entire cast except sora and kazuya it seems, returns whatever was in the register in_x3 + 0x58
+fighter	145	RETURNS_ITEM_HAND_GRIP_HEX	RETURNS_ITEM_HAND_GRIP_HEX	0	0	u64	2	shared across the entire cast except minmin, this one always returns the hash for item_hand_grip even with minmin
+weapon	0	INITIALIZATION	INITIALIZATION	3	0	mixed	54	looks like initializing the article
+weapon	1	UNK1	UNK1	0	0	u64	2	Most weapons refer to a common function
+weapon	2	UNK2	UNK2	2	0	u64	54	
+weapon	3	UNK3	UNK3	2	0	u64	178	
+weapon	4	UNK4	UNK4	8	8	u64	2	
+weapon	5	UNK5	UNK5	0	0	void	2	
+weapon	6	WEAPON_GENERATE_1	WEAPON_GENERATE_1	8	8	u64	350	
+weapon	7	WEAPON_GENERATE_2	WEAPON_GENERATE_2	8	8	u64	388	
+weapon	8	WEAPON_GENERATE_3	WEAPON_GENERATE_3	3	0	mixed	216	
+weapon	9	ON_WEAPON_REMOVE	ON_WEAPON_REMOVE	2	0	u64	102	
+weapon	10	UNK10	UNK10	2	0	u64	2	
+weapon	11	UNK11	UNK11	3	0	u64	65	
+weapon	12	WEAPON_NOTIFY_EVENT_MSC_CMD	WEAPON_NOTIFY_EVENT_MSC_CMD	3	1	u64	53	
+weapon	13	WEAPON_LINK_EVENT	WEAPON_LINK_EVENT	5	0	mixed	107	
+weapon	14	UNK14	UNK14	2	0	mixed	66	
+weapon	15	UNK15	UNK15	2	0	u64	16	
+weapon	16	UNK16	UNK16	2	0	u64	17	
+weapon	17	UNK17	UNK17	2	0	mixed	131	
+weapon	18	UNK18	UNK18	2	0	u64	8	
+weapon	19	UNK19	UNK19	2	0	u64	5	
+weapon	20	UNK20	UNK20	2	0	u64	20	
+weapon	21	UNK21	UNK21	2	0	u64	12	
+weapon	22	WEAPON_ON_STAGE_COLLISION	WEAPON_ON_STAGE_COLLISION	4	1	u64	95	
+weapon	23	UNK23	UNK23	5	0	u32	5	
+weapon	24	UNK24	UNK24	2	0	u32	21	Sets TeamModule and ReflectModule associated stuff
+weapon	25	UNK25	UNK25	4	0	u32	12	
+weapon	26	UNK26	UNK26	0	0	u32	9	
+weapon	27	UNK27	UNK27	0	0	f64	3	
+weapon	28	UNK28	UNK28	2	0	u64	10	Resets TeamModule and ReflectModule associated stuff
+weapon	29	ON_ATTACK	ON_ATTACK	3	0	u64	189	
+weapon	30	UNK30	UNK30	2	0	u32	54	Sets speed and life multipliers
+weapon	31	ON_WEAPON_REFLECT	ON_WEAPON_REFLECT	2	2	u64	3	When this weapon gets reflected
+weapon	32	UNK32	UNK32	2	0	u64	9	Sets team and posture stuff for opponent projectile
+weapon	33	UNK33	UNK33	2	0	u64	37	Sets the reflection speed
+weapon	34	UNK34	UNK34	2	0	u64	3	Updates projectile lr
+weapon	35	ON_SEARCH	ON_SEARCH	4	0	u64	25	
+weapon	36	UNK36	UNK36	2	0	u32	21	
+weapon	37	UNK37	UNK37	3	0	u64	16	
+weapon	38	UNK38	UNK38	3	0	u64	2	
+weapon	39	UNK39	UNK39	3	0	mixed	25	
+weapon	40	UNK40	UNK40	3	0	u64	49	
+weapon	41	UNK41	UNK41	3	0	u64	23	
+weapon	42	UNK42	UNK42	3	0	u64	4	
+weapon	43	ON_SHIELD_COLLISION_1	ON_SHIELD_COLLISION_1	3	0	u64	2	Unused on all articles due to none of them loading ShieldModule
+weapon	44	ON_SHIELD_COLLISION_2	ON_SHIELD_COLLISION_2	2	0	u32	2	Unused on all articles due to none of them loading ShieldModule
+weapon	45	ON_REFLECTOR_COLLISION_1	ON_REFLECTOR_COLLISION_1	3	0	u64	3	When a battle object hits this articles reflector
+weapon	46	ON_REFLECTOR_COLLISION_2	ON_REFLECTOR_COLLISION_2	2	0	u32	3	
+weapon	47	UNK47	UNK47	3	0	u64	16	
+weapon	48	UNK48	UNK48	0	0	void	1	
+weapon	49	UNK49	UNK49	3	0	u64	7	Lr related stuff
+weapon	50	UNK50	UNK50	3	0	u64	29	
+weapon	51	UNK51	UNK51	6	0	u64	84	Object IDs and GroundModule::set_shape_safe_pos
+weapon	52	UNK52	UNK52	3	0	u64	5	
+weapon	53	UNK53	UNK53	2	0	u32	3	
+weapon	54	UNK54	UNK54	2	0	u64	3	Gets the pos of the weapon and returns it as a u8
+weapon	55	UNK55	UNK55	3	0	mixed	141	
+weapon	56	UNK56	UNK56	2	0	u64	31	
+weapon	57	UNK57	UNK57	2	0	u64	30	
+weapon	58	UNK58	UNK58	2	0	u64	39	
+weapon	59	UNK59	UNK59	2	0	u32	3	
+weapon	60	UNK60	UNK60	2	0	u64	2	
+weapon	61	UNK61	UNK61	0	0	u32	1	
+weapon	62	UNK62	UNK62	2	0	u32	5	
+weapon	63	UNK63	UNK63	4	0	u64	9	
+weapon	64	UNK64	UNK64	4	0	u64	17	
+weapon	65	UNK65	UNK65	3	0	u32	2	
+weapon	66	UNK66	UNK66	2	0	u64	17	
+weapon	67	UNK67	UNK67	0	0	void	1	
+weapon	68	UNK68	UNK68	2	0	u64	15	
+weapon	69	UNK69	UNK69	2	0	u64	5	
+weapon	70	UNK70	UNK70	3	0	u32	3	
+weapon	71	UNK71	UNK71	4	0	u64	2	
+weapon	72	UNK72	UNK72	3	0	u64	2	
+weapon	73	UNK73	UNK73	4	0	f64	6	
+weapon	74	UNK74	UNK74	0	0	u32	2	
+weapon	75	UNK75	UNK75	0	0	u32	3	
+weapon	76	UNK76	UNK76	2	0	u64	3	Uncertain on what this offset is doing but it has code in it
+weapon	77	UNK77	UNK77	2	0	u64	2	
+weapon	78	UNK78	UNK78	2	0	u64	23	
+weapon	79	UNK79	UNK79	2	0	u64	18	
+weapon	80	UNK80	UNK80	2	0	u64	11	
+weapon	81	UNK81	UNK81	3	0	u64	4	
+weapon	82	UNK82	UNK82	3	0	u64	41	
+weapon	83	UNK83	UNK83	3	0	u64	24	More KineticModule stuff
+weapon	84	UNK84	UNK84	0	0	u32	2	
+weapon	85	UNK85	UNK85	0	0	u32	2	
+weapon	86	UNK86	UNK86	6	0	u32	4	
+weapon	87	UNK87	UNK87	3	0	u64	2	
+weapon	88	UNK88	UNK88	2	0	u64	11	
+weapon	89	UNK89	UNK89	0	0	u32	2	
+weapon	90	UNK90	UNK90	2	0	u32	5	
+weapon	91	UNK91	UNK91	3	0	u64	2	
+weapon	92	UNK92	UNK92	4	0	u32	3	
+weapon	93	UNK93	UNK93	3	0	u32	3	
+weapon	94	UNK94	UNK94	3	0	u32	2	
+weapon	95	UNK95	UNK95	6	0	u64	3	
+weapon	96	UNK96	UNK96	8	3	u64	6	
+weapon	97	UNK97	UNK97	4	0	u64	2	
+weapon	98	UNK98	UNK98	2	0	u32	2	
+weapon	99	UNK99	UNK99	3	0	u32	3	More LinkModule stuff
+weapon	100	UNK100	UNK100	6	1	u64	3	
+weapon	101	UNK101	UNK101	2	0	u64	3	
+weapon	102	UNK102	UNK102	2	0	u64	3	Uncertain on what this offset is doing but it has code in it
+weapon	103	UNK103	UNK103	0	0	u32	6	
+item	0	DESTRUCTOR_1	DESTRUCTOR_1	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	1	DESTRUCTOR_2	DESTRUCTOR_2	5	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	2	INITIALIZE	INITIALIZE	5	0	u64	1	(item, id, kind, flag, record); the creator 0x15db0b0 calls it on every spawn at 0x15dbb30, same virtual and shape as Weapon slot 2 (0x339e810)
+item	3	START	START	1	0	u64	1	(item); the creator calls it right after INITIALIZE at 0x15dbb40, it sets the state byte +0x3a to 3 and builds the collisions from the descriptor row
+item	4	UNK4	UNK4	0	0	void	1	BattleObject virtual, Item's own entry
+item	5	UNK5	UNK5	0	0	void	1	BattleObject virtual, Item's own entry
+item	6	UNK6	UNK6	2	0	u64	1	BattleObject virtual, Item's own entry
+item	7	UNK7	UNK7	2	0	u64	1	BattleObject virtual, Item's own entry
+item	8	UNK8	UNK8	2	2	u64	1	BattleObject; the Weapon object vtable holds the same entry
+item	9	UNK9	UNK9	2	0	u64	1	BattleObject virtual, Item's own entry
+item	10	UNK10	UNK10	1	0	u64	1	BattleObject virtual, Item's own entry
+item	11	UNK11	UNK11	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	12	UNK12	UNK12	0	0	u32	1	BattleObject virtual, Item's own entry
+item	13	UNK13	UNK13	1	0	u32	1	BattleObject virtual, Item's own entry
+item	14	UNK14	UNK14	1	0	u64	1	BattleObject virtual, Item's own entry
+item	15	UNK15	UNK15	1	0	u64	1	BattleObject virtual, Item's own entry
+item	16	UNK16	UNK16	2	0	u64	1	BattleObject virtual, Item's own entry
+item	17	UNK17	UNK17	0	0	u32	1	BattleObject virtual, Item's own entry
+item	18	UNK18	UNK18	2	0	u64	1	BattleObject virtual, Item's own entry
+item	19	UNK19	UNK19	3	0	u32	1	BattleObject virtual, Item's own entry
+item	20	UNK20	UNK20	1	0	u64	1	BattleObject virtual, Item's own entry
+item	21	UNK21	UNK21	1	0	u64	1	BattleObject virtual, Item's own entry
+item	22	UNK22	UNK22	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	23	UNK23	UNK23	2	0	u32	1	BattleObject virtual, Item's own entry
+item	24	UNK24	UNK24	0	0	u32	1	BattleObject virtual, Item's own entry
+item	25	UNK25	UNK25	2	0	u64	1	BattleObject virtual, Item's own entry
+item	26	UNK26	UNK26	2	0	u64	1	BattleObject virtual, Item's own entry
+item	27	UNK27	UNK27	2	0	u64	1	BattleObject virtual, Item's own entry
+item	28	UNK28	UNK28	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	29	UNK29	UNK29	0	0	void	1	BattleObject virtual, Item's own entry
+item	30	UNK30	UNK30	0	0	u32	1	BattleObject virtual, Item's own entry
+item	31	UNK31	UNK31	1	0	u32	1	BattleObject virtual, Item's own entry
+item	32	UNK32	UNK32	4	0	u64	1	BattleObject virtual, Item's own entry
+item	33	UNK33	UNK33	1	0	u64	1	BattleObject virtual, Item's own entry
+item	34	UNK34	UNK34	1	0	u64	1	BattleObject virtual, Item's own entry
+item	35	UNK35	UNK35	3	0	u64	1	BattleObject virtual, Item's own entry
+item	36	UNK36	UNK36	1	0	u64	1	BattleObject virtual, Item's own entry
+item	37	UNK37	UNK37	1	0	u64	1	BattleObject virtual, Item's own entry
+item	38	UNK38	UNK38	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	39	UNK39	UNK39	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	40	UNK40	UNK40	1	0	u32	1	BattleObject virtual, Item's own entry
+item	41	UNK41	UNK41	2	0	u64	1	BattleObject virtual, Item's own entry
+item	42	UNK42	UNK42	3	0	u32	1	BattleObject virtual, Item's own entry
+item	43	UNK43	UNK43	2	1	u64	1	BattleObject virtual, Item's own entry
+item	44	UNK44	UNK44	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	45	UNK45	UNK45	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	46	UNK46	UNK46	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	47	UNK47	UNK47	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	48	UNK48	UNK48	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	49	UNK49	UNK49	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	50	UNK50	UNK50	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	51	UNK51	UNK51	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	52	UNK52	UNK52	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	53	UNK53	UNK53	0	0	u32	1	BattleObject virtual, Item's own entry
+item	54	UNK54	UNK54	0	0	u32	1	BattleObject virtual, Item's own entry
+item	55	UNK55	UNK55	0	0	u32	1	BattleObject virtual, Item's own entry
+item	56	UNK56	UNK56	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	57	UNK57	UNK57	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	58	UNK58	UNK58	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	59	UNK59	UNK59	2	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	60	UNK60	UNK60	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	61	UNK61	UNK61	0	0	u32	1	BattleObject virtual, Item's own entry
+item	62	UNK62	UNK62	0	0	u32	1	BattleObject virtual, Item's own entry
+item	63	UNK63	UNK63	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	64	UNK64	UNK64	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	65	UNK65	UNK65	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	66	UNK66	UNK66	3	0	u64	1	BattleObject virtual, Item's own entry
+item	67	UNK67	UNK67	0	0	void	1	BattleObject virtual, Item's own entry
+item	68	UNK68	UNK68	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	69	UNK69	UNK69	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	70	UNK70	UNK70	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	71	UNK71	UNK71	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	72	UNK72	UNK72	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	73	UNK73	UNK73	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	74	UNK74	UNK74	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	75	UNK75	UNK75	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	76	UNK76	UNK76	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	77	UNK77	UNK77	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	78	UNK78	UNK78	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	79	UNK79	UNK79	1	0	u32	1	BattleObject virtual, Item's own entry
+item	80	UNK80	UNK80	3	0	u64	1	BattleObject virtual, Item's own entry
+item	81	UNK81	UNK81	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	82	UNK82	UNK82	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	83	UNK83	UNK83	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	84	UNK84	UNK84	2	0	u32	1	BattleObject virtual, Item's own entry
+item	85	UNK85	UNK85	2	0	u32	1	BattleObject virtual, Item's own entry
+item	86	UNK86	UNK86	0	0	f64	1	BattleObject; the Weapon object vtable holds the same entry
+item	87	UNK87	UNK87	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	88	UNK88	UNK88	1	0	u64	1	BattleObject virtual, Item's own entry
+item	89	UNK89	UNK89	0	0	u32	1	BattleObject virtual, Item's own entry
+item	90	UNK90	UNK90	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	91	UNK91	UNK91	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	92	UNK92	UNK92	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	93	UNK93	UNK93	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	94	UNK94	UNK94	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	95	UNK95	UNK95	1	0	u64	1	BattleObject virtual, Item's own entry
+item	96	UNK96	UNK96	0	0	f64	1	BattleObject; the Weapon object vtable holds the same entry
+item	97	UNK97	UNK97	0	0	f64	1	BattleObject; the Weapon object vtable holds the same entry
+item	98	UNK98	UNK98	3	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	99	UNK99	UNK99	0	0	f64	1	BattleObject; the Weapon object vtable holds the same entry
+item	100	UNK100	UNK100	0	0	f64	1	BattleObject; the Weapon object vtable holds the same entry
+item	101	UNK101	UNK101	0	0	f64	1	BattleObject; the Weapon object vtable holds the same entry
+item	102	UNK102	UNK102	0	0	void	1	BattleObject virtual, Item's own entry
+item	103	UNK103	UNK103	0	0	void	1	BattleObject virtual, Item's own entry
+item	104	UNK104	UNK104	1	0	u64	1	BattleObject virtual, Item's own entry
+item	105	UNK105	UNK105	1	0	u64	1	BattleObject virtual, Item's own entry
+item	106	UPDATE_1	UPDATE_1	1	0	u64	1	(item); phase 1 of the 9 the BattleObjectManager runs each frame on every object whose state byte +0x3a is 4 or more, first dispatch at 0x3ac8f0
+item	107	UPDATE_2	UPDATE_2	1	0	u64	1	(item); phase 2 of the 9 the BattleObjectManager runs each frame on every object whose state byte +0x3a is 4 or more, first dispatch at 0x3acb1c
+item	108	UPDATE_3	UPDATE_3	1	0	u64	1	(item); phase 3 of the 9 the BattleObjectManager runs each frame on every object whose state byte +0x3a is 4 or more, first dispatch at 0x3acd98
+item	109	UPDATE_4	UPDATE_4	1	0	u64	1	(item); phase 4 of the 9 the BattleObjectManager runs each frame on every object whose state byte +0x3a is 4 or more, first dispatch at 0x3acfe8
+item	110	UPDATE_5	UPDATE_5	1	0	u64	1	(item); phase 5 of the 9 the BattleObjectManager runs each frame on every object whose state byte +0x3a is 4 or more, first dispatch at 0x3ad238
+item	111	UPDATE_6	UPDATE_6	1	0	u64	1	(item); phase 6 of the 9 the BattleObjectManager runs each frame on every object whose state byte +0x3a is 4 or more, first dispatch at 0x3ad488
+item	112	UPDATE_7	UPDATE_7	1	0	u64	1	(item); phase 7 of the 9 the BattleObjectManager runs each frame on every object whose state byte +0x3a is 4 or more, first dispatch at 0x3ad6d8
+item	113	UPDATE_8	UPDATE_8	1	0	u64	1	(item); phase 8 of the 9 the BattleObjectManager runs each frame on every object whose state byte +0x3a is 4 or more, first dispatch at 0x3ad928
+item	114	UPDATE_9	UPDATE_9	1	0	u64	1	(item); phase 9 of the 9 the BattleObjectManager runs each frame on every object whose state byte +0x3a is 4 or more, first dispatch at 0x3adb80
+item	115	UNK115	UNK115	1	0	u64	1	BattleObject virtual, Item's own entry
+item	116	UNK116	UNK116	1	0	u64	1	BattleObject virtual, Item's own entry
+item	117	UNK117	UNK117	0	0	void	1	BattleObject virtual, Item's own entry
+item	118	UNK118	UNK118	1	0	u64	1	BattleObject virtual, Item's own entry
+item	119	UNK119	UNK119	0	0	u32	1	BattleObject virtual, Item's own entry
+item	120	UNK120	UNK120	1	0	u64	1	BattleObject; the Weapon object vtable holds the same entry
+item	121	UNK121	UNK121	0	0	f64	1	BattleObject; the Weapon object vtable holds the same entry
+item	122	UNK122	UNK122	0	0	void	1	BattleObject virtual, Item's own entry
+item	123	UNK123	UNK123	1	0	u64	1	BattleObject virtual, Item's own entry
+item	124	UNK124	UNK124	1	0	u64	1	BattleObject virtual, Item's own entry
+item	125	UNK125	UNK125	1	0	u32	1	BattleObject virtual, Item's own entry
+item	126	UNK126	UNK126	0	0	f64	1	BattleObject; the Weapon object vtable holds the same entry
+item	127	UNK127	UNK127	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	128	UNK128	UNK128	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	129	UNK129	UNK129	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	130	UNK130	UNK130	3	0	u64	1	BattleObject virtual, Item's own entry
+item	131	UNK131	UNK131	2	0	u64	1	BattleObject virtual, Item's own entry
+item	132	UNK132	UNK132	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	133	UNK133	UNK133	1	0	u64	1	BattleObject virtual, Item's own entry
+item	134	UNK134	UNK134	1	0	u64	1	BattleObject virtual, Item's own entry
+item	135	UNK135	UNK135	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	136	UNK136	UNK136	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	137	UNK137	UNK137	2	0	u64	1	BattleObject virtual, Item's own entry
+item	138	UNK138	UNK138	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	139	UNK139	UNK139	0	0	u32	1	BattleObject virtual, Item's own entry
+item	140	UNK140	UNK140	1	0	x8	1	BattleObject virtual, Item's own entry
+item	141	UNK141	UNK141	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	142	UNK142	UNK142	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	143	UNK143	UNK143	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	144	UNK144	UNK144	1	0	u64	1	BattleObject virtual, Item's own entry
+item	145	UNK145	UNK145	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	146	UNK146	UNK146	0	0	u32	1	BattleObject virtual, Item's own entry
+item	147	UNK147	UNK147	1	0	u32	1	BattleObject virtual, Item's own entry
+item	148	UNK148	UNK148	0	0	void	1	BattleObject virtual, Item's own entry
+item	149	UNK149	UNK149	1	0	u64	1	BattleObject virtual, Item's own entry
+item	150	UNK150	UNK150	1	0	u64	1	BattleObject virtual, Item's own entry
+item	151	UNK151	UNK151	1	0	u64	1	BattleObject virtual, Item's own entry
+item	152	UNK152	UNK152	2	0	u64	1	BattleObject virtual, Item's own entry
+item	153	UNK153	UNK153	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	154	UNK154	UNK154	3	0	void	1	BattleObject virtual, Item's own entry
+item	155	UNK155	UNK155	0	0	f64	1	BattleObject virtual, Item's own entry
+item	156	UNK156	UNK156	0	0	u32	1	BattleObject virtual, Item's own entry
+item	157	UNK157	UNK157	2	0	u64	1	BattleObject virtual, Item's own entry
+item	158	UNK158	UNK158	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	159	UNK159	UNK159	0	0	u32	1	BattleObject virtual, Item's own entry
+item	160	UNK160	UNK160	0	0	void	1	BattleObject; the Weapon object vtable holds the same entry
+item	161	UNK161	UNK161	0	0	u32	1	BattleObject virtual, Item's own entry
+item	162	UNK162	UNK162	0	0	u32	1	BattleObject; the Weapon object vtable holds the same entry
+item	163	UNK163	UNK163	2	0	u64	1	Item-only virtual
+item	164	UNK164	UNK164	1	0	u64	1	Item-only virtual
+item	165	UNK165	UNK165	1	0	u32	1	Item-only virtual
+item	166	UNK166	UNK166	0	0	void	1	Item-only virtual
+item	167	UNK167	UNK167	0	0	void	1	Item-only virtual
+item	168	SET_VISIBILITY_WHOLE	SET_VISIBILITY_WHOLE	2	0	u64	1	app::item::set_visibility_whole
+item	169	ACTION	ACTION	2	1	u64	1	app::item::action
+item	170	UNK170	UNK170	2	0	u64	1	Item-only virtual
+item	171	UNK171	UNK171	3	0	u64	1	Item-only virtual
+item	172	UNK172	UNK172	2	0	u64	1	Item-only virtual
+item	173	UNK173	UNK173	0	0	u32	1	Item-only virtual
+item	174	UNK174	UNK174	0	0	void	1	Item-only virtual
+item	175	UNK175	UNK175	1	0	u32	1	Item-only virtual
+item	176	UNK176	UNK176	1	0	u64	1	Item-only virtual
+item	177	UNK177	UNK177	2	0	u64	1	Item-only virtual
+item	178	UNK178	UNK178	1	0	u64	1	Item-only virtual
+item	179	HAVE	HAVE	3	0	u64	1	app::item::have
+item	180	UNK180	UNK180	3	0	u64	1	Item-only virtual

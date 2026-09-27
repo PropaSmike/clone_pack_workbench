@@ -54,8 +54,9 @@ the clone's names in place of the base's. The Rust tab writes both calls.
 files for reuse its lowest), articles (listed from the folder; click one,
 pick its source fighter and weapon, Add) and, for a stage, every
 `stage.toml` key. Writes `config.json` and the manifest file, keeping lines
-you added by hand: the flat keys, `[[article]]`, `[kirby]` and `[params]`; a
-`[[kirby.motion]]` table you wrote stays where it is.
+you added by hand: the flat keys, `[[article]]` (a `base_article` one
+included), `[kirby]` and `[params]`; a `[[kirby.motion]]` or `[[kirby.mesh]]`
+table you wrote stays where it is.
 
 **Rename files** changes a part's name everywhere the pack carries it: type
 the new name, click the button, check the two names. Every folder and file
@@ -122,17 +123,42 @@ still loads from the lower costume's file. `.marker` files, manifests and the
 plugin are never touched; a name `config.json` already aliases is left as it
 is; empty folders are dropped. Run **Lint** afterwards.
 
+**Vtables**: every vtable entry the part can hook, with its address for the
+base and a signature read off the game. A fighter lists its own vtable, its
+agent's `L2CFighterCommon` entries, the entries Kirby runs while he holds its
+ability, and for each of its articles the weapon vtable and `L2CWeaponCommon`.
+An item lists its own vtable and its agent's first ten entries. Double-click an
+entry, or select several and **Hook selected**; each becomes a `#[hook]` on the
+Rust tab that calls the original. The line under the table shows the whole
+entry under the pointer, or else the selected one. The fighter, weapon and item
+tables are this clone's own copies, so a hook there runs for it alone. The
+fighter and weapon addresses, slot names and notes are incredibleplays'
+[`smash-vtables`](https://github.com/theincredibleplayer/smash-vtables).
+
+The signature comes from every implementation of the entry in the game: a
+declared integer argument the function does not use is harmless, floats are
+`f64` so an `f32` passes through unchanged, and the return is `u64`, `f64` or,
+for common entries 10 and 12, `L2CValue`. An entry whose return could not be
+settled (some implementations return an integer, others a float, or it returns
+a struct) is listed but not offered. Addresses are main offsets for 13.0.4.
+
 **Rust**: one `lib.rs` for the pack, following the other tabs as you edit;
 copy it or save it as `lib.rs`. Every argument carries a comment. Per
 fighter: `fighter!`, a `<NAME>_COSTUMES` constant that drives the manifest,
 the CSK maps and the ParamConfig slots, the `Manifest` and `register` in
 `main`, then the Smashline agents (the fighter, one per article, Kirby when
-the clone has copy statuses). With the plugin flag: `register_css_entry`
+the clone has copy statuses). What only a hand-written `fighter.toml` says
+(a `base_article`, `[kirby]` `first` and `model`, `[[kirby.motion]]` and
+`[[kirby.mesh]]`, `save_no`, `exhibit_year`) reaches the `Manifest` too, so
+a pack can drop the file and keep them. With the plugin flag: `register_css_entry`
 (CSK's call, one layout per costume) and `register_params` (ParamConfig's
 calls with the clone's kind). Per item: `item!`, the `ItemManifest` and
 `register`, and `register_item_labels` for the label and name fields. With
 several parts of a kind, each part's functions carry its name
-(`register_css_entry_wawa`). Stages need no code.
+(`register_css_entry_wawa`); the first fighter is `fighter!`, the others a
+plain `static`, since `fighter!` also names the crate's default fighter. The
+entries picked on the Vtables tab follow as `#[hook]` functions, installed
+with `install_hooks!` after `register`. Stages need no code.
 
 ## Values
 
@@ -296,7 +322,12 @@ checked in turn, and one `config.json` holds them all. `stage_bank_ids.py` and
 ## What else is in this folder
 
 `clone_pack_gui/data/`: fighter, item and weapon kinds, music playlists, the
-fighter param words, and `ParamLabels.csv`, which names the hashes in a prc.
+fighter param words, `ParamLabels.csv`, which names the hashes in a prc, and
+the `vtable_*.tsv` tables behind the Vtables tab. The fighter and weapon
+addresses, slot names and notes are incredibleplays'
+[`smash-vtables`](https://github.com/theincredibleplayer/smash-vtables) (13.0.4);
+the item table, the common tables and the signatures were read off the game's
+code.
 `docs/`: the parameter field lists for game version 13.0.4.
 
 `arc_index/`: the file and folder paths inside `data.arc` (13.0.4), and

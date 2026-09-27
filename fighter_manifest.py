@@ -7,7 +7,7 @@ FIGHTER_KEYS = {
     "color_count": "int", "color_start": "int", "ui_chara": "str",
     "fighter_kind_name": "str", "resource_name": "str", "base_resource_name": "str",
     "series": "str", "disp_order": "int", "save_no": "int", "exhibit_year": "int",
-    "narration": "str", "staffroll": "bool", "jingle": "str",
+    "narration": "str", "staffroll": "bool", "css": "bool", "jingle": "str",
     "owns_param_resources": "bool", "effect_namespace": "int", "article_namespace": "int",
 }
 ARTICLE_KEYS = {"name": "str", "from": "str", "base_article": "str", "kirby": "bool"}

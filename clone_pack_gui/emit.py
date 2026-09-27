@@ -294,11 +294,17 @@ def fighter_manifest_lines(state: dict, constant: str) -> list[str]:
             lines.append("    .disp_order(%d) // position on the select screen" % state["disp_order"])
         if state.get("narration"):
             lines.append("    .narration(%s%s%s) // announcer call" % (q, state["narration"], q))
+        if isinstance(state.get("save_no"), int):
+            lines.append("    .save_no(%d) // the select entry's save slot" % state["save_no"])
+        if isinstance(state.get("exhibit_year"), int):
+            lines.append("    .exhibit_year(%d) // the year the select entry shows" % state["exhibit_year"])
     for key in ("ui_chara", "fighter_kind_name"):
         if state.get(key):
             lines.append("    .%s(%s%s%s) // overrides the name derived from name" % (key, q, state[key], q))
     if state.get("staffroll"):
         lines.append("    .staffroll() // the pack's credits picture")
+    if state.get("jingle"):
+        lines.append("    .jingle(%s%s%s) // victory theme; accepted, not served yet" % (q, state["jingle"], q))
     if state.get("owns_param_resources"):
         lines.append("    .owns_param_resources() // the pack ships the whole camera and CPU param trees")
     for article in state.get("articles") or []:
@@ -310,11 +316,27 @@ def fighter_manifest_lines(state: dict, constant: str) -> list[str]:
             lines.append("    .kirby_article(%s%s%s, %s%s%s) // article for Kirby's copy, from that vanilla weapon" % (q, name, q, q, source, q))
         else:
             lines.append("    .article(%s%s%s, %s%s%s) // fighter/%s/model/%s, copied from that vanilla weapon" % (q, name, q, q, source, q, resource, name))
+    for article in state.get("base_articles") or []:
+        if article.get("name") and article.get("base_article"):
+            lines.append("    .base_article(%s%s%s, %s%s%s) // renames the base's own article into fighter/%s/model/%s"
+                         % (q, article["name"], q, q, article["base_article"], q, resource, article["name"]))
     statuses = state.get("kirby_statuses")
     if isinstance(statuses, int) and statuses > 0:
         lines.append("    .kirby(%d) // status numbers reserved for Kirby's copy" % statuses)
+    if isinstance(state.get("kirby_first"), int):
+        lines.append("    .kirby_first(%#x) // the first of those numbers, pinned" % state["kirby_first"])
     if state.get("kirby_copy_full_model"):
         lines.append("    .kirby_full_model() // Kirby gets the whole body, not a hat")
+    if state.get("kirby_model"):
+        lines.append("    .kirby_model(%s%s%s) // an extra model folder under fighter/kirby/model/" % (q, state["kirby_model"], q))
+    tables = (state.get("kirby_tables") or "").strip()
+    if tables:
+        fence = "#"
+        while ('"' + fence) in tables:
+            fence += "#"
+        lines.append("    .raw(r%s\"" % fence)
+        lines += tables.splitlines()
+        lines.append("\"%s) // Kirby's copy motions and meshes, as fighter.toml carries them" % fence)
     engine, config = split_rules(state)
     rules = engine if own else engine + config
     if rules:
@@ -338,7 +360,22 @@ def float_literal(value) -> str:
     return "%r" % number if "." in text or "e" in text.lower() else "%.1f" % number
 
 
-def fighter_part(state: dict, suffix: str = "") -> dict:
+def hook_lines(kind: str, state: dict, constant: str, resource: str,
+               names_taken: set | None) -> tuple[list[str], list[str]]:
+    """The install line for main and the #[hook] functions, for the entries
+    this part picked on the Vtables tab."""
+    from . import vtables
+    names, blocks = vtables.hook_source(kind, state, constant, resource,
+                                        names_taken if names_taken is not None else set())
+    if not names:
+        return [], []
+    install = ["    clone_engine_api::install_hooks!(%s); // the entries picked on the Vtables tab"
+               % ", ".join(names)]
+    return install, ["\n" + "\n\n".join(blocks) + "\n"]
+
+
+def fighter_part(state: dict, suffix: str = "", first: bool = True,
+                 names_taken: set | None = None) -> dict:
     """What one fighter adds to the plugin: its declaration, its lines in main
     and, when its plugin keeps a one-slot mod's code, the CSK and ParamConfig
     functions with the clone's names."""
@@ -361,9 +398,11 @@ def fighter_part(state: dict, suffix: str = "") -> dict:
         "        // .status(Main, *FIGHTER_STATUS_KIND_SPECIAL_N, special_n_main)",
         "        .install();",
     ]
+    renamed = [article["name"] for article in state.get("base_articles") or []
+               if article.get("name") and article.get("base_article")]
     for article in state.get("articles") or []:
         name = article.get("name")
-        if not name:
+        if not name or name in renamed:
             continue
         if not (article.get("owner") and article.get("weapon")):
             main.append("    // %s ships files but has no source weapon yet: pick a source "
@@ -381,6 +420,14 @@ def fighter_part(state: dict, suffix: str = "") -> dict:
                      "    %s.article(\"%s\")" % (constant, name),
                      "        // .status(Line::Main, STATUS, %s_main)" % short,
                      "        .install();"]
+    for name in renamed:
+        short = identifier(name).lower()
+        main += ["    Agent::new(\"%s_%s\")" % (resource, name),
+                 "        // .game_acmd(\"game_fly\", %s_fly, Priority::Default)" % short,
+                 "        .install();",
+                 "    %s.article(\"%s\")" % (constant, name),
+                 "        // .status(Line::Main, STATUS, %s_main)" % short,
+                 "        .install();"]
     statuses = state.get("kirby_statuses")
     if isinstance(statuses, int) and statuses > 0:
         main += ["    Agent::new(\"kirby\")",
@@ -393,9 +440,19 @@ def fighter_part(state: dict, suffix: str = "") -> dict:
         config = param_config_calls(state, suffix)
         if config:
             tail.append(config)
+    install, hooks = hook_lines("fighter", state, constant, resource, names_taken)
+    if install:
+        uses |= {"v2:hook"} | ({"v2:slot"} if any("slot::" in block for block in hooks) else set())
+        main += install
+        tail += hooks
     colors = int(state.get("color_count", 8) or 8)
+    if first:
+        handle = "fighter!(%s, \"%s\"); // the handle, and the identity" % (constant, resource)
+    else:
+        handle = ("pub static %s: clone_engine_api::v2::Fighter = clone_engine_api::v2::Fighter::new(\"%s\"); "
+                  "// the handle, and the identity" % (constant, resource))
     return {"name": resource, "uses": uses,
-            "decls": ["fighter!(%s, \"%s\"); // the handle, and the identity" % (constant, resource),
+            "decls": [handle,
                       "const %s: u8 = %d; // costumes the pack ships (c00..)" % (costumes_constant(state), colors)],
             "main": main, "tail": tail}
 
@@ -468,7 +525,8 @@ def item_manifest_lines(state: dict, constant: str) -> list[str]:
     return lines
 
 
-def item_part(state: dict, suffix: str = "", taken: set | None = None) -> dict:
+def item_part(state: dict, suffix: str = "", taken: set | None = None,
+              names_taken: set | None = None) -> dict:
     """What one item adds to the plugin: its declaration, its ItemManifest in
     main, and the label and hash fields of its common row, which the manifest
     cannot carry. An item named like a fighter of the pack is NAME_ITEM."""
@@ -482,9 +540,16 @@ def item_part(state: dict, suffix: str = "", taken: set | None = None) -> dict:
         main.append("    register_item_labels%s(kind); // label and hash fields, by name" % suffix)
     main.append("    // %s.status(clone_engine_api::ItemStatusLine::Main, \"STATUS\", %s_main); // status line, a status name of the base item, function"
                 % (constant, constant.lower()))
-    return {"name": resource, "uses": {"v2:item", "v2:ItemManifest"},
+    uses = {"v2:item", "v2:ItemManifest"}
+    tail = [labels] if labels else []
+    install, hooks = hook_lines("item", state, constant, resource, names_taken)
+    if install:
+        uses |= {"v2:hook"} | ({"v2:slot"} if any("slot::" in block for block in hooks) else set())
+        main += install
+        tail += hooks
+    return {"name": resource, "uses": uses,
             "decls": ["item!(%s, \"%s\"); // the handle, and the resource name" % (constant, resource)],
-            "main": main, "tail": [labels] if labels else []}
+            "main": main, "tail": tail}
 
 
 def use_lines(uses: set) -> list[str]:
@@ -503,10 +568,12 @@ def plugin_source(fighters: list[dict], items: list[dict]) -> str:
     (a fighter.toml or item.toml beside it is read first and wins), then adds
     its code. With several parts of one kind, each part's functions carry its
     name."""
-    parts = [fighter_part(state, suffix(state) if len(fighters) > 1 else "")
-             for state in fighters]
+    names_taken: set = set()
+    parts = [fighter_part(state, suffix(state) if len(fighters) > 1 else "",
+                          first=index == 0, names_taken=names_taken)
+             for index, state in enumerate(fighters)]
     taken = {identifier(state.get("resource_name", "wawa")) for state in fighters}
-    parts += [item_part(state, suffix(state) if len(items) > 1 else "", taken)
+    parts += [item_part(state, suffix(state) if len(items) > 1 else "", taken, names_taken)
               for state in items]
     if not parts:
         return ""

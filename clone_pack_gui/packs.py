@@ -131,8 +131,11 @@ def fighter_manifest_values(state: dict) -> dict:
     return values
 
 
-def fighter_article_lines(articles) -> list[str]:
-    """One [[article]] table per source the pack names, minted from its weapon."""
+def fighter_article_lines(articles, base_articles=()) -> list[str]:
+    """One [[article]] table per source the pack names, minted from its weapon,
+    then one per base article renamed into the clone's folder. The panel edits
+    only the first kind; the second is carried from the file so a rewrite never
+    drops it."""
     out: list[str] = []
     for article in articles or ():
         owner = article.get("owner")
@@ -144,6 +147,11 @@ def fighter_article_lines(articles) -> list[str]:
                 "%-13s = %s" % ("from", format_value("%s/%s" % (owner, weapon_short_name(owner, weapon))))]
         if article.get("kirby_copy"):
             out.append("%-13s = %s" % ("kirby", "true"))
+    for article in base_articles or ():
+        name, base = article.get("name"), article.get("base_article")
+        if name and base:
+            out += ["", "[[article]]", "%-13s = %s" % ("name", format_value(name)),
+                    "%-13s = %s" % ("base_article", format_value(base))]
     return out
 
 
@@ -189,7 +197,7 @@ def write_fighter_manifest(path: Path, state: dict) -> list[str]:
     while head and not head[-1].strip():
         head.pop()
     out = list(head)
-    out += fighter_article_lines(state.get("articles"))
+    out += fighter_article_lines(state.get("articles"), state.get("base_articles"))
     out += fighter_kirby_lines(state, kirby_existing)
     out += param_lines
     for header, body in others:
@@ -254,6 +262,9 @@ def fighter_manifest_from_lines(lines: list[str]) -> dict:
     head, sections = split_sections(lines)
     values = parse_lines(head)
     articles = []
+    base_articles = []
+    kirby_tables = []
+    kirby: dict = {}
     for header, body in sections:
         if header == "[fighter]":
             values.update(parse_lines(body))
@@ -266,12 +277,17 @@ def fighter_manifest_from_lines(lines: list[str]) -> dict:
                                  "weapon": "WEAPON_KIND_%s_%s" % (owner.upper(), weapon.upper()),
                                  "name": article["name"],
                                  "kirby_copy": bool(article.get("kirby"))})
+            elif article.get("name") and article.get("base_article"):
+                base_articles.append({"name": article["name"],
+                                      "base_article": article["base_article"]})
         elif header == "[kirby]":
             kirby = parse_lines(body)
             if isinstance(kirby.get("statuses"), int):
                 values["kirby_statuses"] = kirby["statuses"]
             if kirby.get("full_model"):
                 values["kirby_copy_full_model"] = True
+        elif header in ("[[kirby.motion]]", "[[kirby.mesh]]"):
+            kirby_tables.append("\n".join([header] + [line.rstrip() for line in body if line.strip()]))
     state: dict = {}
     if values.get("name"):
         state["resource_name"] = values["name"]
@@ -285,13 +301,17 @@ def fighter_manifest_from_lines(lines: list[str]) -> dict:
         state["color_start"] = values["color_start"]
     for key in ("display_name", "series", "narration", "ui_chara", "fighter_kind_name",
                 "disp_order", "staffroll", "owns_param_resources", "kirby_statuses",
-                "kirby_copy_full_model"):
+                "kirby_copy_full_model", "save_no", "exhibit_year", "jingle"):
         if key in values:
             state[key] = values[key]
     if "css" in values:
         state["own_css"] = values["css"] is False
     if articles:
         state["articles"] = articles
+    state["base_articles"] = base_articles
+    state["kirby_first"] = kirby.get("first") if isinstance(kirby.get("first"), int) else None
+    state["kirby_model"] = kirby.get("model") if isinstance(kirby.get("model"), str) else None
+    state["kirby_tables"] = "\n\n".join(kirby_tables)
     return state
 
 

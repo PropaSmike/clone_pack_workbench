@@ -14,7 +14,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
-from . import backups, emit, guide, optimize, packs, prc
+from . import backups, emit, guide, optimize, packs, prc, vtables
 from .catalog import (Catalog, OWNER_SURFACE, VL_SURFACE, is_float_field,
                       is_label_field, is_name_field)
 
@@ -142,12 +142,13 @@ class Workbench(ttk.Frame):
         self.params = ParamsPanel(self.tabs, self)
         self.lint = LintPanel(self.tabs, self)
         self.optimize = OptimizePanel(self.tabs, self)
+        self.vtables = VtablePanel(self.tabs, self)
         self.rust = RustPanel(self.tabs, self)
         self.help_tab = ttk.Frame(self.tabs)
         for panel, label in ((self.identity, "Identity"), (self.files, "Files"),
                              (self.params, "Parameters"), (self.lint, "Lint"),
-                             (self.optimize, "Optimize"), (self.rust, "Rust"),
-                             (self.help_tab, "Help")):
+                             (self.optimize, "Optimize"), (self.vtables, "Vtables"),
+                             (self.rust, "Rust"), (self.help_tab, "Help")):
             self.tabs.add(panel, text=label)
         self.last_tab = str(self.identity)
         self.tabs.bind("<<NotebookTabChanged>>", self.tab_changed)
@@ -162,6 +163,8 @@ class Workbench(ttk.Frame):
             self.last_tab = chosen
             if self.identity.pending is not None:
                 self.identity.sync()
+            if chosen == str(self.vtables):
+                self.vtables.load()
 
     def show_guide(self) -> None:
         if self.guide is not None and self.guide.winfo_exists():
@@ -432,6 +435,7 @@ class Workbench(ttk.Frame):
         self.identity.load()
         self.params.show(self.kind.get())
         self.params.load()
+        self.vtables.load()
         self.rust.refresh()
 
     def add_kind(self) -> None:
@@ -567,7 +571,7 @@ class Workbench(ttk.Frame):
             for section in parts:
                 beyond = any(section.get(key) for key in
                              ("articles", "params", "item_params", "owner_params",
-                              "owner_prc_files", "item_common_prc"))
+                              "owner_prc_files", "item_common_prc", "hooks"))
                 if section and (kind == packs.FIGHTER or beyond):
                     keep.setdefault(kind, []).append(section)
         if not keep:
@@ -2393,6 +2397,206 @@ class OptimizePanel(ttk.Frame):
         self.app.lint.clear()
         self.scan()
         return True
+
+
+VTABLE_COLUMNS = (
+    ("name", "Entry", 240, "w"),
+    ("picked", "Hooked", 60, "center"),
+    ("slot", "Slot", 50, "e"),
+    ("address", "Address (base)", 230, "w"),
+    ("signature", "Signature", 300, "w"),
+    ("note", "Note", 260, "w"),
+)
+
+
+class VtablePanel(ttk.Frame):
+    """Every vtable entry the part can hook, with its address and a signature
+    read off the game; the picked ones become #[hook] functions on the Rust tab."""
+
+    def __init__(self, parent: tk.Misc, app: Workbench):
+        super().__init__(parent, padding=10)
+        self.app = app
+        self.rows: list[dict] = []
+        self.table_ids: list[str] = []
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
+        bar = ttk.Frame(self)
+        bar.grid(row=0, column=0, sticky="ew")
+        bar.columnconfigure(1, weight=1)
+        ttk.Label(bar, text="Table").grid(row=0, column=0, padx=(0, 6))
+        self.table_var = tk.StringVar()
+        self.table_box = ttk.Combobox(bar, textvariable=self.table_var, state="readonly", width=60)
+        self.table_box.grid(row=0, column=1, sticky="w")
+        self.table_box.bind("<<ComboboxSelected>>", lambda _: self.fill())
+        ttk.Label(bar, text="Find").grid(row=0, column=2, padx=(12, 6))
+        self.find_var = tk.StringVar()
+        find = ttk.Entry(bar, textvariable=self.find_var, width=18)
+        find.grid(row=0, column=3)
+        find.bind("<KeyRelease>", lambda _: self.fill())
+        self.sheet = Sheet(self, VTABLE_COLUMNS, height=14)
+        self.sheet.tree.configure(selectmode="extended")
+        self.sheet.tree.column("name", stretch=False)
+        self.sheet.tree.column("note", stretch=True)
+        self.sheet.grid(row=1, column=0, sticky="nsew", pady=(8, 4))
+        self.sheet.tree.bind("<Double-1>", lambda _: self.toggle())
+        self.sheet.on_select(lambda _: self.show(self.focused()))
+        self.sheet.tree.bind("<Motion>", self.hover, add="+")
+        self.sheet.tree.bind("<Leave>", lambda _: self.show(self.focused()), add="+")
+        self.shown_table: str | None = None
+        self.showing: int | None = -1
+        self.detail = ttk.Label(self, justify="left", text="")
+        self.detail.grid(row=2, column=0, sticky="w", pady=(0, 6))
+        buttons = ttk.Frame(self)
+        buttons.grid(row=3, column=0, sticky="ew")
+        ttk.Button(buttons, text="Hook selected", command=lambda: self.set_picked(True)).pack(side="left")
+        ttk.Button(buttons, text="Unhook selected", command=lambda: self.set_picked(False)).pack(side="left", padx=4)
+        ttk.Button(buttons, text="Unhook this table", command=self.clear_table).pack(side="left")
+        self.summary = ttk.Label(buttons, text="", justify="left")
+        self.summary.pack(side="left", padx=12)
+        self.note = ttk.Label(self, foreground="#555", justify="left", text=(
+            "Double-click an entry, or select several and Hook selected; each becomes a "
+            "#[hook] on the Rust tab that calls the original, ready for your code before or "
+            "after it. The fighter and item tables are this clone's own copies, so a hook "
+            "there runs for it alone. The signature is read off every implementation of the "
+            "entry in the game: extra integer arguments are harmless, floats are f64 so an "
+            "f32 passes through unchanged. An entry whose return could not be settled is "
+            "listed but not offered. Addresses are main 13.0.4 offsets for the base. The "
+            "fighter and weapon addresses, slot names and notes are incredibleplays' "
+            "smash-vtables."))
+        self.note.grid(row=4, column=0, sticky="w", pady=(6, 0))
+        wrap_within(self, [self.detail, self.summary, self.note])
+
+    def kind(self) -> str:
+        return self.app.kind.get()
+
+    def part(self) -> dict:
+        return self.app.part(self.kind())
+
+    def load(self) -> None:
+        """The tables for the part being worked on, keeping the chosen one if it still exists."""
+        if not vtables.available():
+            self.table_ids = []
+            self.table_box.configure(values=[])
+            self.table_var.set("")
+            self.sheet.clear()
+            self.summary.configure(text="The vtable catalog (data/vtable_*.tsv) is missing.")
+            return
+        choices = vtables.tables(self.kind(), self.part())
+        previous = self.table_ids[self.table_box.current()] if self.table_ids and self.table_box.current() >= 0 else None
+        self.table_ids = [table for table, _ in choices]
+        self.table_box.configure(values=[label for _, label in choices])
+        if not choices:
+            self.table_var.set("")
+            self.sheet.clear()
+            self.summary.configure(text="A %s has no vtable to hook." % self.kind())
+            return
+        self.table_box.current(self.table_ids.index(previous) if previous in self.table_ids else 0)
+        self.fill()
+
+    def table(self) -> str | None:
+        index = self.table_box.current()
+        return self.table_ids[index] if 0 <= index < len(self.table_ids) else None
+
+    def picked(self) -> list[dict]:
+        return self.part().setdefault("hooks", [])
+
+    def is_picked(self, table: str, slot: int) -> bool:
+        return any(hook.get("table") == table and hook.get("slot") == slot for hook in self.picked())
+
+    def fill(self) -> None:
+        table = self.table()
+        kept = {self.rows[index]["slot"] for index in self.sheet.selection()
+                if index < len(self.rows)} if table == self.shown_table else set()
+        self.sheet.clear()
+        self.rows = []
+        self.shown_table = table
+        self.showing = -1
+        if table is None:
+            self.show(None)
+            return
+        wanted = self.find_var.get().strip().lower()
+        for row in vtables.entries(table, self.part()):
+            text = ("%s %s %s" % (row["name"], row["slot"], row["note"])).lower()
+            if wanted and wanted not in text:
+                continue
+            picked = self.is_picked(table, row["slot"])
+            self.sheet.append({"name": row["name"], "picked": "yes" if picked else "",
+                               "slot": row["slot"], "address": row["address"],
+                               "signature": row["signature"], "note": row["note"]}, changed=picked)
+            self.rows.append(row)
+        again = [str(index) for index, row in enumerate(self.rows) if row["slot"] in kept]
+        if again:
+            self.sheet.tree.selection_set(again)
+        self.show(self.focused())
+        here = sum(1 for hook in self.picked() if hook.get("table") == table)
+        self.summary.configure(text="%d hooked in this table, %d on this part"
+                               % (here, len(self.picked())))
+
+    def focused(self) -> int | None:
+        selection = self.sheet.selection()
+        return selection[0] if selection else None
+
+    def hover(self, event) -> None:
+        row = self.sheet.tree.identify_row(event.y)
+        self.show(int(row) if row else self.focused())
+
+    def show(self, index: int | None) -> None:
+        """The whole entry under the pointer, or else the selected one, since a
+        note or a signature is often longer than its column."""
+        if index == self.showing:
+            return
+        self.showing = index
+        if index is None or not 0 <= index < len(self.rows):
+            self.detail.configure(text="Select or point at an entry to read all of it.")
+            return
+        row = self.rows[index]
+        head = [row["name"], "slot %s" % row["slot"], row["address"]]
+        lines = ["   ".join(part for part in head if part), row["signature"]]
+        if row["note"]:
+            lines.append(row["note"])
+        self.detail.configure(text="\n".join(lines))
+
+    def set_picked(self, on: bool, indices=None) -> None:
+        table = self.table()
+        if table is None:
+            return
+        hooks = self.picked()
+        changed = False
+        for index in (self.sheet.selection() if indices is None else indices):
+            row = self.rows[index]
+            present = self.is_picked(table, row["slot"])
+            if on and not present:
+                if not row["offered"]:
+                    self.app.log("vtables: %s is not offered (%s)" % (row["name"], row["signature"]))
+                    continue
+                hooks.append({"table": table, "slot": row["slot"]})
+                changed = True
+            elif not on and present:
+                hooks[:] = [hook for hook in hooks
+                            if not (hook.get("table") == table and hook.get("slot") == row["slot"])]
+                changed = True
+        if changed:
+            self.after_change()
+
+    def toggle(self) -> None:
+        selection = self.sheet.selection()
+        if not selection:
+            return
+        row = self.rows[selection[0]]
+        self.set_picked(not self.is_picked(self.table(), row["slot"]), selection[:1])
+
+    def clear_table(self) -> None:
+        table = self.table()
+        hooks = self.picked()
+        before = len(hooks)
+        hooks[:] = [hook for hook in hooks if hook.get("table") != table]
+        if len(hooks) != before:
+            self.after_change()
+
+    def after_change(self) -> None:
+        self.fill()
+        self.app.save_state()
+        self.app.rust.refresh()
 
 
 class RustPanel(ttk.Frame):

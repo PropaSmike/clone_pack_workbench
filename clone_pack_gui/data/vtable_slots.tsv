@@ -67,7 +67,7 @@ fighter	64	UNK64	UNK64	2	0	u64	2
 fighter	65	UNK65	UNK65	3	0	u64	3	
 fighter	66	ON_GRABBED	ON_GRABBED	3	0	u64	21	triggers once a grabbox connects, it also seems to make you immune to being grabbed if the return value isn't 1
 fighter	67	UNK67	UNK67	2	0	u32	7	
-fighter	68	ON_DAMAGE	ON_DAMAGE	3	0	mixed	44	
+fighter	68	ON_DAMAGE	ON_DAMAGE	3	0	u64	44	the game ignores the return
 fighter	69	UNK69	UNK69	3	0	f64	5	
 fighter	70	UNK70	UNK70	2	0	u64	2	
 fighter	71	UNK71	UNK71	3	0	u64	5	
@@ -184,7 +184,7 @@ weapon	35	ON_SEARCH	ON_SEARCH	4	0	u64	25
 weapon	36	UNK36	UNK36	2	0	u32	21	
 weapon	37	UNK37	UNK37	3	0	u64	16	
 weapon	38	UNK38	UNK38	3	0	u64	2	
-weapon	39	UNK39	UNK39	3	0	mixed	25	
+weapon	39	UNK39	UNK39	3	0	u64	25	on damage, on every hit including pushes with no damage; a2 is the hit record: +0x04 damage, +0x30 hit position, +0x44 attacker id; the game ignores the return
 weapon	40	UNK40	UNK40	3	0	u64	49	
 weapon	41	UNK41	UNK41	3	0	u64	23	
 weapon	42	UNK42	UNK42	3	0	u64	4	

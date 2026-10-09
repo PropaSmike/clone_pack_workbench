@@ -264,6 +264,8 @@ def fighter_manifest_from_lines(lines: list[str]) -> dict:
     articles = []
     base_articles = []
     kirby_tables = []
+    motion_tables = []
+    grab_tables = []
     kirby: dict = {}
     for header, body in sections:
         if header == "[fighter]":
@@ -288,6 +290,10 @@ def fighter_manifest_from_lines(lines: list[str]) -> dict:
                 values["kirby_copy_full_model"] = True
         elif header in ("[[kirby.motion]]", "[[kirby.mesh]]"):
             kirby_tables.append("\n".join([header] + [line.rstrip() for line in body if line.strip()]))
+        elif header == "[[global_motion]]":
+            motion_tables.append("\n".join([header] + [line.rstrip() for line in body if line.strip()]))
+        elif header == "[[grab]]":
+            grab_tables.append("\n".join([header] + [line.rstrip() for line in body if line.strip()]))
     state: dict = {}
     if values.get("name"):
         state["resource_name"] = values["name"]
@@ -312,6 +318,8 @@ def fighter_manifest_from_lines(lines: list[str]) -> dict:
     state["kirby_first"] = kirby.get("first") if isinstance(kirby.get("first"), int) else None
     state["kirby_model"] = kirby.get("model") if isinstance(kirby.get("model"), str) else None
     state["kirby_tables"] = "\n\n".join(kirby_tables)
+    state["global_motion_tables"] = "\n\n".join(motion_tables)
+    state["grab_tables"] = "\n\n".join(grab_tables)
     return state
 
 

@@ -16,9 +16,32 @@ MOTION_KEYS = {"name": "str", "animation": "str", "template": "str", "scripts": 
                "game": "str", "sound": "str", "effect": "str", "expression": "str",
                "flags": "list", "loop": "bool", "blend_frames": "int",
                "cancel_frame": "int", "xlu": "list", "no_stop_intp": "bool",
-               "animation_unk": "int", "no_extra": "bool"}
+               "animation_unk": "int", "no_extra": "bool", "victim": "bool"}
 MESH_KEYS = {"name": "str", "visible": "bool"}
+GRAB_KEYS = {"status": "status", "victim": "status", "then": "status", "node": "str",
+             "offset": "vec3", "catch": "bool"}
+STATUS_NAMES = {
+    "ATTACK": 0x27, "ATTACK_DASH": 0x29, "ATTACK_S3": 0x2a, "ATTACK_HI3": 0x2b,
+    "ATTACK_LW3": 0x2c, "ATTACK_S4": 0x2f, "ATTACK_LW4": 0x32, "ATTACK_HI4": 0x35,
+    "ATTACK_AIR": 0x36, "CATCH": 0x37, "CATCH_PULL": 0x38, "CATCH_DASH": 0x39,
+    "CATCH_DASH_PULL": 0x3a, "CATCH_TURN": 0x3b, "CATCH_WAIT": 0x3c, "THROW": 0x40,
+    "CAPTURE_PULLED": 0x41, "CAPTURE_WAIT": 0x42, "CLUNG_GANON": 0xbd, "CATCHED_GANON": 0xbe,
+    "CATCHED_AIR_GANON": 0xbf, "CLUNG_CAPTAIN": 0xc3, "KOOPA_DIVED": 0xc4,
+    "SHOULDERED_DONKEY_START": 0xc5, "SWALLOWED": 0xe6, "BITTEN_WARIO_START": 0xed,
+    "CLUNG_DIDDY": 0xf0, "CAPTURE_YOSHI": 0xf3, "CATCHED_REFLET": 0xfe, "CATCHED_RIDLEY": 0x171,
+    "MIIFIGHTER_SUPLEX_AIR_CAPTURED": 0x186, "CAPTURE_JACK_WIRE": 0x19c,
+    "DOLLY_SUPER_SPECIAL2_CAPTURE": 0x1ae, "CAPTURE_MASTER_SWORD": 0x1b4, "DEMON_DIVED": 0x1ca,
+    "SPECIAL_N": 0x1dc, "SPECIAL_S": 0x1dd, "SPECIAL_HI": 0x1de, "SPECIAL_LW": 0x1df,
+}
 NAME_RE = re.compile(r"^[a-z0-9_]+$")
+
+
+def status_kind(name):
+    """A status name as [[grab]] writes it, with or without FIGHTER_STATUS_KIND_, or None."""
+    bare = name.strip()
+    if bare.upper().startswith("FIGHTER_STATUS_KIND_"):
+        bare = bare[len("FIGHTER_STATUS_KIND_"):]
+    return STATUS_NAMES.get(bare.upper())
 
 
 class ManifestError(ValueError):
@@ -57,6 +80,26 @@ def parse_scalar(text, kind, line, key):
         if not (text.startswith("[") and text.endswith("]")):
             raise ManifestError(line, "%s must be a [list]" % key)
         return [item.strip().strip('"') for item in text[1:-1].split(",") if item.strip()]
+    if kind == "status":
+        if text.startswith('"'):
+            name = parse_scalar(text, "str", line, key)
+            value = status_kind(name)
+            if value is None:
+                raise ManifestError(line, '%s: "%s" is not a known status name; write its number'
+                                    % (key, name))
+        else:
+            value = parse_scalar(text, "int", line, key)
+        if value < 0:
+            raise ManifestError(line, "%s must not be negative" % key)
+        return value
+    if kind == "vec3":
+        parts = parse_scalar(text, "list", line, key)
+        if len(parts) != 3:
+            raise ManifestError(line, "%s must be [x, y, z]" % key)
+        try:
+            return [float(part) for part in parts]
+        except ValueError:
+            raise ManifestError(line, "%s must be [x, y, z] numbers" % key)
     raise ManifestError(line, "unknown kind for %s" % key)
 
 
@@ -88,7 +131,7 @@ def blocks(text):
 
 
 def parse_lines(lines, first_line=1):
-    fighter = {"articles": [], "kirby": None, "params": []}
+    fighter = {"articles": [], "kirby": None, "params": [], "global_motions": [], "grabs": []}
     section = ("fighter", None)
     for offset, raw in enumerate(lines):
         number = first_line + offset
@@ -115,6 +158,12 @@ def parse_lines(lines, first_line=1):
                 fighter["kirby"] = fighter["kirby"] or {"motions": [], "meshes": []}
                 fighter["kirby"]["meshes"].append({})
                 section = ("mesh", fighter["kirby"]["meshes"][-1])
+            elif (name, array) == ("global_motion", True):
+                fighter["global_motions"].append({})
+                section = ("global_motion", fighter["global_motions"][-1])
+            elif (name, array) == ("grab", True):
+                fighter["grabs"].append({})
+                section = ("grab", fighter["grabs"][-1])
             elif not array and (name == "params" or name.startswith("params.")):
                 slot, op = None, "set"
                 for part in name.split(".")[1:]:
@@ -144,9 +193,11 @@ def parse_lines(lines, first_line=1):
             fighter["params"].append({"name": key, "slot": slot, "op": op, "value": parsed})
             continue
         table = {"fighter": FIGHTER_KEYS, "article": ARTICLE_KEYS, "kirby": KIRBY_KEYS,
-                 "motion": MOTION_KEYS, "mesh": MESH_KEYS}[kind]
+                 "motion": MOTION_KEYS, "mesh": MESH_KEYS, "global_motion": MOTION_KEYS,
+                 "grab": GRAB_KEYS}[kind]
         if key not in table:
-            raise ManifestError(number, "unknown %s key %s" % (kind, key))
+            label = "motion" if kind == "global_motion" else kind
+            raise ManifestError(number, "unknown %s key %s" % (label, key))
         parsed = parse_scalar(value, table[key], number, key)
         if kind == "fighter":
             if key == "color_count":
@@ -190,9 +241,20 @@ def check(fighter):
         for motion in kirby["motions"]:
             if not motion.get("name") or not motion.get("animation"):
                 problems.append("a kirby motion needs name and animation")
+            elif motion.get("victim"):
+                problems.append("kirby motion %s: victim is for global motions" % motion["name"])
         for mesh in kirby["meshes"]:
             if not mesh.get("name"):
                 problems.append("a kirby mesh needs a name")
+    for motion in fighter.get("global_motions", []):
+        if not motion.get("name"):
+            problems.append("a global motion needs a name")
+        elif not motion.get("animation") and not motion.get("template") and not motion.get("victim"):
+            problems.append("global motion %s needs a template, an animation or victim = true"
+                            % motion["name"])
+    for grab in fighter.get("grabs", []):
+        if "status" not in grab:
+            problems.append("a grab needs status, the grabber status its CATCH box belongs to")
     return problems
 
 

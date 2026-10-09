@@ -55,8 +55,11 @@ files for reuse its lowest), articles (listed from the folder; click one,
 pick its source fighter and weapon, Add) and, for a stage, every
 `stage.toml` key. Writes `config.json` and the manifest file, keeping lines
 you added by hand: the flat keys, `[[article]]` (a `base_article` one
-included), `[kirby]` and `[params]`; a `[[kirby.motion]]` or `[[kirby.mesh]]`
-table you wrote stays where it is.
+included), `[kirby]` and `[params]`; a `[[kirby.motion]]`, `[[kirby.mesh]]`,
+`[[global_motion]]` or `[[grab]]` table you wrote stays where it is. Global
+motions (a motion added to every fighter, a throw's opponent pose) and grab
+rules (command grabs) are written by hand in `fighter.toml`: see the engine's
+`docs/wiki/FIGHTERS.md`.
 
 **Rename files** changes a part's name everywhere the pack carries it: type
 the new name, click the button, check the two names. Every folder and file
@@ -133,14 +136,20 @@ Rust tab that calls the original. The line under the table shows the whole
 entry under the pointer, or else the selected one. The fighter, weapon and item
 tables are this clone's own copies, so a hook there runs for it alone. The
 fighter and weapon addresses, slot names and notes are incredibleplays'
-[`smash-vtables`](https://github.com/theincredibleplayer/smash-vtables).
+[`smash-vtables`](https://github.com/theincredibleplayer/smash-vtables);
+the notes on weapon entry 39 and fighter entry 68 are ours.
 
 The signature comes from every implementation of the entry in the game: a
 declared integer argument the function does not use is harmless, floats are
 `f64` so an `f32` passes through unchanged, and the return is `u64`, `f64` or,
 for common entries 10 and 12, `L2CValue`. An entry whose return could not be
 settled (some implementations return an integer, others a float, or it returns
-a struct) is listed but not offered. Addresses are main offsets for 13.0.4.
+a struct) is listed but not offered, except two whose callers were read: the
+game ignores what they return. Weapon entry 39 (`UNK39`) is the weapon's
+on-damage call, checked in a match: it runs on every hit, pushes that deal no
+damage included, and `a2` is the hit record (damage at `+0x04`, hit position
+at `+0x30`, attacker's object id at `+0x44`). Fighter entry 68 is `ON_DAMAGE`.
+Addresses are main offsets for 13.0.4.
 
 **Rust**: one `lib.rs` for the pack, following the other tabs as you edit;
 copy it or save it as `lib.rs`. Every argument carries a comment. Per
@@ -150,7 +159,10 @@ the CSK maps and the ParamConfig slots, the `Manifest` and `register` in
 the clone has copy statuses). What only a hand-written `fighter.toml` says
 (a `base_article`, `[kirby]` `first` and `model`, `[[kirby.motion]]` and
 `[[kirby.mesh]]`, `save_no`, `exhibit_year`) reaches the `Manifest` too, so
-a pack can drop the file and keep them. With the plugin flag: `register_css_entry`
+a pack can drop the file and keep them. `[[global_motion]]` and `[[grab]]`
+tables are added after it, each behind a check of the engine's capability
+(`CAP_GLOBAL_MOTIONS`, `CAP_GRAB_RULES`): an engine without the feature
+refuses the whole manifest. With the plugin flag: `register_css_entry`
 (CSK's call, one layout per costume) and `register_params` (ParamConfig's
 calls with the clone's kind). Per item: `item!`, the `ItemManifest` and
 `register`, and `register_item_labels` for the label and name fields. With
@@ -193,7 +205,9 @@ carries the `v2` module (`Manifest`, `fighter!`, `item!`); so do
 `fighter.toml` and the `[common]` and `[owner_params]` tables of `item.toml`.
 An older engine ignores them; a pack for it registers by hand (the engine's
 `DEPRECATED.md`). A call the engine lacks prints
-`was not applied: EngineUnavailable` in the log.
+`was not applied: EngineUnavailable` in the log. `[[global_motion]]` and
+`[[grab]]` need an engine newer than `0.4.2-beta.1`; an older one refuses a
+`fighter.toml` that has them, so the Rust tab checks first.
 
 One item or stage per pack: `item.toml` and `stage.toml` are written flat,
 which every engine reads. Two or more: one `[[item]]` or `[[stage]]` block
@@ -297,7 +311,9 @@ some costume groups is a warning. A `fighter.toml` is read with
 the engine's rules (an unknown key or table is an error with its line) and
 checked against the folders: the base is a fighter, every `[[article]]` has
 its files, the costume count covers the body model, a `[kirby]` table has a
-copy model, `staffroll = true` has its texture. When the pack folder holds
+copy model, `staffroll = true` has its texture, a global motion's `animation`
+is shipped in some fighter's motion folder (a `victim` one in the clone's
+own). A `[[grab]]` status is a number or one of the engine's names. When the pack folder holds
 its Rust source under `src/`, a custom work id past a base's `_TERM` is
 warned about: a clone's work arrays are its base's size.
 

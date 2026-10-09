@@ -331,9 +331,7 @@ def fighter_manifest_lines(state: dict, constant: str) -> list[str]:
         lines.append("    .kirby_model(%s%s%s) // an extra model folder under fighter/kirby/model/" % (q, state["kirby_model"], q))
     tables = (state.get("kirby_tables") or "").strip()
     if tables:
-        fence = "#"
-        while ('"' + fence) in tables:
-            fence += "#"
+        fence = raw_fence(tables)
         lines.append("    .raw(r%s\"" % fence)
         lines += tables.splitlines()
         lines.append("\"%s) // Kirby's copy motions and meshes, as fighter.toml carries them" % fence)
@@ -342,6 +340,10 @@ def fighter_manifest_lines(state: dict, constant: str) -> list[str]:
     if rules:
         lines += manifest_param_calls(rules)
     lines[-1] = end_statement(lines[-1])
+    lines += guarded_tables(state.get("global_motion_tables"), "CAP_GLOBAL_MOTIONS",
+                            "motions added to every fighter's motion list")
+    lines += guarded_tables(state.get("grab_tables"), "CAP_GRAB_RULES",
+                            "command grabs the engine accepts")
     lines += [
         "    let Ok(kind) = %s.register(manifest) else {" % constant,
         "        return; // the fault is in the log",
@@ -349,6 +351,31 @@ def fighter_manifest_lines(state: dict, constant: str) -> list[str]:
         "    skyline::println!(\"[%s] registered as fighter kind {kind}\");" % resource,
     ]
     return lines
+
+
+def raw_fence(text: str) -> str:
+    """The #s a raw string needs so the text cannot close it early."""
+    fence = "#"
+    while ('"' + fence) in text:
+        fence += "#"
+    return fence
+
+
+def guarded_tables(tables, capability: str, note: str) -> list[str]:
+    """fighter.toml tables added to the manifest only when the engine has the
+    feature: an engine without it refuses the whole manifest."""
+    tables = (tables or "").strip()
+    if not tables:
+        return []
+    fence = raw_fence(tables)
+    return (["    let manifest = if clone_engine_api::runtime_capabilities() & clone_engine_api::%s != 0 {"
+             % capability,
+             "        manifest.raw(r%s\"" % fence]
+            + tables.splitlines()
+            + ["\"%s) // %s, as fighter.toml carries them" % (fence, note),
+               "    } else {",
+               "        manifest // an older engine would refuse the whole manifest",
+               "    };"])
 
 
 def float_literal(value) -> str:

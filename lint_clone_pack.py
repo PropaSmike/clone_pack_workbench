@@ -131,6 +131,23 @@ def check_fighter_manifest(mod_dir, shipped, vanilla):
             findings.append(("WARN", "fighter.toml: [kirby] declares statuses but no copy model is "
                                      "shipped under fighter/%s/model/kirbycopy/ or "
                                      "fighter/kirby/model/copy_%s_*" % (name, name)))
+        for motion in fighter.get("global_motions", []):
+            animation = motion.get("animation")
+            if not animation:
+                continue
+            owners = {p.split("/")[1] for p in shipped
+                      if p.startswith("fighter/") and "/motion/" in p
+                      and p.rsplit("/", 1)[-1] == animation}
+            if motion.get("victim"):
+                if name not in owners:
+                    findings.append(("WARN", f"fighter.toml: victim motion {motion['name']!r} names "
+                                             f"{animation} but fighter/{name}/motion/ does not ship "
+                                             "it; the opponent has no file to play"))
+            elif not owners:
+                findings.append(("WARN", f"fighter.toml: global motion {motion['name']!r} names "
+                                         f"{animation} but no fighter's motion folder ships it; "
+                                         + ("every fighter keeps the template's animation"
+                                            if motion.get("template") else "no fighter gets it")))
         if fighter.get("staffroll") and not any(
                 p == f"standard/staffroll/texture/standard_staffroll_{name}.nutexb"
                 for p in shipped):

@@ -70,7 +70,9 @@ def css_registration(state: dict, suffix: str = "") -> str:
     only fighter_kind, fighter_kind_corps and ui_chara_id change, to the
     clone's names. The manifest says own_css() so the engine writes no row of
     its own. Costume maps and layouts run over the COSTUMES constant; the base
-    has eight layouts, so a costume past c07 clones layout `color % 8`."""
+    has eight layouts, so a costume past c07 clones layout `color % 8`. The row
+    copies the base's (World of Light lists only copied rows) and every value is
+    Overwrite, since an Optional value never replaces a copied one."""
     resource = state.get("resource_name", "wawa")
     base = state.get("base_resource_name", "mario")
     kind_name = state.get("fighter_kind_name") or "fighter_kind_%s" % resource
@@ -99,7 +101,7 @@ def css_registration(state: dict, suffix: str = "") -> str:
         "    allow_ui_chara_hash_online(ui_chara); // let the entry be picked online",
         "    add_chara_db_entry_info(CharacterDatabaseEntry {",
         "        ui_chara_id: ui_chara,                                        // the clone's UI id",
-        "        clone_from_ui_chara_id: Some(hash40(%sui_chara_%s%s)), // copy every other field from the base's entry" % (q, base, q),
+        "        clone_from_ui_chara_id: Some(hash40(%sui_chara_%s%s)), // copy every other field from the base's entry; World of Light lists only copied rows" % (q, base, q),
         "        name_id: StringType::Overwrite(CStrCSK::new(%s%s%s)), // suffix of the nam_chr*_00_<x> labels in msg_name.xmsbt" % (q, name_id, q),
         "        fighter_kind: Hash40Type::Overwrite(hash40(%s%s%s)), // the clone's identity: fighter_kind_<name>" % (q, kind_name, q),
         "        fighter_kind_corps: Hash40Type::Overwrite(hash40(%s%s%s)), // same" % (q, kind_name, q),
@@ -110,12 +112,15 @@ def css_registration(state: dict, suffix: str = "") -> str:
             series = "ui_series_" + series
         lines.append("        ui_series_id: Hash40Type::Overwrite(hash40(%s%s%s)), // series icon" % (q, series, q))
     if isinstance(order, int):
-        lines.append("        disp_order: SignedByteType::Optional(Some(%d)), // position on the select screen" % order)
+        lines.append("        disp_order: SignedByteType::Overwrite(%d), // position on the select screen; Overwrite, an Optional keeps the base's" % order)
+    if isinstance(state.get("exhibit_year"), int):
+        lines.append("        exhibit_year: ShortType::Overwrite(%d), // the year the select entry shows" % state["exhibit_year"])
+    save_no = state["save_no"] if isinstance(state.get("save_no"), int) else 0
     lines += [
         "        color_num: UnsignedByteType::Overwrite(%s), // number of costumes" % costumes,
         "        shop_item_tag: Hash40Type::Overwrite(hash40(%s-1%s)), // the base's DLC fields hide the entry; clear them" % (q, q),
         "        alt_chara_id: Hash40Type::Overwrite(hash40(%s-1%s))," % (q, q),
-        "        save_no: SignedByteType::Overwrite(0),",
+        "        save_no: SignedByteType::Overwrite(%d), // the select entry's save slot" % save_no,
         "        is_dlc: BoolType::Overwrite(false),",
         "        is_patch: BoolType::Overwrite(false),",
         "        extra_index_maps: UnsignedByteMap::Overwrite(indices),",

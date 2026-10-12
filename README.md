@@ -47,6 +47,9 @@ and ParamConfig code**. The manifest then says `own_css()` (the file
 `css = false`), the plugin's `add_chara_db_entry_info` publishes the select
 entry and its `param_config::update_*` calls set the `vl.prc` values, with
 the clone's names in place of the base's. The Rust tab writes both calls.
+The row copies the base's (`clone_from_ui_chara_id`) and sets every value
+with `Overwrite`: World of Light lists only copied rows, and on a copied row
+CSK keeps the base's value over an `Optional` one.
 
 ## The tabs
 

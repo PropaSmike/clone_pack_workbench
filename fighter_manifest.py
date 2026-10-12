@@ -20,6 +20,15 @@ MOTION_KEYS = {"name": "str", "animation": "str", "template": "str", "scripts": 
 MESH_KEYS = {"name": "str", "visible": "bool"}
 GRAB_KEYS = {"status": "status", "victim": "status", "then": "status", "node": "str",
              "offset": "vec3", "catch": "bool"}
+HURTBOX_KEYS = {"node": "str", "size": "float", "offset": "vec3", "offset2": "vec3",
+                "part": "part", "height": "height", "status": "hit_status", "shape": "shape"}
+HURTBOX_FIELDS = {
+    "part": ("COLLISION_PART_", {"body": 0, "etc": 1, "legs": 2, "body_legs": 3, "head": 4}),
+    "height": ("HIT_HEIGHT_", {"low": 0, "center": 1, "high": 2}),
+    "hit_status": ("HIT_STATUS_", {"normal": 0, "invincible": 1, "xlu": 2, "off": 3}),
+    "shape": ("COLLISION_SHAPE_TYPE_", {"sphere": 0, "aabb": 1, "capsule": 2}),
+}
+MAX_HURTBOXES = 16
 STATUS_NAMES = {
     "ATTACK": 0x27, "ATTACK_DASH": 0x29, "ATTACK_S3": 0x2a, "ATTACK_HI3": 0x2b,
     "ATTACK_LW3": 0x2c, "ATTACK_S4": 0x2f, "ATTACK_LW4": 0x32, "ATTACK_HI4": 0x35,
@@ -92,6 +101,22 @@ def parse_scalar(text, kind, line, key):
         if value < 0:
             raise ManifestError(line, "%s must not be negative" % key)
         return value
+    if kind == "float":
+        try:
+            return float(text)
+        except ValueError:
+            raise ManifestError(line, "%s must be a number" % key)
+    if kind in HURTBOX_FIELDS:
+        prefix, names = HURTBOX_FIELDS[kind]
+        if not text.startswith('"'):
+            return parse_scalar(text, "int", line, key)
+        name = parse_scalar(text, "str", line, key)
+        bare = name.strip().upper()
+        if bare.startswith(prefix):
+            bare = bare[len(prefix):]
+        if bare.lower() not in names:
+            raise ManifestError(line, '%s: "%s" is not one of %s' % (key, name, ", ".join(names)))
+        return names[bare.lower()]
     if kind == "vec3":
         parts = parse_scalar(text, "list", line, key)
         if len(parts) != 3:
@@ -147,6 +172,11 @@ def parse_lines(lines, first_line=1):
             elif (name, array) == ("article", True):
                 fighter["articles"].append({})
                 section = ("article", fighter["articles"][-1])
+            elif (name, array) == ("article.hurtbox", True):
+                if not fighter["articles"]:
+                    raise ManifestError(number, "[[article.hurtbox]] must follow the [[article]] it belongs to")
+                fighter["articles"][-1].setdefault("hurtboxes", []).append({})
+                section = ("hurtbox", fighter["articles"][-1]["hurtboxes"][-1])
             elif (name, array) == ("kirby", False):
                 fighter["kirby"] = fighter["kirby"] or {"motions": [], "meshes": []}
                 section = ("kirby", fighter["kirby"])
@@ -194,7 +224,7 @@ def parse_lines(lines, first_line=1):
             continue
         table = {"fighter": FIGHTER_KEYS, "article": ARTICLE_KEYS, "kirby": KIRBY_KEYS,
                  "motion": MOTION_KEYS, "mesh": MESH_KEYS, "global_motion": MOTION_KEYS,
-                 "grab": GRAB_KEYS}[kind]
+                 "grab": GRAB_KEYS, "hurtbox": HURTBOX_KEYS}[kind]
         if key not in table:
             label = "motion" if kind == "global_motion" else kind
             raise ManifestError(number, "unknown %s key %s" % (label, key))
@@ -232,6 +262,7 @@ def check(fighter):
             problems.append("article %s has both from and base_article" % article.get("name"))
         if source and (source.count("/") != 1 or not all(source.split("/"))):
             problems.append("article %s: from must be \"fighter/weapon\"" % article.get("name"))
+        problems += hurtbox_problems(article)
     kirby = fighter.get("kirby")
     if kirby:
         if kirby.get("statuses", 0) < 0:
@@ -255,6 +286,36 @@ def check(fighter):
     for grab in fighter.get("grabs", []):
         if "status" not in grab:
             problems.append("a grab needs status, the grabber status its CATCH box belongs to")
+    return problems
+
+
+def hurtbox_problems(article):
+    hurtboxes = article.get("hurtboxes") or []
+    name = article.get("name")
+    if not hurtboxes:
+        return []
+    if not article.get("from"):
+        return ["article %s: hurtboxes need from = \"fighter/weapon\"" % name]
+    if len(hurtboxes) > MAX_HURTBOXES:
+        return ["article %s: at most %d hurtboxes" % (name, MAX_HURTBOXES)]
+    problems = []
+    for hurtbox in hurtboxes:
+        node = (hurtbox.get("node") or "").strip()
+        if not node:
+            problems.append("article %s: a hurtbox needs a node" % name)
+            continue
+        size = hurtbox.get("size", 0.0)
+        if not (size > 0.0 and size != float("inf")):
+            problems.append("article %s: hurtbox on %s: size must be above 0" % (name, node))
+        shape = hurtbox.get("shape", 2 if "offset2" in hurtbox else 0)
+        for key, field, value in (("part", "part", hurtbox.get("part", 1)),
+                                  ("height", "height", hurtbox.get("height", 1)),
+                                  ("status", "hit_status", hurtbox.get("status", 0)),
+                                  ("shape", "shape", shape)):
+            names = HURTBOX_FIELDS[field][1]
+            if value not in names.values():
+                problems.append("article %s: hurtbox on %s: %s %d is not one of %s"
+                                % (name, node, key, value, ", ".join(names)))
     return problems
 
 

@@ -131,11 +131,23 @@ def fighter_manifest_values(state: dict) -> dict:
     return values
 
 
-def fighter_article_lines(articles, base_articles=()) -> list[str]:
+def article_hurtbox_tables(sections) -> dict:
+    """The [[article.hurtbox]] bodies of a file, keyed by the article they follow."""
+    tables: dict = {}
+    name = None
+    for header, body in sections:
+        if header == "[[article]]":
+            name = parse_lines(body).get("name")
+        elif header == "[[article.hurtbox]]" and name:
+            tables.setdefault(name, []).append([line for line in body if line.strip()])
+    return tables
+
+
+def fighter_article_lines(articles, base_articles=(), hurtboxes=None) -> list[str]:
     """One [[article]] table per source the pack names, minted from its weapon,
     then one per base article renamed into the clone's folder. The panel edits
     only the first kind; the second is carried from the file so a rewrite never
-    drops it."""
+    drops it. Each article's [[article.hurtbox]] tables stay under it."""
     out: list[str] = []
     for article in articles or ():
         owner = article.get("owner")
@@ -147,6 +159,8 @@ def fighter_article_lines(articles, base_articles=()) -> list[str]:
                 "%-13s = %s" % ("from", format_value("%s/%s" % (owner, weapon_short_name(owner, weapon))))]
         if article.get("kirby_copy"):
             out.append("%-13s = %s" % ("kirby", "true"))
+        for body in (hurtboxes or {}).get(name, []):
+            out += ["", "[[article.hurtbox]]"] + body
     for article in base_articles or ():
         name, base = article.get("name"), article.get("base_article")
         if name and base:
@@ -182,10 +196,11 @@ def write_fighter_manifest(path: Path, state: dict) -> list[str]:
     others = []
     kirby_existing = None
     param_lines = engine_param_lines(state)
+    hurtboxes = article_hurtbox_tables(sections)
     for header, body in sections:
         if header == "[fighter]":
             fighter_lines += body
-        elif header == "[[article]]":
+        elif header in ("[[article]]", "[[article.hurtbox]]"):
             continue
         elif header == "[kirby]":
             kirby_existing = body
@@ -197,7 +212,7 @@ def write_fighter_manifest(path: Path, state: dict) -> list[str]:
     while head and not head[-1].strip():
         head.pop()
     out = list(head)
-    out += fighter_article_lines(state.get("articles"), state.get("base_articles"))
+    out += fighter_article_lines(state.get("articles"), state.get("base_articles"), hurtboxes)
     out += fighter_kirby_lines(state, kirby_existing)
     out += param_lines
     for header, body in others:

@@ -9,8 +9,38 @@ FIGHTER_KEYS = {
     "series": "str", "disp_order": "int", "save_no": "int", "exhibit_year": "int",
     "narration": "str", "staffroll": "bool", "css": "bool", "jingle": "str",
     "owns_param_resources": "bool", "effect_namespace": "int", "article_namespace": "int",
+    "partner": "partner", "switch": "list",
 }
-ARTICLE_KEYS = {"name": "str", "from": "str", "base_article": "str", "kirby": "bool"}
+PARTNER_PARAMS = {
+    "jostle_data_nana.speed_x_gg": "float", "jostle_data_nana.speed_x_ga": "float",
+    "jostle_data_nana.speed_x_ag": "float", "jostle_data_nana.speed_x_aa": "float",
+    "jostle_data_nana.speed_z": "float", "jostle_data_nana.max_pos_z": "float",
+    "jostle_data_nana_small.speed_x_gg": "float", "jostle_data_nana_small.speed_x_ga": "float",
+    "jostle_data_nana_small.speed_x_ag": "float", "jostle_data_nana_small.speed_x_aa": "float",
+    "jostle_data_nana_small.speed_z": "float", "jostle_data_nana_small.max_pos_z": "float",
+    "rebirth_diff_x": "float", "nana_damage_mul": "float", "nana_damage_reaction_mul": "float",
+    "unk_1435e39667": "float", "nana_different_damage_motion_rate": "float",
+    "nana_opt_dst": "float", "nana_delay": "int", "nana_pos_x_offset": "float",
+    "nana_partner_comp_rate_x": "float", "nana_opt_dst_max": "float", "nana_opt_near_dst": "float",
+    "nana_partner_near_comp_rate_x": "float", "nana_roulette_pos_x_offset": "float",
+    "nana_warp_sync_dst": "float", "popo_modify_jostle_range": "float",
+    "popo_jostle_add_back": "float", "popo_jostle_weight_mul": "float",
+    "nana_partner_modify_jostle_comp_rate_x": "float",
+    "nana_partner_modify_jostle_comp_rate_continual_frame": "int", "unk_219438148d": "float",
+    "unk_214f2437da": "float", "nana_cp_rank_for_2": "int", "nana_cp_rank_for_3": "int",
+    "nana_cp_rank_for_4": "int", "nana_cp_rank_for_5": "int", "nana_cp_rank_for_6": "int",
+    "nana_cp_rank_for_7": "int", "nana_cp_rank_for_8": "int", "final_couple_distance": "float",
+    "final_couple_condor_distance": "float", "unk_1a4d9acd60": "int", "final_scroll_rate": "float",
+    "final_scroll_rate_change_frame": "int",
+}
+PARTNER_BASES = ("popo",)
+NO_SWITCH_BASES = ("popo", "nana")
+MAX_SWITCH_MEMBERS = 2
+ARTICLE_KEYS = {"name": "str", "from": "str", "base_article": "str", "kirby": "bool",
+                "lvd": "str"}
+LVD_VERTEX_KEYS = {"vertex": "int", "joint": "str", "offset": "vec3", "joint_left": "str"}
+MAX_LVD_VERTICES = 32
+MAX_LVD_VERTEX_INDEX = 0xFFFF
 KIRBY_KEYS = {"statuses": "int", "first": "int", "full_model": "bool", "model": "str"}
 MOTION_KEYS = {"name": "str", "animation": "str", "template": "str", "scripts": "str",
                "game": "str", "sound": "str", "effect": "str", "expression": "str",
@@ -18,8 +48,30 @@ MOTION_KEYS = {"name": "str", "animation": "str", "template": "str", "scripts": 
                "cancel_frame": "int", "xlu": "list", "no_stop_intp": "bool",
                "animation_unk": "int", "no_extra": "bool", "victim": "bool"}
 MESH_KEYS = {"name": "str", "visible": "bool"}
+HUD_KEYS = {"from": "str", "layout": "str"}
+HUD_LAYOUT_BYTES = set("abcdefghijklmnopqrstuvwxyz0123456789_-./")
+HUD_DONORS = ("jack", "cloud", "inkling", "brave", "littlemac", "shulk", "reflet", "pickel",
+              "trail", "dolly", "demon")
+FINAL_KEYS = {"from": "str"}
+FINAL_DONORS = ("donkey", "pikachu", "purin", "peach", "daisy", "pichu", "marth", "lucina",
+                "younglink", "roy", "chrom", "pikmin", "toonlink", "wiifit")
+TETHER_KEYS = {"from": "str"}
+TETHER_BOX_KEYS = {"p1": "vec2", "p2": "vec2"}
+TETHER_DONORS = ("samus", "samusd", "luigi", "younglink", "szerosuit", "lucas", "toonlink")
+MAX_TETHER_BOXES = 8
+SWITCH_BASES = ("eflame", "elight", "pzenigame", "pfushigisou", "plizardon")
 GRAB_KEYS = {"status": "status", "victim": "status", "then": "status", "node": "str",
              "offset": "vec3", "catch": "bool"}
+COMMANDS_KEYS = {"vanilla": "bool", "special_command_life_max": "frames",
+                 "super_special_command_life_max": "frames", "special_command_ab_button_life": "frames",
+                 "special_command_neutral_threshold": "threshold",
+                 "special_command_stick_range": "stick_range"}
+COMMAND_KEYS = {"name": "str", "input": "input", "button": "button", "super": "bool",
+                "life": "frames", "neutral_resets": "bool", "reverse": "bool", "cpu": "chance"}
+COMMAND_BUTTONS = ("special", "attack", "either", "none")
+MAX_COMMANDS = 32
+MAX_COMMAND_STEPS = 12
+STICK_SECTORS = 7
 HURTBOX_KEYS = {"node": "str", "size": "float", "offset": "vec3", "offset2": "vec3",
                 "part": "part", "height": "height", "status": "hit_status", "shape": "shape"}
 HURTBOX_FIELDS = {
@@ -80,6 +132,12 @@ def parse_scalar(text, kind, line, key):
         if text in ("true", "false"):
             return text == "true"
         raise ManifestError(line, "%s must be true or false" % key)
+    if kind == "partner":
+        if text.startswith('"'):
+            return parse_scalar(text, "str", line, key)
+        if text in ("true", "false"):
+            return text == "true"
+        raise ManifestError(line, '%s must be true, false or a fighter\'s name in quotes' % key)
     if kind == "int":
         try:
             return int(text, 0)
@@ -117,6 +175,58 @@ def parse_scalar(text, kind, line, key):
         if bare.lower() not in names:
             raise ManifestError(line, '%s: "%s" is not one of %s' % (key, name, ", ".join(names)))
         return names[bare.lower()]
+    if kind == "frames":
+        value = parse_scalar(text, "int", line, key)
+        if not 1 <= value <= 255:
+            raise ManifestError(line, "%s must be 1 to 255 frames" % key)
+        return value
+    if kind == "chance":
+        value = parse_scalar(text, "float", line, key)
+        if not 0.0 <= value <= 1.0:
+            raise ManifestError(line, "%s must be a chance from 0 to 1" % key)
+        return value
+    if kind == "threshold":
+        value = parse_scalar(text, "float", line, key)
+        if not 0.0 <= value < 1.0:
+            raise ManifestError(line, "%s must be a number from 0 to below 1" % key)
+        return value
+    if kind == "stick_range":
+        if not (text.startswith("[") and text.endswith("]")):
+            raise ManifestError(line, "%s must be a list of %d [min, max] pairs" % (key, STICK_SECTORS))
+        pairs = re.findall(r"\[([^\[\]]*)\]", text[1:-1])
+        if len(pairs) != STICK_SECTORS:
+            raise ManifestError(line, "%s must have exactly %d [min, max] pairs" % (key, STICK_SECTORS))
+        out = []
+        for index, pair in enumerate(pairs):
+            low_high = parse_scalar("[%s]" % pair, "vec2", line, key)
+            if low_high[0] > low_high[1] or not all(-180.0 <= v <= 180.0 for v in low_high):
+                raise ManifestError(line, "%s[%d] needs min <= max within -180..180 degrees" % (key, index))
+            out.append(low_high)
+        return out
+    if kind == "input":
+        digits = parse_scalar(text, "str", line, key) if text.startswith('"') else text
+        if not digits or any(char not in "123456789" for char in digits):
+            raise ManifestError(line, 'input "%s" must be numpad digits 1 to 9' % digits)
+        if any(a == b for a, b in zip(digits, digits[1:])):
+            raise ManifestError(line, 'input "%s" repeats a direction; put 5 between two of the same' % digits)
+        if digits[0] == "5" or digits[-1] == "5":
+            raise ManifestError(line, 'input "%s" must start and end on a direction, not 5' % digits)
+        if len(digits) > MAX_COMMAND_STEPS:
+            raise ManifestError(line, 'input "%s" has more than %d directions' % (digits, MAX_COMMAND_STEPS))
+        return digits
+    if kind == "button":
+        name = parse_scalar(text, "str", line, key)
+        if name not in COMMAND_BUTTONS:
+            raise ManifestError(line, 'button "%s" must be special, attack, either or none' % name)
+        return name
+    if kind == "vec2":
+        parts = parse_scalar(text, "list", line, key)
+        if len(parts) != 2:
+            raise ManifestError(line, "%s must be [x, y]" % key)
+        try:
+            return [float(part) for part in parts]
+        except ValueError:
+            raise ManifestError(line, "%s must be [x, y] numbers" % key)
     if kind == "vec3":
         parts = parse_scalar(text, "list", line, key)
         if len(parts) != 3:
@@ -126,6 +236,27 @@ def parse_scalar(text, kind, line, key):
         except ValueError:
             raise ManifestError(line, "%s must be [x, y, z] numbers" % key)
     raise ManifestError(line, "unknown kind for %s" % key)
+
+
+def partner_param(key, text, line):
+    """A [partner_params] value checked against the Ice Climbers' word of that name."""
+    name = key[len("param_private."):] if key.startswith("param_private.") else key
+    kind = PARTNER_PARAMS.get(name)
+    if kind is None:
+        raise ManifestError(line, "%s is not one of the Ice Climbers' partner params" % key)
+    text = text.strip()
+    try:
+        return int(text, 10) if kind == "int" else float(text)
+    except ValueError:
+        raise ManifestError(line, "%s must be %s" % (key, "a whole number" if kind == "int" else "a number"))
+
+
+def has_partner(fighter):
+    """The engine's partner default: the Ice Climbers' own pair unless switch or partner says otherwise."""
+    partner = fighter.get("partner")
+    if partner is None:
+        return fighter.get("base") in PARTNER_BASES and not fighter.get("switch")
+    return partner is not False
 
 
 def header(line):
@@ -156,7 +287,8 @@ def blocks(text):
 
 
 def parse_lines(lines, first_line=1):
-    fighter = {"articles": [], "kirby": None, "params": [], "global_motions": [], "grabs": []}
+    fighter = {"articles": [], "kirby": None, "params": [], "global_motions": [], "grabs": [],
+               "partner_params": [], "command_settings": {}, "commands": []}
     section = ("fighter", None)
     for offset, raw in enumerate(lines):
         number = first_line + offset
@@ -177,6 +309,11 @@ def parse_lines(lines, first_line=1):
                     raise ManifestError(number, "[[article.hurtbox]] must follow the [[article]] it belongs to")
                 fighter["articles"][-1].setdefault("hurtboxes", []).append({})
                 section = ("hurtbox", fighter["articles"][-1]["hurtboxes"][-1])
+            elif (name, array) == ("article.lvd_vertex", True):
+                if not fighter["articles"]:
+                    raise ManifestError(number, "[[article.lvd_vertex]] must follow the [[article]] it belongs to")
+                fighter["articles"][-1].setdefault("lvd_vertices", []).append({})
+                section = ("lvd_vertex", fighter["articles"][-1]["lvd_vertices"][-1])
             elif (name, array) == ("kirby", False):
                 fighter["kirby"] = fighter["kirby"] or {"motions": [], "meshes": []}
                 section = ("kirby", fighter["kirby"])
@@ -194,6 +331,26 @@ def parse_lines(lines, first_line=1):
             elif (name, array) == ("grab", True):
                 fighter["grabs"].append({})
                 section = ("grab", fighter["grabs"][-1])
+            elif (name, array) == ("hud", False):
+                fighter["hud"] = fighter.get("hud") or {}
+                section = ("hud", fighter["hud"])
+            elif (name, array) == ("final", False):
+                fighter["final"] = fighter.get("final") or {}
+                section = ("final", fighter["final"])
+            elif (name, array) == ("tether", False):
+                fighter["tether"] = fighter.get("tether") or {"boxes": []}
+                section = ("tether", fighter["tether"])
+            elif (name, array) == ("tether.box", True):
+                fighter["tether"] = fighter.get("tether") or {"boxes": []}
+                fighter["tether"]["boxes"].append({})
+                section = ("tether_box", fighter["tether"]["boxes"][-1])
+            elif (name, array) == ("partner_params", False):
+                section = ("partner_params", None)
+            elif (name, array) == ("commands", False):
+                section = ("commands", fighter["command_settings"])
+            elif (name, array) == ("command", True):
+                fighter["commands"].append({})
+                section = ("command", fighter["commands"][-1])
             elif not array and (name == "params" or name.startswith("params.")):
                 slot, op = None, "set"
                 for part in name.split(".")[1:]:
@@ -222,13 +379,34 @@ def parse_lines(lines, first_line=1):
                 raise ManifestError(number, "%s: a multiplier must be a decimal" % key)
             fighter["params"].append({"name": key, "slot": slot, "op": op, "value": parsed})
             continue
+        if kind == "partner_params":
+            fighter["partner_params"].append(
+                {"name": key, "value": partner_param(key, value, number)})
+            continue
         table = {"fighter": FIGHTER_KEYS, "article": ARTICLE_KEYS, "kirby": KIRBY_KEYS,
                  "motion": MOTION_KEYS, "mesh": MESH_KEYS, "global_motion": MOTION_KEYS,
-                 "grab": GRAB_KEYS, "hurtbox": HURTBOX_KEYS}[kind]
+                 "grab": GRAB_KEYS, "hurtbox": HURTBOX_KEYS, "lvd_vertex": LVD_VERTEX_KEYS,
+                 "hud": HUD_KEYS, "final": FINAL_KEYS, "tether": TETHER_KEYS,
+                 "tether_box": TETHER_BOX_KEYS, "commands": COMMANDS_KEYS,
+                 "command": COMMAND_KEYS}[kind]
         if key not in table:
-            label = "motion" if kind == "global_motion" else kind
+            label = {"global_motion": "motion", "tether_box": "tether.box"}.get(kind, kind)
             raise ManifestError(number, "unknown %s key %s" % (label, key))
         parsed = parse_scalar(value, table[key], number, key)
+        if kind == "hud" and key == "from" and parsed not in HUD_DONORS:
+            raise ManifestError(number, 'hud from "%s" is not a HUD the engine drives; use %s'
+                                % (parsed, ", ".join('"%s"' % name for name in HUD_DONORS)))
+        if kind == "hud" and key == "layout" and not (
+                parsed.endswith(".arc") and not parsed.startswith("/") and "//" not in parsed
+                and set(parsed) <= HUD_LAYOUT_BYTES):
+            raise ManifestError(number, 'hud layout "%s" must be a lowercase arc path ending in .arc, '
+                                        'such as "ui/layout/hud/my_fighter/layout.arc"' % parsed)
+        if kind == "final" and key == "from" and parsed not in FINAL_DONORS:
+            raise ManifestError(number, 'final from "%s" is not a Final Smash a clone can borrow; use %s'
+                                % (parsed, ", ".join('"%s"' % name for name in FINAL_DONORS)))
+        if kind == "tether" and key == "from" and parsed not in TETHER_DONORS:
+            raise ManifestError(number, 'tether from "%s" has no tether; use %s'
+                                % (parsed, ", ".join('"%s"' % name for name in TETHER_DONORS)))
         if kind == "fighter":
             if key == "color_count":
                 key = "costumes"
@@ -251,6 +429,29 @@ def check(fighter):
     start = fighter.get("color_start", 0)
     if costumes < 1 or start + costumes > 256:
         problems.append("costumes must be 1 to 256 including color_start")
+    name = fighter.get("name")
+    if fighter.get("switch"):
+        if len(fighter["switch"]) > MAX_SWITCH_MEMBERS:
+            problems.append("%s switches with at most two other fighters" % name)
+        if fighter.get("base") in NO_SWITCH_BASES:
+            problems.append("%s is on the Ice Climbers, who cannot switch" % name)
+        if name in fighter["switch"]:
+            problems.append("%s cannot switch with itself" % name)
+    if fighter.get("partner") == name:
+        problems.append("%s cannot name itself as its partner; partner = true gives it a copy of itself"
+                        % name)
+    if fighter.get("partner") not in (None, False) and fighter.get("switch"):
+        problems.append("%s has both a partner and a switch group; a player slot holds one or the other"
+                        % name)
+    if fighter.get("partner_params") and not has_partner(fighter):
+        problems.append("%s has partner_params but no partner" % name)
+    tether = fighter.get("tether")
+    if tether is not None:
+        if len(tether["boxes"]) > MAX_TETHER_BOXES:
+            problems.append("at most %d tether boxes" % MAX_TETHER_BOXES)
+        for index, shape in enumerate(tether["boxes"], 1):
+            if "p1" not in shape or "p2" not in shape:
+                problems.append("tether box %d needs p1 and p2" % index)
     for article in fighter["articles"]:
         if not article.get("name"):
             problems.append("an article needs a name")
@@ -263,6 +464,7 @@ def check(fighter):
         if source and (source.count("/") != 1 or not all(source.split("/"))):
             problems.append("article %s: from must be \"fighter/weapon\"" % article.get("name"))
         problems += hurtbox_problems(article)
+        problems += lvd_problems(article)
     kirby = fighter.get("kirby")
     if kirby:
         if kirby.get("statuses", 0) < 0:
@@ -286,6 +488,25 @@ def check(fighter):
     for grab in fighter.get("grabs", []):
         if "status" not in grab:
             problems.append("a grab needs status, the grabber status its CATCH box belongs to")
+    commands = fighter.get("commands", [])
+    if len(commands) > MAX_COMMANDS:
+        problems.append("at most %d commands" % MAX_COMMANDS)
+    seen = set()
+    for command in commands:
+        if not command.get("name"):
+            problems.append("a command needs a name")
+            continue
+        if not NAME_RE.match(command["name"]):
+            problems.append("command %s: name must be lowercase letters, digits and underscores"
+                            % command["name"])
+        if "input" not in command:
+            problems.append("command %s needs an input" % command["name"])
+        if command.get("cpu", 0) > 0 and command.get("button") == "none":
+            problems.append("command %s: cpu needs a button, a computer player gets the command when it presses it"
+                            % command["name"])
+        if command["name"] in seen:
+            problems.append("command %s is declared twice" % command["name"])
+        seen.add(command["name"])
     return problems
 
 
@@ -317,6 +538,40 @@ def hurtbox_problems(article):
                 problems.append("article %s: hurtbox on %s: %s %d is not one of %s"
                                 % (name, node, key, value, ", ".join(names)))
     return problems
+
+
+def lvd_problems(article):
+    vertices = article.get("lvd_vertices") or []
+    file = (article.get("lvd") or "").strip()
+    name = article.get("name")
+    if "lvd" not in article and not vertices:
+        return []
+    prefix = "article %s: " % name
+    if not article.get("from"):
+        return [prefix + "lvd needs from = \"fighter/weapon\""]
+    if not file:
+        return [prefix + "[[article.lvd_vertex]] needs lvd = \"file.lvd\" on its article"]
+    if any("vertex" not in vertex for vertex in vertices):
+        return [prefix + "every [[article.lvd_vertex]] needs vertex"]
+    if "/" in file or "\\" in file or not file.lower().endswith(".lvd") or len(file) <= 4:
+        return [prefix + "lvd = \"%s\" must be a file name in the article's model folder, "
+                         "like \"platform.lvd\"" % file]
+    if not vertices:
+        return [prefix + "lvd %s needs at least one lvd_vertex tying a vertex to a joint" % file]
+    if len(vertices) > MAX_LVD_VERTICES:
+        return [prefix + "lvd %s: at most %d lvd_vertex entries" % (file, MAX_LVD_VERTICES)]
+    seen = set()
+    for vertex in vertices:
+        index = vertex["vertex"]
+        if index < 0 or index > MAX_LVD_VERTEX_INDEX:
+            return [prefix + "lvd %s: vertex %d is above %d" % (file, index, MAX_LVD_VERTEX_INDEX)]
+        joint = (vertex.get("joint") or "").strip()
+        if not joint or ("joint_left" in vertex and not vertex["joint_left"].strip()):
+            return [prefix + "lvd %s: vertex %d needs a joint" % (file, index)]
+        if index in seen:
+            return [prefix + "lvd %s: vertex %d is listed twice" % (file, index)]
+        seen.add(index)
+    return []
 
 
 def read(path):

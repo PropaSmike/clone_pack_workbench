@@ -3,6 +3,10 @@
 
 from __future__ import annotations
 
+import re
+
+from . import gimmicks
+
 
 def identifier(name: str) -> str:
     return "".join(character if character.isalnum() else "_"
@@ -340,15 +344,38 @@ def fighter_manifest_lines(state: dict, constant: str) -> list[str]:
         lines.append("    .raw(r%s\"" % fence)
         lines += tables.splitlines()
         lines.append("\"%s) // Kirby's copy motions and meshes, as fighter.toml carries them" % fence)
+    lines += article_gimmick_calls(state)
     engine, config = split_rules(state)
     rules = engine if own else engine + config
     if rules:
         lines += manifest_param_calls(rules)
     lines[-1] = end_statement(lines[-1])
-    lines += guarded_tables(state.get("global_motion_tables"), "CAP_GLOBAL_MOTIONS",
-                            "motions added to every fighter's motion list")
-    lines += guarded_tables(state.get("grab_tables"), "CAP_GRAB_RULES",
-                            "command grabs the engine accepts")
+    if "global_motions" in state:
+        lines += guarded_tables(row_tables("global_motion", state.get("global_motions")), "CAP_GLOBAL_MOTIONS",
+                                "motions added to every fighter's motion list")
+    else:
+        lines += guarded_tables(state.get("global_motion_tables"), "CAP_GLOBAL_MOTIONS",
+                                "motions added to every fighter's motion list")
+    if "grabs" in state:
+        lines += guarded_tables(row_tables("grab", state.get("grabs")), "CAP_GRAB_RULES",
+                                "command grabs the engine accepts")
+    else:
+        lines += guarded_tables(state.get("grab_tables"), "CAP_GRAB_RULES",
+                                "command grabs the engine accepts")
+    if "hud" in state:
+        lines += hud_manifest_lines(state)
+    else:
+        lines += guarded_tables(state.get("hud_tables"), "CAP_HUD",
+                                "the fighter's HUD, borrowed or its own layout")
+    lines += guarded_tables(state.get("final_tables"), "CAP_FINAL_SMASH",
+                            "the Final Smash borrowed from another fighter")
+    if "tether" in state:
+        lines += tether_manifest_lines(state)
+    else:
+        lines += guarded_tables(state.get("tether_tables"), "CAP_TETHER",
+                                "the tether borrowed from another fighter and its ledge reach")
+    lines += command_lines(state)
+    lines += entry_group_lines(state)
     lines += [
         "    let Ok(kind) = %s.register(manifest) else {" % constant,
         "        return; // the fault is in the log",
@@ -356,6 +383,458 @@ def fighter_manifest_lines(state: dict, constant: str) -> list[str]:
         "    skyline::println!(\"[%s] registered as fighter kind {kind}\");" % resource,
     ]
     return lines
+
+
+COMMAND_SETTING_NOTES = (
+    ("special_command_life_max", "frames between two directions"),
+    ("super_special_command_life_max", "the same for super commands"),
+    ("special_command_ab_button_life", "frames a button press counts"),
+    ("special_command_neutral_threshold", "stick distance that reads as neutral"),
+)
+
+
+def stick_range_literal(text) -> str | None:
+    """special_command_stick_range as a Rust array of seven [min, max] pairs."""
+    numbers = re.findall(r"-?\d+(?:\.\d+)?(?:[eE]-?\d+)?", str(text))
+    if len(numbers) != 14:
+        return None
+    pairs = ["[%s, %s]" % (float_literal(numbers[i]), float_literal(numbers[i + 1]))
+             for i in range(0, 14, 2)]
+    return "[%s]" % ", ".join(pairs)
+
+
+def command_call(command: dict) -> str:
+    q = '"'
+    call = "Command::new(%s%s%s, %s%s%s)" % (q, command.get("name", ""), q, q, command.get("input", ""), q)
+    button = command.get("button", "either")
+    if button != "either":
+        call += ".button(Button::%s)" % str(button).capitalize()
+    if command.get("super"):
+        call += ".super_command()"
+    if isinstance(command.get("life"), int):
+        call += ".life(%d)" % command["life"]
+    if command.get("neutral_resets") is False:
+        call += ".neutral_resets(false)"
+    if command.get("reverse"):
+        call += ".reverse()"
+    if command.get("cpu"):
+        call += ".cpu(%s)" % float_literal(command["cpu"])
+    return call
+
+
+def command_lines(state: dict) -> list[str]:
+    """[commands] and [[command]] as Manifest calls, added only when the engine has them."""
+    settings = state.get("command_settings") or {}
+    commands = [command for command in state.get("commands") or [] if command.get("name")]
+    calls = []
+    if settings.get("vanilla"):
+        calls.append(".vanilla_commands(true) // the game's own commands, read with get_command_flag_cat")
+    for key, note in COMMAND_SETTING_NOTES:
+        value = settings.get(key)
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            continue
+        literal = float_literal(value) if key == "special_command_neutral_threshold" else str(int(value))
+        calls.append(".%s(%s) // %s" % (key, literal, note))
+    stick = stick_range_literal(settings.get("special_command_stick_range", ""))
+    if stick:
+        calls.append(".special_command_stick_range(%s) // up, up-forward, forward, down-forward, "
+                     "then the back three, in degrees" % stick)
+    for command in commands:
+        calls.append(".%s // read with fight::command(fighter, \"%s\")"
+                     % ("command(%s)" % command_call(command), command["name"]))
+    if not calls:
+        return []
+    return (["    let manifest = if clone_engine_api::runtime_capabilities() & clone_engine_api::CAP_COMMAND_INPUTS != 0 {",
+             "        manifest"]
+            + ["            " + call for call in calls]
+            + ["    } else {",
+               "        manifest // an older engine would refuse the whole manifest",
+               "    };"])
+
+
+def command_uses(state: dict) -> set:
+    commands = [command for command in state.get("commands") or [] if command.get("name")]
+    if not commands:
+        return set()
+    if any(command.get("button", "either") != "either" for command in commands):
+        return {"use clone_engine_api::fight::{Button, Command};"}
+    return {"use clone_engine_api::fight::Command;"}
+
+
+STATUS_TABLE_OWNERS = {"chrom": "roy", "daisy": "peach", "ken": "ryu", "koopag": "koopa", "lucina": "marth",
+                       "nana": "popo", "pichu": "pikachu", "pitb": "pit", "richter": "simon", "samusd": "samus",
+                       "toonlink": "link", "wolf": "fox", "younglink": "link"}
+STATUS_TABLE_MAX = ("donkey", "koopa", "peach", "pit")
+FLOATING_BASES = ("peach", "daisy")
+FLOAT_DEFAULTS = (("frames", 150), ("start_y", 1.5), ("water_height", 14.0))
+FLOAT_MOTIONS = ("fuwafuwa_start", "fuwafuwa")
+
+
+def status_total(base: str) -> str:
+    """The constant the base's SetStatusScripts sizes its status table with."""
+    owner = STATUS_TABLE_OWNERS.get(base, base)
+    return "*FIGHTER_%s_STATUS_KIND_%s" % (owner.upper(), "MAX" if owner in STATUS_TABLE_MAX else "NUM")
+
+
+def float_call(settings: dict) -> str:
+    """Float::PEACH with a builder call for each value the panel changed."""
+    call = "Float::PEACH"
+    for key, default in FLOAT_DEFAULTS:
+        value = settings.get(key)
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or value == default:
+            continue
+        call += ".%s(%s)" % (key, str(int(value)) if key == "frames" else float_literal(value))
+    start, hover = settings.get("start_motion") or "", settings.get("motion") or ""
+    if (start or hover) and (start, hover) != FLOAT_MOTIONS:
+        call += ".motions(%s, %s)" % tuple('smashline::skyline_smash::hash40("%s")' % name for name in
+                                          (start or FLOAT_MOTIONS[0], hover or FLOAT_MOTIONS[1]))
+    item = settings.get("item")
+    if isinstance(item, int) and not isinstance(item, bool) and item >= 0:
+        call += ".item(%d)" % item
+    return call
+
+
+def float_lines(state: dict, resource: str) -> list[str]:
+    """Peach's float from clone_engine_api::float: its two statuses past the
+    base's own, the way in and the aerial that keeps it going."""
+    settings = state.get("float") or {}
+    if not settings.get("on"):
+        return []
+    base = state.get("base_resource_name") or state.get("base_fighter") or "mario"
+    if base in FLOATING_BASES:
+        return ["    // %s floats already: a clone of it keeps the float" % base]
+    item = settings.get("item")
+    call = float_call(settings)
+    note = "Peach's float: jump held in the air, or down and jump on the ground"
+    if isinstance(item, int) and not isinstance(item, bool) and item >= 0:
+        note += "; down special throws %s mid-float" % (settings.get("item_name") or "item %d" % item)
+    return [
+        "    let float_status = %s; // %s's status count: the float takes it and the next one, "
+        "so number statuses of your own from float_status + 2" % (status_total(base), base),
+        '    float::register("%s", %s, float_status); // %s' % (resource, call, note),
+        '    Agent::new("%s") // the float, under the clone\'s own name' % resource,
+        "        .on_start(float::on_start) // the way in, from the jump checks",
+        "        .on_line(Main, float::frame) // one float per airtime, and the jump out of water",
+        "        .status(Pre, float_status, float::start_pre)",
+        "        .status(Init, float_status, float::start_init)",
+        "        .status(Main, float_status, float::start_main)",
+        "        .status(End, float_status, float::end)",
+        "        .status(Pre, float_status + 1, float::float_pre)",
+        "        .status(Main, float_status + 1, float::float_main)",
+        "        .status(End, float_status + 1, float::end)",
+        "        .status(Pre, *FIGHTER_STATUS_KIND_ATTACK_AIR, float::attack_air_pre) // an aerial "
+        "keeps the float going; an aerial status of your own calls these",
+        "        .status(Main, *FIGHTER_STATUS_KIND_ATTACK_AIR, float::attack_air_main)",
+        "        .install();",
+    ]
+
+
+def row_tables(table: str, rows) -> str:
+    """Panel rows as the fighter.toml tables a guarded raw() carries."""
+    lines: list[str] = []
+    for row in rows or []:
+        lines += gimmicks.table_lines(table, row)
+    return "\n".join(lines).strip("\n")
+
+
+def vec_literal(text: str, count: int) -> str | None:
+    values = gimmicks.numbers(text)
+    if len(values) != count:
+        return None
+    return ", ".join(float_literal(value) for value in values)
+
+
+def hurtbox_call(row: dict) -> tuple[str, str]:
+    """Hurtbox::new and a builder call for each key the row sets, and the names of its numbers."""
+    call = 'Hurtbox::new("%s", %s)' % (gimmicks.display(row.get("node", "")),
+                                       float_literal(gimmicks.display(row.get("size", "0"))))
+    notes = []
+    for key in ("offset", "offset2"):
+        literal = vec_literal(row.get(key, ""), 3)
+        if literal:
+            call += ".%s(%s)" % (key, literal)
+    for key in ("part", "height", "status", "shape"):
+        found = gimmicks.named_number(key, row[key]) if key in row else None
+        if found:
+            call += ".%s(%d)" % (key, found[0])
+            notes.append("%s %s" % (key, found[1]))
+    return call, ", ".join(notes)
+
+
+def lvd_vertex_parts(row: dict) -> tuple[int, str, str | None, str | None]:
+    try:
+        vertex = int(gimmicks.display(row.get("vertex", "0")), 0)
+    except ValueError:
+        vertex = 0
+    left = gimmicks.display(row["joint_left"]) if "joint_left" in row else None
+    return vertex, gimmicks.display(row.get("joint", "top")), vec_literal(row.get("offset", ""), 3), left
+
+
+def lvd_expression(file: str, rows) -> tuple[str, bool]:
+    """ArticleLvd for one article, and whether it needs LvdVertex for a vertex with both an
+    offset and a joint_left."""
+    parts = [lvd_vertex_parts(row) for row in rows]
+    if not any(offset and left for _, _, offset, left in parts):
+        call = 'ArticleLvd::new("%s")' % file
+        for vertex, joint, offset, left in parts:
+            if offset:
+                call += '.vertex_at(%d, "%s", %s)' % (vertex, joint, offset)
+            elif left:
+                call += '.vertex_facing(%d, "%s", "%s")' % (vertex, joint, left)
+            else:
+                call += '.vertex(%d, "%s")' % (vertex, joint)
+        return call, False
+    pushes = []
+    for vertex, joint, offset, left in parts:
+        expression = 'LvdVertex::new(%d, "%s")' % (vertex, joint)
+        if offset:
+            expression += ".offset(%s)" % offset
+        if left:
+            expression += '.joint_left("%s")' % left
+        pushes.append("lvd.vertices.push(%s);" % expression)
+    return '{ let mut lvd = ArticleLvd::new("%s"); %s lvd }' % (file, " ".join(pushes)), True
+
+
+def article_gimmick_calls(state: dict) -> list[str]:
+    """The articles' hurtboxes and platforms, as Manifest calls."""
+    lines = []
+    declared = {article.get("name") for article in state.get("articles") or []
+                if article.get("owner") and article.get("weapon")}
+    for row in state.get("article_hurtboxes") or []:
+        if row.get("article") in declared:
+            call, notes = hurtbox_call(row)
+            lines.append('    .article_hurtbox("%s", %s) // a hurtbox on that article%s'
+                         % (row["article"], call, ": " + notes if notes else ""))
+    for article in state.get("articles") or []:
+        if not (article.get("name") and article.get("lvd")):
+            continue
+        rows = [row for row in state.get("article_lvd_vertices") or [] if row.get("article") == article["name"]]
+        expression, _ = lvd_expression(article["lvd"], rows)
+        lines.append('    .article_lvd("%s", %s) // a platform from the article\'s own .lvd'
+                     % (article["name"], expression))
+    return lines
+
+
+def article_gimmick_uses(state: dict) -> set:
+    uses = set()
+    declared = {article.get("name") for article in state.get("articles") or []
+                if article.get("owner") and article.get("weapon")}
+    if any(row.get("article") in declared for row in state.get("article_hurtboxes") or []):
+        uses.add("v2:Hurtbox")
+    for article in state.get("articles") or []:
+        if article.get("name") and article.get("lvd"):
+            uses.add("v2:ArticleLvd")
+            rows = [row for row in state.get("article_lvd_vertices") or [] if row.get("article") == article["name"]]
+            if lvd_expression(article["lvd"], rows)[1]:
+                uses.add("v2:LvdVertex")
+    return uses
+
+
+def guarded_calls(capability: str, calls: list[str]) -> list[str]:
+    if not calls:
+        return []
+    return (["    let manifest = if clone_engine_api::runtime_capabilities() & clone_engine_api::%s != 0 {"
+             % capability, "        manifest"]
+            + ["            " + call for call in calls]
+            + ["    } else {",
+               "        manifest // an older engine would refuse the whole manifest",
+               "    };"])
+
+
+def hud_manifest_lines(state: dict) -> list[str]:
+    hud = state.get("hud") or {}
+    calls = []
+    if hud.get("from"):
+        calls.append('.hud("%s") // that fighter\'s HUD by this fighter\'s portrait' % hud["from"])
+    if hud.get("layout"):
+        calls.append('.hud_layout("%s") // the pack\'s own layout on the damage card' % hud["layout"])
+    return guarded_calls("CAP_HUD", calls)
+
+
+def tether_manifest_lines(state: dict) -> list[str]:
+    tether = state.get("tether") or {}
+    calls = []
+    if tether.get("from"):
+        calls.append('.tether("%s") // its air_lasso_data and ledge boxes; the tether statuses below '
+                     "are blank until you port its own" % tether["from"])
+    for row in tether.get("boxes") or []:
+        first, second = vec_literal(row.get("p1", ""), 2), vec_literal(row.get("p2", ""), 2)
+        if first and second:
+            calls.append(".tether_box([%s], [%s]) // a ledge box of your own, two corners from the fighter"
+                         % (first, second))
+    return guarded_calls("CAP_TETHER", calls)
+
+
+def blank(name: str, returns: bool, body: list[str]) -> str:
+    """A status or line function left for the modder to fill in."""
+    signature = "unsafe extern \"C\" fn %s(fighter: &mut L2CFighterCommon)%s {" % (
+        name, " -> L2CValue" if returns else "")
+    return "\n".join(["#[allow(unused_variables)]", signature] + ["    " + line for line in body]
+                     + (["    0.into()"] if returns else []) + ["}"])
+
+
+def minted_name(state: dict, source: str) -> str | None:
+    owner, _, weapon = source.partition("/")
+    from .packs import weapon_short_name
+    for article in state.get("articles") or []:
+        if article.get("owner") == owner and article.get("weapon") and \
+                weapon_short_name(owner, article["weapon"]) == weapon:
+            return article.get("name")
+    return None
+
+
+def hud_code(state: dict, constant: str, resource: str, suffix: str) -> tuple[list[str], list[str], set]:
+    """A blank line function with the calls the picked HUD takes."""
+    hud = state.get("hud") or {}
+    if not (hud.get("from") or hud.get("layout")):
+        return [], [], set()
+    name = "hud%s" % suffix
+    body = ["// called every frame: tell the HUD what to show, here or from your moves"]
+    calls = list(gimmicks.HUD_CALLS.get(hud.get("from"), ())) + (
+        list(gimmicks.LAYOUT_CALLS) if hud.get("layout") else [])
+    for call in calls:
+        code, _, note = call.partition(" // ")
+        body.append("// %s.hud(&*fighter, %s);%s" % (constant, code, " // " + note if note else ""))
+    main = ['    Agent::new("%s").on_line(Main, %s).install(); // the HUD, driven from your code' % (resource, name)]
+    uses = {"use smashline::skyline_smash::lua2cpp::L2CFighterCommon;"}
+    return main, ["\n" + blank(name, False, body) + "\n"], uses
+
+
+TETHER_STATUSES = (
+    ("AIR_LASSO", "Main", "air_lasso_main"),
+    ("AIR_LASSO_REACH", "Main", "air_lasso_reach_main"),
+    ("AIR_LASSO_REACH", "End", "air_lasso_reach_end"),
+    ("AIR_LASSO_HANG", "Main", "air_lasso_hang_main"),
+    ("AIR_LASSO_REWIND", "Main", "air_lasso_rewind_main"),
+    ("AIR_LASSO_FAILURE", "Main", "air_lasso_failure_main"),
+    ("AIR_LASSO_LANDING", "Main", "air_lasso_landing_main"),
+)
+
+
+def tether_bodies(state: dict, constant: str) -> dict:
+    """The donor's own calls for each tether status, as comments."""
+    donor = (state.get("tether") or {}).get("from") or ""
+    info = gimmicks.TETHER.get(donor)
+    if info is None:
+        return {}
+    first, second, data = info["lasso"]
+    names = {}
+    for source in info["articles"]:
+        minted = minted_name(state, source)
+        names[source.partition("/")[2]] = minted
+    def index(weapon):
+        if weapon is None:
+            return "(*ARTICLE_ID_NONE)"
+        return '%s.article("%s").index().unwrap_or(*ARTICLE_ID_NONE)' % (
+            constant, names.get(weapon) or "<your %s>" % weapon)
+    articles = ", ".join("%s (from %s)" % (names.get(source.partition("/")[2]) or "not minted yet", source)
+                         for source in info["articles"])
+    bodies = {
+        "air_lasso_main": ["// %s's tether: its articles, cliff hang data %d" % (donor, data),
+                           "// fighter.status_AirLasso(%s.into(), %s.into(), %d.into(), true.into());"
+                           % (index(first), index(second), data)],
+        "air_lasso_reach_main": ["// fighter.status_AirLassoReach(7.into()); // the article's REACH status"],
+        "air_lasso_reach_end": ["// fighter.status_end_AirLassoReach();"],
+        "air_lasso_rewind_main": ["// fighter.status_AirLassoRewind(6.into()); // the article's HANG_REWIND status"],
+        "air_lasso_failure_main": [
+            "// a function of yours calls fighter.sub_air_lasso_failure_uniq(3.into()):",
+            "// fighter.status_AirLassoFailure(L2CValue::Ptr(failure_uniq as *const () as _), "
+            "hash40(\"air_catch\").into(), 3.into());"],
+        "air_lasso_landing_main": ["// fighter.status_AirLassoLanding(2.into()); // the article's EXHAUST status"],
+    }
+    if donor in ("samus", "samusd", "lucas"):
+        bodies["air_lasso_reach_end"].insert(0, "// WorkModule::set_int(fighter.module_accessor, %s, "
+                                                "*FIGHTER_STATUS_AIR_LASSO_REACH_WORK_INT_ARTICLE_STATUS);"
+                                             % index(first))
+    if info["joint"]:
+        bodies["air_lasso_hang_main"] = ['// fighter.status_AirLassoHang(hash40("%s").into(), 2.into(), '
+                                         'hash40("rot").into()); // the joint it hangs from' % info["joint"]]
+    else:
+        bodies["air_lasso_hang_main"] = ["// %s's tether never hangs" % donor]
+    bodies["air_lasso_main"].append("// its articles: %s" % articles)
+    return bodies
+
+
+def tether_code(state: dict, constant: str, resource: str, suffix: str) -> tuple[list[str], list[str], set]:
+    """Blank tether statuses with the donor's own calls in comments."""
+    tether = state.get("tether") or {}
+    donor = tether.get("from")
+    if not donor:
+        return [], [], set()
+    bodies = tether_bodies(state, constant)
+    window = "frame 7 only" if donor == "lucas" else "frames 0 to 5"
+    tail = ["\n// %s's tether, blank: port each status from %s's own (the comments are its calls), then its\n"
+            "// aircatch scripts, which spawn, shoot, rewind and remove the articles and hold\n"
+            "// FIGHTER_STATUS_AIR_LASSO_FLAG_CHECK on for %s. List air_catch, air_catch_pose,\n"
+            "// air_catch_hang, air_catch_hit and air_catch_landing in the motion list, and ship\n"
+            "// %s_vl.prc in fighter/%s/param/. Also: %s." % (
+                donor, donor, window, donor, resource, gimmicks.TETHER_EXTRAS.get(donor, ""))]
+    for _, _, name in TETHER_STATUSES:
+        tail.append(blank(name + suffix, True, bodies.get(name, [])))
+    tail[-1] += "\n"
+    main = ['    Agent::new("%s") // the tether statuses, blank until ported' % resource]
+    for status, line, name in TETHER_STATUSES:
+        main.append("        .status(%s, *FIGHTER_STATUS_KIND_%s, %s%s)" % (line, status, name, suffix))
+    main.append("        .install();")
+    uses = {"use smashline::skyline_smash::lua2cpp::L2CFighterCommon;", "use smashline::skyline_smash::lib::L2CValue;",
+            "use smashline::skyline_smash::lib::lua_const::*;", "smashline:End"}
+    return main, ["\n\n".join(tail)], uses
+
+
+GLIDE_FUNCTIONS = (("glide_start_init", "Init", "GLIDE_START"), ("glide_start_exec", "Exec", "GLIDE_START"),
+                   ("glide_init", "Init", "GLIDE"), ("glide_exec", "Exec", "GLIDE"))
+
+
+def glide_code(state: dict, resource: str, suffix: str) -> tuple[list[str], list[str], set]:
+    """Brawl's glide from clone_engine_api::glide, unless the float is on."""
+    settings = state.get("glide") or {}
+    if not settings.get("on") or (state.get("float") or {}).get("on"):
+        return [], [], set()
+    preset = settings.get("preset") if settings.get("preset") in gimmicks.GLIDE_PRESETS else "META_KNIGHT"
+    call = "Glide::%s" % preset
+    frames = settings.get("button_frame")
+    if isinstance(frames, int) and not isinstance(frames, bool) and frames != 8:
+        call += ".button_frame(%d)" % frames
+    constant = "GLIDE%s" % suffix.upper()
+    tail = ["\n/// Brawl's glide: %s's values; jump held through the top of the midair jump.\n"
+            "/// The motion list needs glide_start, glide, glide_attack, glide_end and glide_landing.\n"
+            "const %s: Glide = %s;" % (preset.replace("_", " ").title(), constant, call),
+            "unsafe extern \"C\" fn glide_entry%s(fighter: &mut L2CFighterCommon) {\n"
+            "    glide::frame(fighter, &%s);\n}" % (suffix, constant)]
+    for name, _, _ in GLIDE_FUNCTIONS:
+        tail.append("unsafe extern \"C\" fn %s%s(fighter: &mut L2CFighterCommon) -> L2CValue {\n"
+                    "    glide::%s(fighter, &%s)\n}" % (name, suffix, name, constant))
+    main = ['    Agent::new("%s") // Brawl\'s glide' % resource,
+            "        .on_line(Main, glide_entry%s) // the way in, checked every frame" % suffix]
+    for name, line, status in GLIDE_FUNCTIONS:
+        main.append("        .status(%s, *FIGHTER_STATUS_KIND_%s, %s%s)" % (line, status, name, suffix))
+    main.append("        .install();")
+    uses = {"use clone_engine_api::glide::{self, Glide};", "use smashline::skyline_smash::lua2cpp::L2CFighterCommon;",
+            "use smashline::skyline_smash::lib::L2CValue;", "use smashline::skyline_smash::lib::lua_const::*;",
+            "smashline:Exec", "smashline:Init"}
+    return main, ["\n\n".join(tail) + "\n"], uses
+
+
+def fight_code(state: dict, resource: str, suffix: str) -> tuple[list[str], list[str], set]:
+    """Facing the opponent, and a blank reader for each of the clone's own commands."""
+    commands = [command.get("name") for command in state.get("commands") or [] if command.get("name")]
+    face = bool(state.get("face_opponent"))
+    if not (face or commands):
+        return [], [], set()
+    name = "fight_frame%s" % suffix
+    body = []
+    if face:
+        body.append("fight::face_opponent(fighter); // in a 1-on-1 on the ground, turn toward the opponent")
+    for command in commands:
+        body += ['// if let Some(lr) = fight::command_lr(fighter, "%s") { // lr: the way it was input for' % command,
+                 '//     fight::clear_command(fighter, "%s"); // used up' % command,
+                 "//     // the move it does",
+                 "// }"]
+    main = ['    Agent::new("%s").on_line(Main, %s).install(); // %s' % (
+        resource, name, "facing the opponent and the commands" if face and commands
+        else "facing the opponent" if face else "reading the commands")]
+    uses = {"use clone_engine_api::fight;", "use smashline::skyline_smash::lua2cpp::L2CFighterCommon;"}
+    return main, ["\n" + blank(name, False, body) + "\n"], uses
 
 
 def raw_fence(text: str) -> str:
@@ -381,6 +860,53 @@ def guarded_tables(tables, capability: str, note: str) -> list[str]:
                "    } else {",
                "        manifest // an older engine would refuse the whole manifest",
                "    };"])
+
+
+GAME_SWITCH_BASES = ("eflame", "elight", "pzenigame", "pfushigisou", "plizardon")
+
+
+def entry_group_lines(state: dict) -> list[str]:
+    """`switch_with`, `partner` and `partner_with`, added only when the engine has them."""
+    from .packs import partner_value, switch_members
+    base = state.get("base_resource_name") or state.get("base_fighter") or ""
+    calls = []
+    any_base = False
+    members = switch_members(state)
+    if members:
+        game_set = base in GAME_SWITCH_BASES
+        calls.append("switch_with(&[%s]) // %s"
+                     % (", ".join('"%s"' % name for name in members),
+                        "the clones down special cycles through" if game_set
+                        else "the clones clone_engine_api::switch::next cycles through"))
+        any_base = not game_set
+    partner = partner_value(state)
+    if partner is False:
+        calls.append("partner(false) // no partner")
+    elif partner is True:
+        calls.append("partner(true) // a copy of this fighter follows it the way Nana follows Popo")
+        any_base = any_base or base != "popo"
+    elif partner:
+        calls.append('partner_with("%s") // that clone follows this fighter the way Nana follows Popo'
+                     % partner)
+        any_base = True
+    lines = []
+    if calls:
+        capability = "CAP_ANY_BASE_GROUPS" if any_base else "CAP_ENTRY_GROUPS"
+        chain = ["        manifest." + calls[0]] + ["            ." + call for call in calls[1:]]
+        lines = (["    let manifest = if clone_engine_api::runtime_capabilities() & clone_engine_api::%s != 0 {"
+                  % capability]
+                 + chain
+                 + ["    } else {",
+                    "        manifest // an older engine would refuse the whole manifest",
+                    "    };"])
+    if "partner_params" in state:
+        params = [row for row in state.get("partner_params") or [] if row.get("key")]
+        tables = ("[partner_params]\n" + "\n".join("%s = %s" % (row["key"], row["value"]) for row in params)
+                  if params else "")
+    else:
+        tables = state.get("partner_tables")
+    return lines + guarded_tables(tables, "CAP_ANY_BASE_GROUPS",
+                                  "the partner's follow params, the Ice Climbers' own names")
 
 
 def float_literal(value) -> str:
@@ -415,11 +941,12 @@ def fighter_part(state: dict, suffix: str = "", first: bool = True,
     constant = identifier(resource)
     own = bool(state.get("own_css"))
     _, config_rules = split_rules(state)
-    uses = {"v2:fighter", "v2:Line", "v2:Manifest", "use smashline::{Agent, Main, Priority};"}
+    uses = {"v2:fighter", "v2:Line", "v2:Manifest", "smashline:Agent", "smashline:Main", "smashline:Priority"}
     if own:
         uses |= {"use std::collections::HashMap;", "use smash::hash40;",
                  "use the_csk_collection_api::*;"}
     main = fighter_manifest_lines(state, constant)
+    uses |= command_uses(state)
     if own:
         main.append("    register_css_entry%s(); // CSK's own call, with the clone's names" % suffix)
         if config_rules:
@@ -430,7 +957,36 @@ def fighter_part(state: dict, suffix: str = "", first: bool = True,
         "        // .status(Main, *FIGHTER_STATUS_KIND_SPECIAL_N, special_n_main)",
         "        .install();",
     ]
-    renamed = [article["name"] for article in state.get("base_articles") or []
+    floating = float_lines(state, resource)
+    main += floating
+    if len(floating) > 1:
+        uses |= {"use clone_engine_api::float::{self, Float};", "use smashline::skyline_smash::lib::lua_const::*;",
+                 "smashline:End", "smashline:Init", "smashline:Pre"}
+    uses |= article_gimmick_uses(state)
+    gimmick_tail: list[str] = []
+    for code_main, code_tail, code_uses in (glide_code(state, resource, suffix),
+                                            tether_code(state, constant, resource, suffix),
+                                            hud_code(state, constant, resource, suffix),
+                                            fight_code(state, resource, suffix)):
+        main += code_main
+        gimmick_tail += code_tail
+        uses |= code_uses
+    if (state.get("hud") or {}).get("from") or (state.get("hud") or {}).get("layout"):
+        uses |= {"v2:Hud"} | ({"v2:MenuCommand"} if (state.get("hud") or {}).get("from") == "brave" else set())
+    if (state.get("tether") or {}).get("from"):
+        uses |= {"use smashline::skyline_smash::app::lua_bind::*;", "use smashline::skyline_smash::hash40;"}
+    if state.get("grabs"):
+        main.append("    // a grab rule's CATCH box goes in that status's game script: "
+                    "macros::CATCH(agent, 0, Hash40::new(\"top\"), size, x, y, z, None, None, None, "
+                    "*FIGHTER_STATUS_KIND_CAPTURE_PULLED, *COLLISION_SITUATION_MASK_GA)")
+    victims = [gimmicks.display(row.get("name", "")) for row in state.get("global_motions") or []
+               if row.get("victim") == "true"]
+    if victims:
+        main.append("    // %s: play it on the opponent your throw holds, from the throw's status: "
+                    "MotionModule::change_motion(opponent, Hash40::new(\"%s\"), 0.0, 1.0, false, 0.0, false, false), "
+                    "the opponent from LinkModule::get_node_object_id(boma, *LINK_NO_CAPTURE)"
+                    % (", ".join(victims), victims[0]))
+    renamed =[article["name"] for article in state.get("base_articles") or []
                if article.get("name") and article.get("base_article")]
     for article in state.get("articles") or []:
         name = article.get("name")
@@ -466,7 +1022,7 @@ def fighter_part(state: dict, suffix: str = "", first: bool = True,
                  "        // .status(Main, %s.kirby_status(0), kirby_special_n_main)" % constant,
                  "        .install();",
                  "    %s.arm_kirby();" % constant]
-    tail = []
+    tail = list(gimmick_tail)
     if own:
         tail.append(css_registration(state, suffix))
         config = param_config_calls(state, suffix)
@@ -585,11 +1141,14 @@ def item_part(state: dict, suffix: str = "", taken: set | None = None,
 
 
 def use_lines(uses: set) -> list[str]:
-    """The use block: std first, then the crates by name; the v2 names in one line."""
-    v2 = sorted((use[3:] for use in uses if use.startswith("v2:")), key=str.lower)
-    plain = {use for use in uses if not use.startswith("v2:")}
-    if v2:
-        plain.add("use clone_engine_api::v2::{%s};" % ", ".join(v2))
+    """The use block: std first, then the crates by name; the v2 and the
+    smashline names each in one line."""
+    plain = set(uses)
+    for prefix, path in (("v2:", "clone_engine_api::v2"), ("smashline:", "smashline")):
+        names = sorted((use[len(prefix):] for use in uses if use.startswith(prefix)), key=str.lower)
+        plain -= {prefix + name for name in names}
+        if names:
+            plain.add("use %s::{%s};" % (path, ", ".join(names)))
     std = sorted(use for use in plain if use.startswith("use std::"))
     crates = sorted(use for use in plain if not use.startswith("use std::"))
     return std + crates

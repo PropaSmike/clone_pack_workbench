@@ -11,7 +11,7 @@ from pathlib import Path
 
 from .emit import engine_param_lines
 
-from . import backups
+from . import backups, gimmicks
 
 FIGHTER = "fighter"
 ITEM = "item"
@@ -45,8 +45,13 @@ STAGE_ENGINE_KEYS = ("place", "display_name", "id_name", "forms", "ships_battle_
                      "bgm_setting_no", "bgm_selector")
 FIGHTER_KEYS = ("name", "base", "display_name", "costumes", "color_start", "series",
                 "disp_order", "narration", "staffroll", "css", "ui_chara", "fighter_kind_name",
-                "owns_param_resources")
+                "owns_param_resources", "partner", "switch")
 FIGHTER_MANIFEST = "fighter.toml"
+COMMANDS_KEYS = ("vanilla", "special_command_life_max", "super_special_command_life_max",
+                 "special_command_ab_button_life", "special_command_neutral_threshold",
+                 "special_command_stick_range")
+COMMAND_KEYS = ("name", "input", "button", "super", "life", "neutral_resets", "reverse", "cpu")
+COMMAND_TABLES = ("[commands]", "[[command]]")
 
 
 def detect_kinds(folder: Path) -> list[str]:
@@ -128,26 +133,111 @@ def fighter_manifest_values(state: dict) -> dict:
         values["css"] = False
     if state.get("owns_param_resources"):
         values["owns_param_resources"] = True
+    partner = partner_value(state)
+    if partner is not None:
+        values["partner"] = partner
+    members = switch_members(state)
+    if members:
+        values["switch"] = members
     return values
 
 
-def article_hurtbox_tables(sections) -> dict:
-    """The [[article.hurtbox]] bodies of a file, keyed by the article they follow."""
-    tables: dict = {}
+def partner_value(state: dict):
+    """partner as fighter.toml writes it: false, true, a clone's name, or None for the base's default."""
+    text = str(state.get("partner") or "").strip()
+    if not text:
+        return False if state.get("no_partner") else None
+    return {"none": False, "copy": True}.get(text, text)
+
+
+def switch_members(state: dict) -> list[str]:
+    """The clones a part switches with, from the comma separated field."""
+    text = state.get("switch_with") or ""
+    if isinstance(text, (list, tuple)):
+        text = ",".join(str(name) for name in text)
+    return [name.strip() for name in str(text).split(",") if name.strip()]
+
+
+ARTICLE_CHILD_TABLES = ("[[article.hurtbox]]", "[[article.lvd_vertex]]")
+ARTICLE_CARRIED_KEYS = ("lvd",)
+ARTICLE_ROWS = (("hurtbox", "article_hurtboxes"), ("lvd_vertex", "article_lvd_vertices"))
+PANEL_TABLES = {"[hud]": "hud", "[tether]": "tether", "[[tether.box]]": "tether", "[[grab]]": "grabs",
+                "[[global_motion]]": "global_motions", "[partner_params]": "partner_params"}
+TABLE_ASSIGN_RE = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_.]*)\s*=\s*(.+?)\s*$")
+
+
+def table_texts(lines) -> dict:
+    """Each assignment of a table as written: its key to its TOML text."""
+    values: dict = {}
+    for line in lines:
+        stripped = strip_comment(line).strip()
+        if not stripped or stripped.startswith("["):
+            continue
+        match = TABLE_ASSIGN_RE.match(stripped)
+        if match:
+            values[match.group(1)] = match.group(2).strip()
+    return values
+
+
+def state_article_children(state: dict) -> dict:
+    """The hurtbox and platform vertex rows of the panels, as tables under their articles."""
+    children: dict = {}
+    for table, key in ARTICLE_ROWS:
+        for row in state.get(key) or []:
+            if row.get("article"):
+                lines = gimmicks.table_lines(table, row)
+                children.setdefault(row["article"], {"keys": [], "tables": []})["tables"].append(
+                    (lines[1], lines[2:]))
+    return children
+
+
+def panel_table_lines(state: dict) -> list[str]:
+    """[hud], [tether], [[grab]], [[global_motion]] and [partner_params] from the panels."""
+    out: list[str] = []
+    hud = state.get("hud") or {}
+    hud_lines = ["%s = %s" % (key, format_value(hud[key])) for key in ("from", "layout") if hud.get(key)]
+    if hud_lines:
+        out += ["", "[hud]"] + hud_lines
+    tether = state.get("tether") or {}
+    if tether.get("from"):
+        out += ["", "[tether]", "from = %s" % format_value(tether["from"])]
+    for row in tether.get("boxes") or []:
+        out += gimmicks.table_lines("tether_box", row)
+    for row in state.get("grabs") or []:
+        out += gimmicks.table_lines("grab", row)
+    for row in state.get("global_motions") or []:
+        out += gimmicks.table_lines("global_motion", row)
+    params = [row for row in state.get("partner_params") or [] if row.get("key")]
+    if params:
+        out += ["", "[partner_params]"] + ["%s = %s" % (row["key"], row["value"]) for row in params]
+    return out
+
+
+def article_children(sections) -> dict:
+    """What a file keeps under each article the panel does not edit: its extra
+    keys (lvd) and its [[article.hurtbox]] and [[article.lvd_vertex]] tables,
+    keyed by the article's name."""
+    children: dict = {}
     name = None
     for header, body in sections:
         if header == "[[article]]":
             name = parse_lines(body).get("name")
-        elif header == "[[article.hurtbox]]" and name:
-            tables.setdefault(name, []).append([line for line in body if line.strip()])
-    return tables
+            if name:
+                child = children.setdefault(name, {"keys": [], "tables": []})
+                child["keys"] += [line for line in body
+                                  if line.split("=", 1)[0].strip() in ARTICLE_CARRIED_KEYS]
+        elif header in ARTICLE_CHILD_TABLES and name:
+            child = children.setdefault(name, {"keys": [], "tables": []})
+            child["tables"].append((header, [line for line in body if line.strip()]))
+    return children
 
 
-def fighter_article_lines(articles, base_articles=(), hurtboxes=None) -> list[str]:
+def fighter_article_lines(articles, base_articles=(), children=None) -> list[str]:
     """One [[article]] table per source the pack names, minted from its weapon,
     then one per base article renamed into the clone's folder. The panel edits
     only the first kind; the second is carried from the file so a rewrite never
-    drops it. Each article's [[article.hurtbox]] tables stay under it."""
+    drops it. Each article keeps its lvd key and its [[article.hurtbox]] and
+    [[article.lvd_vertex]] tables."""
     out: list[str] = []
     for article in articles or ():
         owner = article.get("owner")
@@ -159,8 +249,12 @@ def fighter_article_lines(articles, base_articles=(), hurtboxes=None) -> list[st
                 "%-13s = %s" % ("from", format_value("%s/%s" % (owner, weapon_short_name(owner, weapon))))]
         if article.get("kirby_copy"):
             out.append("%-13s = %s" % ("kirby", "true"))
-        for body in (hurtboxes or {}).get(name, []):
-            out += ["", "[[article.hurtbox]]"] + body
+        if article.get("lvd"):
+            out.append("%-13s = %s" % ("lvd", format_value(article["lvd"])))
+        child = (children or {}).get(name, {})
+        out += child.get("keys", [])
+        for header, body in child.get("tables", []):
+            out += ["", header] + body
     for article in base_articles or ():
         name, base = article.get("name"), article.get("base_article")
         if name and base:
@@ -183,10 +277,64 @@ def fighter_kirby_lines(state: dict, existing: list[str] | None) -> list[str]:
     return ["", "[kirby]"] + [line for line in lines if line.strip()]
 
 
+def command_scalar(text: str):
+    """One [commands] or [[command]] value: numbers stay numbers, a list keeps its text."""
+    text = strip_comment(text).strip()
+    if text.startswith("["):
+        return text
+    if len(text) > 1 and text[0] == text[-1] and text[0] in "\"'":
+        return text[1:-1]
+    if text in ("true", "false"):
+        return text == "true"
+    for cast in (int, float):
+        try:
+            return cast(text)
+        except ValueError:
+            pass
+    return text
+
+
+def command_values(lines) -> dict:
+    values: dict = {}
+    for line in lines:
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or stripped.startswith("["):
+            continue
+        match = ASSIGN_RE.match(line)
+        if match:
+            values[match.group(1)] = command_scalar(match.group(2))
+    return values
+
+
+def command_format(key: str, value) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if key in ("name", "input", "button"):
+        return '"%s"' % value
+    if key == "special_command_stick_range" or isinstance(value, (int, float)):
+        return str(value)
+    return '"%s"' % value
+
+
+def fighter_command_lines(state: dict) -> list[str]:
+    """[commands] and one [[command]] per command, in the engine's key order."""
+    out = []
+    settings = state.get("command_settings") or {}
+    known = [key for key in COMMANDS_KEYS if key in settings]
+    if known:
+        out += ["", "[commands]"] + ["%s = %s" % (key, command_format(key, settings[key])) for key in known]
+    for command in state.get("commands") or []:
+        lines = ["%s = %s" % (key, command_format(key, command[key])) for key in COMMAND_KEYS
+                 if key in command]
+        out += ["", "[[command]]"] + lines
+    return out
+
+
 def write_fighter_manifest(path: Path, state: dict) -> list[str]:
     """fighter.toml from a fighter part: the flat keys in the head, the articles
-    the panel lists as [[article]] tables, [kirby] merged, every other table
-    ([params], [[kirby.motion]], ...) kept as written."""
+    the panel lists as [[article]] tables with their hurtboxes and platforms,
+    [kirby] merged, the commands and the gimmick tables the panels list, every
+    other table ([params], [[kirby.motion]], ...) kept as written."""
     path = Path(path)
     values = fighter_manifest_values(state)
     lines = (path.read_text(encoding="utf-8", errors="replace").splitlines()
@@ -196,15 +344,22 @@ def write_fighter_manifest(path: Path, state: dict) -> list[str]:
     others = []
     kirby_existing = None
     param_lines = engine_param_lines(state)
-    hurtboxes = article_hurtbox_tables(sections)
+    if any(key in state for _, key in ARTICLE_ROWS):
+        children = state_article_children(state)
+    else:
+        children = article_children(sections)
     for header, body in sections:
         if header == "[fighter]":
             fighter_lines += body
-        elif header in ("[[article]]", "[[article.hurtbox]]"):
+        elif header == "[[article]]" or header in ARTICLE_CHILD_TABLES:
             continue
         elif header == "[kirby]":
             kirby_existing = body
         elif header in ("[params]", "[params.mul]") and param_lines:
+            continue
+        elif header in COMMAND_TABLES and ("commands" in state or "command_settings" in state):
+            continue
+        elif PANEL_TABLES.get(header) in state:
             continue
         else:
             others.append((header, body))
@@ -212,9 +367,12 @@ def write_fighter_manifest(path: Path, state: dict) -> list[str]:
     while head and not head[-1].strip():
         head.pop()
     out = list(head)
-    out += fighter_article_lines(state.get("articles"), state.get("base_articles"), hurtboxes)
+    out += fighter_article_lines(state.get("articles"), state.get("base_articles"), children)
     out += fighter_kirby_lines(state, kirby_existing)
     out += param_lines
+    if "commands" in state or "command_settings" in state:
+        out += fighter_command_lines(state)
+    out += panel_table_lines(state)
     for header, body in others:
         out += ["", header] + body
     text = "\n".join(out).rstrip("\n") + "\n"
@@ -279,24 +437,41 @@ def fighter_manifest_from_lines(lines: list[str]) -> dict:
     articles = []
     base_articles = []
     kirby_tables = []
-    motion_tables = []
-    grab_tables = []
+    final_tables = []
+    global_motions = []
+    grabs = []
+    hud: dict = {}
+    tether: dict = {"from": "", "boxes": []}
+    partner_params = []
+    article_hurtboxes = []
+    article_lvd_vertices = []
+    article = None
+    command_settings: dict = {}
+    commands = []
     kirby: dict = {}
     for header, body in sections:
         if header == "[fighter]":
             values.update(parse_lines(body))
         elif header == "[[article]]":
-            article = parse_lines(body)
-            source = str(article.get("from") or "")
+            found = parse_lines(body)
+            article = found.get("name")
+            source = str(found.get("from") or "")
             owner, _, weapon = source.partition("/")
-            if article.get("name") and owner and weapon:
-                articles.append({"owner": owner,
-                                 "weapon": "WEAPON_KIND_%s_%s" % (owner.upper(), weapon.upper()),
-                                 "name": article["name"],
-                                 "kirby_copy": bool(article.get("kirby"))})
-            elif article.get("name") and article.get("base_article"):
-                base_articles.append({"name": article["name"],
-                                      "base_article": article["base_article"]})
+            if found.get("name") and owner and weapon:
+                entry = {"owner": owner,
+                         "weapon": "WEAPON_KIND_%s_%s" % (owner.upper(), weapon.upper()),
+                         "name": found["name"],
+                         "kirby_copy": bool(found.get("kirby"))}
+                if found.get("lvd"):
+                    entry["lvd"] = str(found["lvd"])
+                articles.append(entry)
+            elif found.get("name") and found.get("base_article"):
+                base_articles.append({"name": found["name"],
+                                      "base_article": found["base_article"]})
+        elif header == "[[article.hurtbox]]" and article:
+            article_hurtboxes.append({"article": article, **table_texts(body)})
+        elif header == "[[article.lvd_vertex]]" and article:
+            article_lvd_vertices.append({"article": article, **table_texts(body)})
         elif header == "[kirby]":
             kirby = parse_lines(body)
             if isinstance(kirby.get("statuses"), int):
@@ -306,9 +481,23 @@ def fighter_manifest_from_lines(lines: list[str]) -> dict:
         elif header in ("[[kirby.motion]]", "[[kirby.mesh]]"):
             kirby_tables.append("\n".join([header] + [line.rstrip() for line in body if line.strip()]))
         elif header == "[[global_motion]]":
-            motion_tables.append("\n".join([header] + [line.rstrip() for line in body if line.strip()]))
+            global_motions.append(table_texts(body))
         elif header == "[[grab]]":
-            grab_tables.append("\n".join([header] + [line.rstrip() for line in body if line.strip()]))
+            grabs.append(table_texts(body))
+        elif header == "[hud]":
+            hud.update({key: gimmicks.display(text) for key, text in table_texts(body).items()})
+        elif header == "[final]":
+            final_tables.append("\n".join([header] + [line.rstrip() for line in body if line.strip()]))
+        elif header == "[tether]":
+            tether["from"] = gimmicks.display(table_texts(body).get("from", ""))
+        elif header == "[[tether.box]]":
+            tether["boxes"].append(table_texts(body))
+        elif header == "[partner_params]":
+            partner_params += [{"key": key, "value": text} for key, text in table_texts(body).items()]
+        elif header == "[commands]":
+            command_settings.update(command_values(body))
+        elif header == "[[command]]":
+            commands.append(command_values(body))
     state: dict = {}
     if values.get("name"):
         state["resource_name"] = values["name"]
@@ -327,14 +516,27 @@ def fighter_manifest_from_lines(lines: list[str]) -> dict:
             state[key] = values[key]
     if "css" in values:
         state["own_css"] = values["css"] is False
+    partner = values.get("partner")
+    state["partner"] = "none" if partner is False else "copy" if partner is True else str(partner or "")
+    state["no_partner"] = False
+    members = values.get("switch")
+    state["switch_with"] = ", ".join(str(name) for name in members) if isinstance(members, list) else ""
     if articles:
         state["articles"] = articles
     state["base_articles"] = base_articles
     state["kirby_first"] = kirby.get("first") if isinstance(kirby.get("first"), int) else None
     state["kirby_model"] = kirby.get("model") if isinstance(kirby.get("model"), str) else None
     state["kirby_tables"] = "\n\n".join(kirby_tables)
-    state["global_motion_tables"] = "\n\n".join(motion_tables)
-    state["grab_tables"] = "\n\n".join(grab_tables)
+    state["final_tables"] = "\n\n".join(final_tables)
+    state["global_motions"] = global_motions
+    state["grabs"] = grabs
+    state["hud"] = hud
+    state["tether"] = tether
+    state["partner_params"] = partner_params
+    state["article_hurtboxes"] = article_hurtboxes
+    state["article_lvd_vertices"] = article_lvd_vertices
+    state["command_settings"] = command_settings
+    state["commands"] = commands
     return state
 
 

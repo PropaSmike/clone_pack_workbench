@@ -264,11 +264,13 @@ def is_asset(path: str) -> bool:
 
 def own_paths(shipped, clone: str) -> set[str]:
     """The shipped files that are this clone's: its trees, its camera, effect and
-    sound banks, and any Kirby copy model or body animation carrying its name."""
+    sound banks, and any Kirby copy model, body animation or copy voice bank
+    carrying its name."""
     prefixes = (f"fighter/{clone}/", f"camera/fighter/{clone}/", f"effect/fighter/{clone}/",
                 f"sound/bank/fighter/se_{clone}_", f"sound/bank/fighter_voice/vc_{clone}_",
                 f"fighter/kirby/model/copy_{clone}_", f"fighter/kirby/motion/copy_{clone}_",
-                f"fighter/kirby/motion/{clone}body/")
+                f"fighter/kirby/motion/{clone}body/",
+                f"sound/bank/fighter_voice/vc_kirby_copy_{clone}.")
     return {path for path in shipped if path.startswith(prefixes) and is_asset(path)}
 
 
@@ -425,7 +427,7 @@ class Census:
         file is in the costume group as well."""
         if color is None:
             for index in self.colors:
-                self.groups[self.costume_group(index)].add(target)
+                self.put(kind, target, index)
             return
         if kind is None or kind == "cNN":
             self.groups[self.costume_group(color)].add(target)
@@ -445,12 +447,15 @@ class Census:
                 kinds = [kind for kind in kinds if kind]
                 if kinds:
                     return kinds
+        if path.startswith(f"fighter/{self.clone}/append/"):
+            return ["append/cNN"]
         if path.startswith(f"camera/fighter/{self.clone}/"):
             return ["camera/cNN"]
         if path.startswith(f"fighter/kirby/motion/{self.clone}body/"):
             return ["kirbycopy/cNN/bodymotion"]
         if path.startswith(f"fighter/kirby/model/copy_{self.clone}_") \
-                or path.startswith(f"fighter/kirby/motion/copy_{self.clone}_"):
+                or path.startswith(f"fighter/kirby/motion/copy_{self.clone}_") \
+                or path.startswith(f"sound/bank/fighter_voice/vc_kirby_copy_{self.clone}."):
             return ["kirbycopy/cNN"]
         return [None]
 
@@ -763,6 +768,49 @@ def add_kirby_copy_motions(config: dict, base: str, clone: str, donor: str,
             config["new-dir-infos-base"].pop(key, None)
 
 
+def add_own_scenes(config: dict, clone: str, shipped) -> tuple[int, int]:
+    """Declare the clone's own Final Smash background (`finalsmash/<clone>/...`) and
+    movies (`prebuilt:/movie/fighter/<clone>/cNN/...`) in the directories the game
+    loads them from: `fighter/<clone>/finalsmash/...` and `fighter/<clone>/movie/cNN`.
+    Every directory gets its own entry, never a base, so the loader walks the
+    pack's children rather than a donor's."""
+    infos = config["new-dir-infos"]
+    groups = config["new-dir-files"]
+    scene = f"finalsmash/{clone}/"
+    movie = f"prebuilt:/movie/fighter/{clone}/"
+    counts = [0, 0]
+    for raw in sorted(shipped):
+        path = raw.replace("prebuilt;", "prebuilt:", 1)
+        if not is_asset(path):
+            continue
+        if path.startswith(scene):
+            rest = path[len(scene):]
+            folder = f"fighter/{clone}/finalsmash"
+            if "/" in rest:
+                folder += "/" + rest.rsplit("/", 1)[0]
+            parts = folder.split("/")
+            for end in range(3, len(parts) + 1):
+                link = "/".join(parts[:end])
+                if link not in infos:
+                    infos.append(link)
+                config["new-dir-infos-base"].pop(link, None)
+            groups.setdefault(folder, []).append(path)
+            counts[0] += 1
+        elif path.startswith(movie):
+            color = path[len(movie):].split("/", 1)[0]
+            if not re.fullmatch(r"c\d{2,3}", color):
+                continue
+            folder = f"fighter/{clone}/movie/{color}"
+            if folder not in infos:
+                infos.append(folder)
+            config["new-dir-infos-base"].pop(folder, None)
+            groups.setdefault(folder, []).append(path)
+            counts[1] += 1
+    for key in list(groups):
+        groups[key] = sorted(set(groups[key]))
+    return counts[0], counts[1]
+
+
 ITEM_OWN_TREES = ("model", "param")
 
 
@@ -1040,6 +1088,11 @@ def main() -> int:
     for tree_name, count in sorted(owned_trees(args.base).items()):
         print(f"{args.base} owns {count} file(s) under '{tree_name}/'; the engine loads "
               f"that tree for the clone, nothing to declare")
+    scenes, movies = add_own_scenes(config, args.clone, shipped)
+    if scenes:
+        print(f"declared {scenes} Final Smash background file(s) under finalsmash/{args.clone}/")
+    if movies:
+        print(f"declared {movies} movie file(s) under prebuilt:/movie/fighter/{args.clone}/")
     if args.kirby_copy_motion_donor:
         add_kirby_copy_motions(config, args.base, args.clone, args.kirby_copy_motion_donor,
                                colors)

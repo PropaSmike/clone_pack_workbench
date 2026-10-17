@@ -161,6 +161,153 @@ def check_fighter_manifest(mod_dir, shipped, vanilla):
             findings.append(("ERROR", "fighter.toml: css = false says the plugin publishes the CSS "
                                       "row through CSK, but there is no plugin.nro; the fighter "
                                       "would have no row"))
+        if (fighter.get("tether") or {}).get("from") == "lucas":
+            findings.append(("INFO", "fighter.toml: tether from \"lucas\": the rope leaves HaveR "
+                                     "the way air_catch_pose aims it and hangs only within 6 of "
+                                     "the ledge, so that animation must aim the right arm like "
+                                     "Lucas's g04aircatchpose"))
+        findings += check_partner_params(fighter)
+    findings += check_switch_groups(mod_dir, fighters)
+    findings += check_partners(mod_dir, fighters)
+    return findings
+
+
+SWITCH_SETS = (("eflame", "elight"), ("pzenigame", "pfushigisou", "plizardon"))
+GAME_SET_BASES = {base for shape in SWITCH_SETS for base in shape}
+
+
+def switch_problem(bases):
+    """Why these bases cannot share a player slot, or None when they can."""
+    if any(sorted(bases) == sorted(shape) for shape in SWITCH_SETS):
+        return None
+    if not 2 <= len(bases) <= 3:
+        return "a switch group holds two or three fighters"
+    if any(base in GAME_SET_BASES for base in bases):
+        return ("Pyra and Mythra (eflame, elight) and Pokemon Trainer's three (pzenigame, "
+                "pfushigisou, plizardon) switch only within their own set")
+    if any(base in fighter_manifest.NO_SWITCH_BASES for base in bases):
+        return "the Ice Climbers cannot be in a switch group"
+    if len(set(bases)) != len(bases):
+        return "each fighter in a switch group needs a different base"
+    return None
+
+
+def fighters_beside(mod_dir):
+    """The fighters the fighter.toml of every pack beside this one declares."""
+    here = os.path.normcase(os.path.abspath(mod_dir))
+    parent = os.path.dirname(here)
+    found = []
+    try:
+        names = sorted(os.listdir(parent))
+    except OSError:
+        return found
+    for name in names:
+        folder = os.path.join(parent, name)
+        path = os.path.join(folder, "fighter.toml")
+        if os.path.normcase(folder) == here or not os.path.isfile(path):
+            continue
+        try:
+            found += fighter_manifest.read(path)
+        except (fighter_manifest.ManifestError, OSError, UnicodeDecodeError):
+            continue
+    return found
+
+
+def check_switch_groups(mod_dir, fighters):
+    """Each switch group against the fighters it names, and a fighter on a
+    switching base that no group takes in."""
+    findings = []
+    if not any(f.get("switch") or f.get("base") in fighter_manifest.SWITCH_BASES
+               for f in fighters):
+        return findings
+    known = fighters + fighters_beside(mod_dir)
+    bases = {}
+    for fighter in known:
+        bases.setdefault(fighter.get("name"), fighter.get("base"))
+    led = {member for fighter in known for member in fighter.get("switch") or ()}
+    for fighter in fighters:
+        name, base = fighter.get("name"), fighter.get("base")
+        members = fighter.get("switch") or []
+        if not members:
+            if base in fighter_manifest.SWITCH_BASES and name not in led:
+                findings.append(("INFO", f"fighter.toml: {name} is on {base} without switch and "
+                                         "no fighter.toml beside it lists it, so it plays alone: "
+                                         "down special does nothing"))
+            continue
+        missing = [member for member in members if member not in bases]
+        if missing:
+            findings.append(("WARN", f"fighter.toml: switch member {missing[0]!r} is declared by "
+                                     "no fighter.toml in this pack or beside it; unless a plugin "
+                                     f"registers it, {name} plays alone"))
+            continue
+        group = [base] + [bases[member] for member in members]
+        problem = switch_problem(group)
+        if problem:
+            findings.append(("ERROR", f"fighter.toml: {name} switches on {', '.join(group)}; "
+                                      f"{problem}, so {name} plays alone"))
+        elif not any(sorted(group) == sorted(shape) for shape in SWITCH_SETS):
+            findings.append(("INFO", f"fighter.toml: {name} switches on {', '.join(group)}, which "
+                                     "have no switch move of their own; it switches when a "
+                                     "plugin calls clone_engine_api::switch::next"))
+    return findings
+
+
+def check_partners(mod_dir, fighters):
+    """A partner named by fighter: it must be declared somewhere. A fighter
+    another one names leads that pair when picked on its own."""
+    findings = []
+    named = [f for f in fighters if isinstance(f.get("partner"), str)]
+    alone = [f for f in fighters if f.get("partner") is None and not f.get("switch")
+             and f.get("base") not in fighter_manifest.PARTNER_BASES]
+    if not named and not alone:
+        return findings
+    beside = fighters_beside(mod_dir)
+    leaders = {}
+    for fighter in fighters + beside:
+        if isinstance(fighter.get("partner"), str):
+            leaders.setdefault(fighter["partner"], fighter.get("name"))
+    for fighter in alone:
+        leader = leaders.get(fighter.get("name"))
+        if leader and leader != fighter.get("name"):
+            findings.append(("INFO", f"fighter.toml: {fighter.get('name')} is {leader}'s partner, so "
+                                     f"its own portrait plays it in front with {leader} following; "
+                                     "partner = false plays it alone"))
+    bases = {}
+    for fighter in fighters + beside:
+        bases.setdefault(fighter.get("name"), fighter.get("base"))
+    for fighter in named:
+        name, partner = fighter.get("name"), fighter["partner"]
+        if partner not in bases:
+            findings.append(("WARN", f"fighter.toml: partner {partner!r} is declared by no "
+                                     "fighter.toml in this pack or beside it; unless a plugin "
+                                     f"registers it, {name} plays alone"))
+        elif bases[partner] == fighter.get("base"):
+            findings.append(("INFO", f"fighter.toml: {name}'s partner {partner} shares its base "
+                                     f"({fighter.get('base')}); Kirby copies {name} whichever of "
+                                     "the two it swallows"))
+    return findings
+
+
+FOLLOW_PARAMS = ("nana_delay", "nana_opt_dst")
+MAX_NANA_DELAY = 15
+
+
+def check_partner_params(fighter):
+    """[partner_params] values the partner's follow clamps or never reads."""
+    findings = []
+    name, base = fighter.get("name"), fighter.get("base")
+    for param in fighter.get("partner_params") or ():
+        key = param["name"]
+        word = key[len("param_private."):] if key.startswith("param_private.") else key
+        if word == "nana_delay" and param["value"] > MAX_NANA_DELAY:
+            findings.append(("WARN", f"fighter.toml: partner_params {key} = {param['value']}: the "
+                                     f"partner repeats your moves at most {MAX_NANA_DELAY} frames "
+                                     f"behind, so it plays as {MAX_NANA_DELAY}"))
+        elif base not in fighter_manifest.PARTNER_BASES and word not in FOLLOW_PARAMS:
+            findings.append(("INFO", f"fighter.toml: partner_params {key} changes nothing for {name} "
+                                     f"on {base}: off popo only nana_delay and nana_opt_dst change "
+                                     "how the partner follows; the others are read by the Ice "
+                                     "Climbers' own moves"))
     return findings
 
 
@@ -209,8 +356,11 @@ def lint(mod_dir, arc_index, cross_color_resources=()):
     shipped = set()
     for root, _, names in os.walk(mod_dir):
         for name in names:
-            rel = os.path.relpath(os.path.join(root, name), mod_dir)
-            shipped.add(rel.replace(os.sep, "/"))
+            rel = os.path.relpath(os.path.join(root, name), mod_dir).replace(os.sep, "/")
+            head, _, rest = rel.partition("/")
+            if head.endswith(";") and rest:
+                rel = head[:-1] + ":/" + rest
+            shipped.add(rel)
     shared_targets = {
         target
         for section in ("share-to-vanilla", "share-to-added")

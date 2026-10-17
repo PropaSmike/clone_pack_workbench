@@ -196,10 +196,10 @@ offset	type	field	source
 0x0378	u32	final_air_flick_x	common
 0x037c	f32	final_air_stick_x	common
 0x0380	u32	final_air_turn_frame	common
-0x0384	bool	special_command_life_max	common
-0x0385	bool	special_command_ab_button_life	common
+0x0384	u8	special_command_life_max	common
+0x0385	u8	special_command_ab_button_life	common
 0x0388	f32	special_command_neutral_threshold	common
-0x038c	bool	super_special_command_life_max	common
+0x038c	u8	super_special_command_life_max	common
 0x03a8	u32	catch_dash_frame	common
 0x03ac	f32	catch_dash_brake_mul	common
 0x03b0	u32	catch_turn_frame	common

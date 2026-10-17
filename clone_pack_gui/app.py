@@ -14,7 +14,8 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
-from . import backups, emit, guide, optimize, packs, prc, vtables
+from . import backups, emit, gimmicks, guide, optimize, packs, prc, stickpad, vtables
+from .tables import Field, TableEditor
 from .catalog import (Catalog, OWNER_SURFACE, VL_SURFACE, is_float_field,
                       is_label_field, is_name_field)
 
@@ -889,6 +890,10 @@ class IdentityPanel(ttk.Frame):
         fields.entry("kirby_statuses", "Kirby copy statuses", width=6,
                      hint="fighter.toml: how many status kinds Kirby's copy needs; the engine picks the numbers")
         fields.flag("owns_param_resources", "Ships its own vl.prc and params")
+        fields.entry("switch_with", "Switches with",
+                     hint="fighter.toml switch: one or two other clones sharing this player slot, comma separated, on any base but the Ice Climbers. Pyra/Mythra and Pokemon Trainer sets switch with down special; other bases switch when a plugin calls clone_engine_api::switch::next. Blank plays alone")
+        fields.entry("partner", "Partner",
+                     hint="fighter.toml partner: blank = the base's default (an Ice Climbers clone gets a Nana-style partner), none = no partner, copy = a copy of this fighter follows it like Nana, or another clone's name (picked on its own, that clone then leads with this one following unless its Partner is none). Tune the follow in a [partner_params] table: off popo only nana_delay (frames behind, 15 at most) and nana_opt_dst (distance kept) change it")
         fields.flag("kirby_copy_full_model", "Kirby wears the whole body, not a cap")
         fields.choice("kirby_copy_donor", "Kirby copy donor",
                       [""] + [name for _, name in catalog.fighter_bases()],
@@ -925,10 +930,26 @@ class IdentityPanel(ttk.Frame):
         ttk.Button(buttons, text="Add", command=self.add_article).pack(side="left")
         ttk.Button(buttons, text="Remove",
                    command=self.remove_article).pack(side="left", padx=4)
+        self.article_lvd = tk.StringVar()
+        ttk.Label(articles, text="Platform (.lvd)").grid(row=2, column=0, sticky="w", pady=(4, 0))
+        ttk.Entry(articles, textvariable=self.article_lvd, width=20).grid(
+            row=2, column=1, padx=4, pady=(4, 0))
+        lvd_hint = ttk.Label(articles, text="a .lvd of your own in the article's model folder makes it a "
+                                            "platform; list the vertices that follow its joints below",
+                             foreground="#555", justify="left")
+        lvd_hint.grid(row=2, column=2, columnspan=2, sticky="w", pady=(4, 0))
+        fields.hints.append(lvd_hint)
         self.article_list = tk.Listbox(articles, height=4, exportselection=False)
-        self.article_list.grid(row=2, column=0, columnspan=4, sticky="ew", pady=(6, 0))
+        self.article_list.grid(row=3, column=0, columnspan=4, sticky="ew", pady=(6, 0))
         self.article_list.bind("<<ListboxSelect>>", self.article_chosen)
         articles.columnconfigure(3, weight=1)
+        self._build_article_gimmicks(frame, fields)
+        self._build_commands(frame, fields)
+        self._build_float(frame, fields)
+        self._build_glide(frame, fields)
+        self._build_tether(frame, fields)
+        self._build_hud(frame, fields)
+        self._build_fighter_tables(frame, fields)
 
         fields.buttons((
             ("Write fighter.toml", self.write_fighter_toml),
@@ -938,6 +959,541 @@ class IdentityPanel(ttk.Frame):
             ("Rename files", self.rename_files),
             ("Renumber costumes", self.renumber_costumes),
         ))
+
+    def _place(self, frame: ttk.Frame, fields: Fields, widget: tk.Widget) -> None:
+        widget.grid(row=fields.row, column=0, columnspan=3, sticky="ew", pady=(10, 4))
+        fields.row += 1
+        if isinstance(widget, TableEditor):
+            fields.hints.append(widget.hint)
+
+    def _build_article_gimmicks(self, frame: ttk.Frame, fields: Fields) -> None:
+        """[[article.hurtbox]] and [[article.lvd_vertex]] under the articles above."""
+        choices = gimmicks.HURTBOX_CHOICES
+        self.hurtbox_editor = TableEditor(
+            frame, "Article hurtboxes", "hurtbox",
+            [Field("article", "Article", 14, "choice"), Field("node", "Joint", 10),
+             Field("size", "Radius", 6), Field("offset", "Offset (x, y, z)", 12),
+             Field("offset2", "Second end", 12), Field("part", "Part", 9, "choice", ("",) + choices["part"]),
+             Field("height", "Height", 8, "choice", ("",) + choices["height"]),
+             Field("status", "Status", 10, "choice", ("",) + choices["status"]),
+             Field("shape", "Shape", 8, "choice", ("",) + choices["shape"])],
+            describe=self.describe_hurtbox, on_change=self.changed, prepare=self.needs_article,
+            hint="hurtboxes on an article made with a source weapon, on top of any its source has: a joint of its "
+                 "model (rot, top, ...) and a radius; a second end makes a capsule. Up to 16 per article. What a "
+                 "hit does is up to the article's status scripts")
+        self._place(frame, fields, self.hurtbox_editor)
+        self.platform_editor = TableEditor(
+            frame, "Article platform vertices", "lvd_vertex",
+            [Field("article", "Article", 14, "choice"), Field("vertex", "Vertex", 5),
+             Field("joint", "Joint", 10), Field("offset", "Offset (x, y, z)", 12),
+             Field("joint_left", "Joint facing left", 10)],
+            describe=self.describe_vertex, on_change=self.changed, prepare=self.needs_platform,
+            identity=lambda row: (row.get("article"), row.get("vertex")),
+            hint="each vertex listed follows a joint of the article every frame (top: y up, z the way it faces); "
+                 "a vertex left out stays where the .lvd puts it. Give the article its .lvd under Articles first")
+        self._place(frame, fields, self.platform_editor)
+
+    def _build_glide(self, frame: ttk.Frame, fields: Fields) -> None:
+        """Brawl's glide, which the plugin gives the clone."""
+        box = ttk.LabelFrame(frame, text="Glide", padding=6)
+        self._place(frame, fields, box)
+        self.glide_on = tk.BooleanVar()
+        self.glide_preset = tk.StringVar(value=gimmicks.GLIDE_PRESETS[0])
+        self.glide_frames = tk.StringVar()
+        ttk.Checkbutton(box, text="Glides like Brawl's", variable=self.glide_on).grid(row=0, column=0, sticky="w")
+        ttk.Combobox(box, textvariable=self.glide_preset, state="readonly", width=14,
+                     values=gimmicks.GLIDE_PRESETS).grid(row=0, column=1, sticky="w", padx=(4, 10))
+        ttk.Label(box, text="Hold frames").grid(row=0, column=2, sticky="w")
+        ttk.Entry(box, textvariable=self.glide_frames, width=5).grid(row=0, column=3, sticky="w", padx=(4, 10))
+        hint = ttk.Label(box, text="the plugin gives the clone Brawl's glide (clone_engine_api::glide) with Meta "
+                                   "Knight's, Pit's or Charizard's values: jump held through the top of the midair "
+                                   "jump glides. Hold frames: how long jump must be held (8). The motion list needs "
+                                   "glide_start, glide, glide_attack, glide_end and glide_landing. It starts from "
+                                   "the float's input, so ticking one clears the other",
+                         foreground="#555", justify="left")
+        hint.grid(row=1, column=0, columnspan=6, sticky="w", pady=(4, 0))
+        box.columnconfigure(5, weight=1)
+        fields.hints.append(hint)
+        self.glide_on.trace_add("write", lambda *_: self.only_one(self.glide_on, self.float_on))
+        self.float_on.trace_add("write", lambda *_: self.only_one(self.float_on, self.glide_on))
+        for variable in (self.glide_on, self.glide_preset, self.glide_frames):
+            variable.trace_add("write", lambda *_: self.changed())
+
+    def only_one(self, picked: tk.BooleanVar, other: tk.BooleanVar) -> None:
+        """The float and the glide start from the same input: ticking one clears the other."""
+        if picked.get() and other.get():
+            other.set(False)
+
+    def _build_tether(self, frame: ttk.Frame, fields: Fields) -> None:
+        """[tether] and its [[tether.box]] ledge boxes."""
+        box = ttk.LabelFrame(frame, text="Tether", padding=6)
+        self._place(frame, fields, box)
+        self.tether_from = tk.StringVar()
+        self.tether_note = tk.StringVar()
+        ttk.Label(box, text="Donor").grid(row=0, column=0, sticky="w")
+        ttk.Combobox(box, textvariable=self.tether_from, state="readonly", width=12,
+                     values=("",) + gimmicks.TETHER_DONORS).grid(row=0, column=1, sticky="w", padx=(4, 10))
+        ttk.Label(box, textvariable=self.tether_note, foreground="#555").grid(row=0, column=2, sticky="w")
+        self.tether_boxes = TableEditor(
+            box, "Ledge boxes", "tether_box",
+            [Field("p1", "Corner (x, y)", 12), Field("p2", "Opposite corner (x, y)", 12)],
+            describe=lambda row: "%s to %s" % (gimmicks.display(row.get("p1", "")), gimmicks.display(row.get("p2", ""))),
+            on_change=self.changed)
+        self.tether_boxes.grid(row=1, column=0, columnspan=4, sticky="ew", pady=(6, 0))
+        hint = ttk.Label(box, text="the donor turns the air tether on and gives the clone its air_lasso_data and "
+                                   "ledge boxes; boxes of your own (two corners relative to the fighter) replace "
+                                   "them. The Rust tab adds the tether statuses blank, the donor's own calls in "
+                                   "comments: port them, its aircatch scripts and five air_catch motions before "
+                                   "playing with it. Needs ParamConfig",
+                         foreground="#555", justify="left")
+        hint.grid(row=2, column=0, columnspan=4, sticky="w", pady=(4, 0))
+        box.columnconfigure(3, weight=1)
+        fields.hints.append(hint)
+        self.tether_from.trace_add("write", lambda *_: self.tether_changed())
+
+    def tether_changed(self) -> None:
+        articles = gimmicks.tether_articles(self.tether_from.get())
+        self.tether_note.set("mint %s under Articles" % " and ".join(articles) if articles else "")
+        self.changed()
+
+    def _build_hud(self, frame: ttk.Frame, fields: Fields) -> None:
+        """[hud]: a borrowed HUD or the pack's own layout."""
+        box = ttk.LabelFrame(frame, text="HUD", padding=6)
+        self._place(frame, fields, box)
+        self.hud_from = tk.StringVar()
+        self.hud_layout = tk.StringVar()
+        ttk.Label(box, text="Borrowed HUD").grid(row=0, column=0, sticky="w")
+        ttk.Combobox(box, textvariable=self.hud_from, state="readonly", width=12,
+                     values=("",) + gimmicks.HUD_DONORS).grid(row=0, column=1, sticky="w", padx=(4, 10))
+        ttk.Label(box, text="Own layout").grid(row=0, column=2, sticky="w")
+        ttk.Entry(box, textvariable=self.hud_layout, width=40).grid(row=0, column=3, sticky="w", padx=(4, 10))
+        hint = ttk.Label(box, text="borrowed: that fighter's HUD by this fighter's portrait (jack Rebellion, cloud "
+                                   "Limit, inkling ink, brave MP and menu, littlemac KO meter, shulk arts, reflet "
+                                   "tomes, pickel materials, trail spells, dolly GO!, demon Rage). Own layout: a "
+                                   "layout.arc the pack ships, such as ui/layout/hud/<name>/layout.arc, drawn on the "
+                                   "damage card. Both at once is fine. The Rust tab adds a blank function with the "
+                                   "calls each takes",
+                         foreground="#555", justify="left")
+        hint.grid(row=1, column=0, columnspan=5, sticky="w", pady=(4, 0))
+        box.columnconfigure(4, weight=1)
+        fields.hints.append(hint)
+        for variable in (self.hud_from, self.hud_layout):
+            variable.trace_add("write", lambda *_: self.changed())
+
+    def _build_fighter_tables(self, frame: ttk.Frame, fields: Fields) -> None:
+        """[[grab]], [[global_motion]] and [partner_params]."""
+        self.grab_editor = TableEditor(
+            frame, "Grab rules", "grab",
+            [Field("status", "Grabber status", 16, "choice", gimmicks.GRAB_STATUSES),
+             Field("victim", "Victim status", 24, "choice", ("",) + gimmicks.VICTIM_STATUSES),
+             Field("then", "Then", 16, "choice", ("",) + gimmicks.GRAB_STATUSES),
+             Field("node", "Hold at joint", 10), Field("offset", "Offset (x, y, z)", 12),
+             Field("node", "held free, at no joint", widget="check", checked='""'),
+             Field("catch", "calls set_catch", widget="check")],
+            describe=self.describe_grab, identity=lambda row: row.get("status"), on_change=self.changed,
+            per_row=3,
+            hint="a CATCH box only catches in the game's grab statuses; a rule makes it catch in yours. Victim: the "
+                 "status the box gives the opponent (any if blank); then: your status once caught (a status number "
+                 "or name). The opponent is held at throw unless another joint is named")
+        self._place(frame, fields, self.grab_editor)
+        self.motion_editor = TableEditor(
+            frame, "Motions on every fighter", "global_motion",
+            [Field("name", "Name", 22), Field("template", "Template", 18), Field("animation", "Animation file", 26),
+             Field("victim", "the opponent's half of a throw", widget="check")],
+            describe=self.describe_motion, identity=lambda row: row.get("name"), on_change=self.changed,
+            per_row=3,
+            hint="a motion added to every fighter's motion list, clones included: template copies one each fighter "
+                 "has, animation plays your file for fighters that ship it; victim = the opponent's half of a throw, "
+                 "playing your file on them")
+        self._place(frame, fields, self.motion_editor)
+        self.partner_editor = TableEditor(
+            frame, "Partner follow params", "partner",
+            [Field("key", "Param", 36, "choice", gimmicks.partner_param_names()), Field("value", "Value", 8)],
+            describe=lambda row: "%s = %s" % (row.get("key"), row.get("value")),
+            identity=lambda row: row.get("key"), on_change=self.changed,
+            hint="[partner_params]: the Nana values of this fighter's partner (Partner above); other Ice Climbers "
+                 "keep theirs. Off popo only nana_delay (frames behind, 15 at most) and nana_opt_dst (distance "
+                 "kept) change the follow")
+        self._place(frame, fields, self.partner_editor)
+
+    def needs_article(self, row: dict, rows: list[dict]):
+        if not row.get("article"):
+            return "Pick the article it belongs to."
+        return row
+
+    def needs_platform(self, row: dict, rows: list[dict]):
+        if not row.get("article"):
+            return "Pick the article it belongs to."
+        if not any(article.get("name") == row["article"] and article.get("lvd") for article in self.articles):
+            return "Give %s its .lvd file under Articles first." % row["article"]
+        return row
+
+    @staticmethod
+    def describe_hurtbox(row: dict) -> str:
+        text = "%s: %s radius %s" % (row.get("article"), gimmicks.display(row.get("node", "")),
+                                     gimmicks.display(row.get("size", "")))
+        for key in ("offset", "offset2", "part", "height", "status"):
+            if key in row:
+                text += ", %s %s" % (key, gimmicks.display(row[key]))
+        return text
+
+    @staticmethod
+    def describe_vertex(row: dict) -> str:
+        text = "%s: vertex %s on %s" % (row.get("article"), gimmicks.display(row.get("vertex", "")),
+                                        gimmicks.display(row.get("joint", "")))
+        if "offset" in row:
+            text += " at %s" % gimmicks.display(row["offset"])
+        if "joint_left" in row:
+            text += ", %s facing left" % gimmicks.display(row["joint_left"])
+        return text
+
+    @staticmethod
+    def describe_grab(row: dict) -> str:
+        text = "%s catches %s" % (gimmicks.display(row.get("status", "")),
+                                  gimmicks.display(row["victim"]) if "victim" in row else "any status")
+        if "then" in row:
+            text += ", then %s" % gimmicks.display(row["then"])
+        if row.get("node") == '""':
+            text += ", held free"
+        elif "node" in row:
+            text += ", at %s" % gimmicks.display(row["node"])
+        if "offset" in row:
+            text += " offset %s" % gimmicks.display(row["offset"])
+        if row.get("catch") == "true":
+            text += ", set_catch"
+        return text
+
+    @staticmethod
+    def describe_motion(row: dict) -> str:
+        text = gimmicks.display(row.get("name", ""))
+        if "template" in row:
+            text += " from %s" % gimmicks.display(row["template"])
+        if "animation" in row:
+            text += ", plays %s" % gimmicks.display(row["animation"])
+        if row.get("victim") == "true":
+            text += ", the opponent's half of a throw"
+        extra = [key for key in row if key not in gimmicks.ORDERS["global_motion"]]
+        if extra:
+            text += " (and %s)" % ", ".join(extra)
+        return text
+
+    def _build_commands(self, frame: ttk.Frame, fields: Fields) -> None:
+        """[commands] and [[command]]: the game's command inputs and the clone's own."""
+        box = ttk.LabelFrame(frame, text="Command inputs", padding=6)
+        box.grid(row=fields.row, column=0, columnspan=3, sticky="ew", pady=(10, 4))
+        fields.row += 1
+        self.commands: list[dict] = []
+        self.command_picked: int | None = None
+        self.command_vanilla = tk.BooleanVar()
+        self.command_settings = {key: tk.StringVar() for key in packs.COMMANDS_KEYS if key != "vanilla"}
+        ttk.Checkbutton(box, text="The game's own commands, as Ryu, Ken, Terry and Kazuya read them",
+                        variable=self.command_vanilla).grid(row=0, column=0, columnspan=6, sticky="w")
+        self.face_opponent = tk.BooleanVar()
+        ttk.Checkbutton(box, text="Faces the opponent in a 1-on-1", variable=self.face_opponent).grid(
+            row=0, column=6, columnspan=3, sticky="w")
+        self.face_opponent.trace_add("write", lambda *_: self.changed())
+        tuning = (("special_command_life_max", "Frames per direction"),
+                  ("super_special_command_life_max", "Super frames"),
+                  ("special_command_ab_button_life", "Button frames"),
+                  ("special_command_neutral_threshold", "Neutral below"))
+        for index, (key, label) in enumerate(tuning):
+            ttk.Label(box, text=label).grid(row=1, column=index * 2, sticky="w", pady=(4, 0))
+            ttk.Entry(box, textvariable=self.command_settings[key], width=6).grid(
+                row=1, column=index * 2 + 1, sticky="w", padx=(4, 10), pady=(4, 0))
+        ttk.Label(box, text="Stick ranges").grid(row=2, column=0, sticky="w", pady=(4, 0))
+        ttk.Entry(box, textvariable=self.command_settings["special_command_stick_range"]).grid(
+            row=2, column=1, columnspan=7, sticky="ew", padx=4, pady=(4, 0))
+        tuning_hint = ttk.Label(box, text="the game's common.prc names; blank keeps its value (10, 20, 3, 0.2). "
+                                          "Stick ranges: seven [min, max] angles from straight up (up, "
+                                          "up-forward, forward, down-forward, then the back three), the way "
+                                          "Kazuya's vl.prc has them", foreground="#555", justify="left")
+        tuning_hint.grid(row=3, column=0, columnspan=9, sticky="w")
+        self.command_vars = {"name": tk.StringVar(), "input": tk.StringVar(),
+                             "button": tk.StringVar(value="either"), "life": tk.StringVar(),
+                             "cpu": tk.StringVar()}
+        self.command_flags = {"super": tk.BooleanVar(), "neutral_resets": tk.BooleanVar(value=True),
+                              "reverse": tk.BooleanVar()}
+        editor = ttk.Frame(box)
+        editor.grid(row=4, column=0, columnspan=8, sticky="nw", pady=(8, 0))
+        for column, (key, label, width) in enumerate((("name", "Name", 14), ("input", "Input", 12),
+                                                      ("life", "Life", 5), ("cpu", "Computer chance", 5))):
+            ttk.Label(editor, text=label).grid(row=0, column=column * 2, sticky="w")
+            ttk.Entry(editor, textvariable=self.command_vars[key], width=width).grid(
+                row=0, column=column * 2 + 1, sticky="w", padx=(4, 10))
+        ttk.Label(editor, text="Button").grid(row=1, column=0, sticky="w", pady=(4, 0))
+        ttk.Combobox(editor, textvariable=self.command_vars["button"], state="readonly", width=10,
+                     values=("special", "attack", "either", "none")).grid(
+            row=1, column=1, sticky="w", padx=(4, 10), pady=(4, 0))
+        flags = ttk.Frame(editor)
+        flags.grid(row=1, column=2, columnspan=6, sticky="w", pady=(4, 0))
+        for key, label in (("super", "super"), ("neutral_resets", "neutral cancels it"),
+                           ("reverse", "also mirrored")):
+            ttk.Checkbutton(flags, text=label, variable=self.command_flags[key]).pack(side="left", padx=(0, 8))
+        ttk.Button(flags, text="Add", command=self.add_command).pack(side="left")
+        ttk.Button(flags, text="Remove", command=self.remove_command).pack(side="left", padx=4)
+        self.command_list = tk.Listbox(box, height=4, exportselection=False)
+        self.command_list.grid(row=5, column=0, columnspan=8, sticky="nsew", pady=(6, 0))
+        self.command_list.bind("<<ListboxSelect>>", self.command_chosen)
+        pad = ttk.Frame(box)
+        pad.grid(row=4, column=8, rowspan=2, sticky="ne", padx=(10, 0), pady=(8, 0))
+        self.command_note = tk.StringVar()
+        self.stick_pad = stickpad.StickPad(pad, self.command_vars["input"], self.stick_settings,
+                                           self.command_note.set)
+        self.stick_pad.grid(row=0, column=0, columnspan=2)
+        ttk.Button(pad, text="Undo", width=6, command=self.stick_pad.undo).grid(
+            row=1, column=0, sticky="ew", pady=(4, 0))
+        ttk.Button(pad, text="Clear", width=6, command=self.stick_pad.clear).grid(
+            row=1, column=1, sticky="ew", pady=(4, 0))
+        ttk.Label(pad, textvariable=self.command_note, foreground="#a33", wraplength=150,
+                  justify="left").grid(row=2, column=0, columnspan=2, sticky="w")
+        for key in ("special_command_neutral_threshold", "special_command_stick_range"):
+            self.command_settings[key].trace_add("write", lambda *_: self.stick_pad.draw())
+        command_hint = ttk.Label(box, text="input is numpad for a fighter facing right (236 is a quarter circle "
+                                           "forward). Click the stick to add a direction, right click takes the "
+                                           "last one off; its zones follow the stick ranges and the neutral "
+                                           "threshold above. Life blank waits the frames above; super waits the super "
+                                           "frames; also mirrored reads the input backwards too. Computer chance "
+                                           "(0 to 1) gives a computer player the command when it presses the "
+                                           "button. Code reads it with clone_engine_api::fight::command(fighter, "
+                                           "\"name\"); the Rust tab adds a blank reader for each. Faces the "
+                                           "opponent: on the ground in a 1-on-1, the fighter turns toward the "
+                                           "opponent in wait, crouch, landing and shield and as jabs, tilts, "
+                                           "specials and grabs start (fight::face_opponent)",
+                                 foreground="#555", justify="left")
+        command_hint.grid(row=6, column=0, columnspan=9, sticky="w", pady=(4, 0))
+        box.columnconfigure(7, weight=1)
+        box.rowconfigure(5, weight=1)
+        fields.hints += [tuning_hint, command_hint]
+        for variable in [self.command_vanilla] + list(self.command_settings.values()):
+            variable.trace_add("write", lambda *_: self.changed())
+
+    def _build_float(self, frame: ttk.Frame, fields: Fields) -> None:
+        """Peach's float, which the plugin gives the clone."""
+        box = ttk.LabelFrame(frame, text="Float", padding=6)
+        box.grid(row=fields.row, column=0, columnspan=3, sticky="ew", pady=(10, 4))
+        fields.row += 1
+        self.float_on = tk.BooleanVar()
+        ttk.Checkbutton(box, text="Floats like Peach and Daisy", variable=self.float_on).grid(
+            row=0, column=0, columnspan=6, sticky="w")
+        self.float_vars = {key: tk.StringVar() for key in
+                           ("frames", "start_y", "water_height", "start_motion", "motion", "item")}
+        for row, entries in ((1, (("frames", "Frames", 6), ("start_y", "Ground height", 6),
+                                  ("water_height", "Water height", 6))),
+                             (2, (("start_motion", "Start animation", 16), ("motion", "Hover animation", 16)))):
+            for index, (key, label, width) in enumerate(entries):
+                ttk.Label(box, text=label).grid(row=row, column=index * 2, sticky="w", pady=(4, 0))
+                ttk.Entry(box, textvariable=self.float_vars[key], width=width).grid(
+                    row=row, column=index * 2 + 1, sticky="w", padx=(4, 10), pady=(4, 0))
+        ttk.Label(box, text="Throws mid-float").grid(row=3, column=0, sticky="w", pady=(4, 0))
+        ttk.Combobox(box, textvariable=self.float_vars["item"], width=24,
+                     values=[""] + named_choice(self.app.catalog.item_kinds())).grid(
+            row=3, column=1, columnspan=3, sticky="w", padx=(4, 10), pady=(4, 0))
+        hint = ttk.Label(box, text="the plugin gives the clone Peach's float (clone_engine_api::float): jump held "
+                                   "in the air, or down and jump on the ground, hovers; letting go drops, an aerial "
+                                   "keeps it going, one float per airtime. Blank keeps Peach's values: 150 frames, "
+                                   "1.5 above the ground when the ground is within 6 of the first jump frame, a jump "
+                                   "out of water floats past 14, fuwafuwa_start and fuwafuwa (a clone without them "
+                                   "floats in its fall). Throws mid-float: the held item down special throws "
+                                   "(Peach's turnip is peachdaikon). A Peach or Daisy clone floats already",
+                         foreground="#555", justify="left")
+        hint.grid(row=4, column=0, columnspan=6, sticky="w", pady=(4, 0))
+        box.columnconfigure(5, weight=1)
+        fields.hints.append(hint)
+        for variable in [self.float_on] + list(self.float_vars.values()):
+            variable.trace_add("write", lambda *_: self.changed())
+
+    def read_float(self) -> dict:
+        settings: dict = {}
+        if self.float_on.get():
+            settings["on"] = True
+        for key in ("frames", "start_y", "water_height"):
+            text = self.float_vars[key].get().strip()
+            if text:
+                settings[key] = packs.command_scalar(text)
+        for key in ("start_motion", "motion"):
+            text = self.float_vars[key].get().strip()
+            if text:
+                settings[key] = text
+        name, number = split_choice(self.float_vars["item"].get())
+        if number is not None:
+            settings["item"] = number
+            settings["item_name"] = name
+        return settings
+
+    def load_float(self, settings: dict) -> None:
+        self.float_on.set(bool(settings.get("on")))
+        for key, variable in self.float_vars.items():
+            variable.set("" if key not in settings or key == "item" else str(settings[key]))
+        if isinstance(settings.get("item"), int):
+            self.float_vars["item"].set("%s (%d)" % (settings.get("item_name") or "item", settings["item"]))
+
+    def stick_settings(self) -> tuple:
+        """The neutral threshold and stick ranges the stick pad reads with."""
+        return (stickpad.threshold_from(self.command_settings["special_command_neutral_threshold"].get()),
+                stickpad.ranges_from(self.command_settings["special_command_stick_range"].get()))
+
+    def collect_gimmicks(self, state: dict, quiet: bool) -> None:
+        """The glide, tether, HUD and table panels into the fighter part."""
+        glide: dict = {}
+        if self.glide_on.get():
+            glide = {"on": True, "preset": self.glide_preset.get() or gimmicks.GLIDE_PRESETS[0]}
+            try:
+                glide["button_frame"] = int(self.glide_frames.get())
+            except ValueError:
+                pass
+        if glide:
+            state["glide"] = glide
+        else:
+            state.pop("glide", None)
+        if self.face_opponent.get():
+            state["face_opponent"] = True
+        else:
+            state.pop("face_opponent", None)
+        state["hud"] = {key: variable.get().strip() for key, variable in
+                        (("from", self.hud_from), ("layout", self.hud_layout)) if variable.get().strip()}
+        state["tether"] = {"from": self.tether_from.get(), "boxes": self.tether_boxes.rows}
+        state["grabs"] = self.grab_editor.rows
+        state["global_motions"] = self.motion_editor.rows
+        state["partner_params"] = self.partner_editor.rows
+        state["article_hurtboxes"] = self.hurtbox_editor.rows
+        state["article_lvd_vertices"] = self.platform_editor.rows
+        if not quiet:
+            for table, key, value in (("hud", "from", state["hud"].get("from", "")),
+                                      ("hud", "layout", state["hud"].get("layout", "")),
+                                      ("tether", "from", self.tether_from.get())):
+                problem = gimmicks.single_problem(table, key, value)
+                if problem:
+                    self.app.log(problem)
+
+    def load_gimmicks(self, part: dict) -> None:
+        glide = part.get("glide") or {}
+        self.glide_on.set(bool(glide.get("on")))
+        self.glide_preset.set(glide.get("preset") or gimmicks.GLIDE_PRESETS[0])
+        self.glide_frames.set(str(glide["button_frame"]) if isinstance(glide.get("button_frame"), int) else "")
+        self.face_opponent.set(bool(part.get("face_opponent")))
+        hud = part.get("hud") or {}
+        self.hud_from.set(hud.get("from", ""))
+        self.hud_layout.set(hud.get("layout", ""))
+        tether = part.get("tether") or {}
+        self.tether_from.set(tether.get("from", ""))
+        self.tether_boxes.set_rows(tether.get("boxes"))
+        self.grab_editor.set_rows(part.get("grabs"))
+        self.motion_editor.set_rows(part.get("global_motions"))
+        self.partner_editor.set_rows(part.get("partner_params"))
+        self.hurtbox_editor.set_rows(part.get("article_hurtboxes"))
+        self.platform_editor.set_rows(part.get("article_lvd_vertices"))
+
+    def read_command_settings(self) -> dict:
+        settings: dict = {}
+        if self.command_vanilla.get():
+            settings["vanilla"] = True
+        for key, variable in self.command_settings.items():
+            text = variable.get().strip()
+            if text:
+                settings[key] = packs.command_scalar(text)
+        return settings
+
+    def add_command(self) -> None:
+        """Add the command in the fields, or replace the one of that name."""
+        name = self.command_vars["name"].get().strip()
+        digits = self.command_vars["input"].get().strip()
+        if not name or not digits:
+            messagebox.showinfo(TITLE, "Give the command a name and an input, such as 236.")
+            return
+        command = {"name": name, "input": digits}
+        button = self.command_vars["button"].get() or "either"
+        if button != "either":
+            command["button"] = button
+        if self.command_flags["super"].get():
+            command["super"] = True
+        for key in ("life", "cpu"):
+            text = self.command_vars[key].get().strip()
+            if text:
+                command[key] = packs.command_scalar(text)
+        if not self.command_flags["neutral_resets"].get():
+            command["neutral_resets"] = False
+        if self.command_flags["reverse"].get():
+            command["reverse"] = True
+        problem = self.command_problem(command)
+        if problem:
+            messagebox.showinfo(TITLE, problem)
+            return
+        for index, known in enumerate(self.commands):
+            if known.get("name") == name:
+                self.commands[index] = command
+                break
+        else:
+            self.commands.append(command)
+        self.refresh_commands()
+        self.app.part(packs.FIGHTER)["commands"] = self.commands
+        self.app.rust.refresh()
+
+    def command_problem(self, command: dict) -> str:
+        """What the engine would refuse in this command, from the linter's own rules."""
+        manifest = import_tool("fighter_manifest")
+        if manifest is None:
+            return ""
+        checks = (("name", "str"), ("input", "input"), ("button", "button"), ("life", "frames"),
+                  ("cpu", "chance"))
+        try:
+            for key, kind in checks:
+                if key in command:
+                    manifest.parse_scalar(packs.command_format(key, command[key]), kind, 0, key)
+        except manifest.ManifestError as problem:
+            return str(problem)
+        if not manifest.NAME_RE.match(command["name"]):
+            return "a command name is lowercase letters, digits and underscores"
+        if command.get("cpu") and command.get("button") == "none":
+            return "computer chance needs a button: a computer player gets the command when it presses it"
+        return ""
+
+    def remove_command(self) -> None:
+        selection = self.command_list.curselection()
+        index = selection[0] if selection else None
+        if index is None:
+            name = self.command_vars["name"].get().strip()
+            index = next((i for i, known in enumerate(self.commands) if known.get("name") == name),
+                         self.command_picked)
+        if index is None or index >= len(self.commands):
+            messagebox.showinfo(TITLE, "Click the command to remove, or type its name.")
+            return
+        gone = self.commands.pop(index)
+        self.app.log("removed the command %s" % gone.get("name"))
+        self.command_picked = None
+        self.refresh_commands()
+        self.app.part(packs.FIGHTER)["commands"] = self.commands
+        self.app.rust.refresh()
+
+    def command_chosen(self, _event=None) -> None:
+        """Clicking a command puts it back in the fields to change it."""
+        selection = self.command_list.curselection()
+        if not selection or selection[0] >= len(self.commands):
+            return
+        self.command_picked = selection[0]
+        command = self.commands[selection[0]]
+        for key, variable in self.command_vars.items():
+            default = "either" if key == "button" else ""
+            variable.set(str(command.get(key, default)))
+        self.command_flags["super"].set(bool(command.get("super")))
+        self.command_flags["neutral_resets"].set(command.get("neutral_resets") is not False)
+        self.command_flags["reverse"].set(bool(command.get("reverse")))
+
+    def refresh_commands(self) -> None:
+        self.command_list.delete(0, "end")
+        for command in self.commands:
+            notes = [str(command.get("button", "either"))]
+            if command.get("super"):
+                notes.append("super")
+            if isinstance(command.get("life"), int):
+                notes.append("%d frames" % command["life"])
+            if command.get("neutral_resets") is False:
+                notes.append("neutral does not cancel it")
+            if command.get("reverse"):
+                notes.append("also mirrored")
+            if command.get("cpu"):
+                notes.append("computer %.0f%%" % (float(command["cpu"]) * 100))
+            self.command_list.insert("end", "%s: %s, %s" % (command.get("name"), command.get("input"),
+                                                           ", ".join(notes)))
 
     def _build_item(self) -> None:
         fields = self._frame(packs.ITEM)
@@ -1168,7 +1724,17 @@ class IdentityPanel(ttk.Frame):
                 fields.vars["base_item"].set("%s (%d)" % (item[base], base))
         self.articles = list(self.app.part(packs.FIGHTER).get("articles") or [])
         self.refresh_articles()
-        chosen = spawn_list(self.app.part(packs.ITEM).get("spawn_from"))
+        fighter_part = self.app.part(packs.FIGHTER)
+        settings = fighter_part.get("command_settings") or {}
+        self.command_vanilla.set(bool(settings.get("vanilla")))
+        for key, variable in self.command_settings.items():
+            variable.set("" if key not in settings else str(settings[key]))
+        self.commands = [dict(command) for command in fighter_part.get("commands") or []]
+        self.command_picked = None
+        self.refresh_commands()
+        self.load_float(fighter_part.get("float") or {})
+        self.load_gimmicks(fighter_part)
+        chosen =spawn_list(self.app.part(packs.ITEM).get("spawn_from"))
         for source, variable in self.spawn_vars.items():
             variable.set(source in chosen)
         forms = self.app.part(packs.STAGE).get("forms") or ["normal"]
@@ -1194,6 +1760,14 @@ class IdentityPanel(ttk.Frame):
                 state.pop("base_kind", None)
                 state.pop("base_resource_name", None)
             state["articles"] = self.articles
+            state["command_settings"] = self.read_command_settings()
+            state["commands"] = self.commands
+            floating = self.read_float()
+            if floating:
+                state["float"] = floating
+            else:
+                state.pop("float", None)
+            self.collect_gimmicks(state, quiet)
             for key in ("color_start", "color_count"):
                 try:
                     values[key] = int(values.get(key) or (0 if key == "color_start" else 8))
@@ -1245,6 +1819,9 @@ class IdentityPanel(ttk.Frame):
             return
         entry = {"owner": self.article_owner.get(), "weapon": const, "name": name,
                  "kirby_copy": bool(self.article_copy.get())}
+        lvd = self.article_lvd.get().strip()
+        if lvd:
+            entry["lvd"] = lvd
         for index, known in enumerate(self.articles):
             if known.get("name") == name:
                 self.articles[index] = entry
@@ -1277,7 +1854,14 @@ class IdentityPanel(ttk.Frame):
         selection = self.article_list.curselection()
         if selection and selection[0] < len(self.articles):
             self.article_picked = selection[0]
-            self.article_name.set(self.articles[selection[0]].get("name") or "")
+            article = self.articles[selection[0]]
+            self.article_name.set(article.get("name") or "")
+            self.article_lvd.set(article.get("lvd") or "")
+            if article.get("owner") and article.get("weapon"):
+                self.article_owner.set(article["owner"])
+                self._weapons_changed()
+                self.article_weapon.set(article["weapon"])
+                self.article_copy.set(bool(article.get("kirby_copy")))
 
     def article_target(self) -> int | None:
         """Which article Remove means: the selected row, the last one clicked, or the
@@ -1302,9 +1886,14 @@ class IdentityPanel(ttk.Frame):
                 self.article_list.insert("end", "%s: ships files, needs a source weapon"
                                          % article.get("name"))
                 continue
-            self.article_list.insert("end", "%s from %s (%s)%s" % (
+            self.article_list.insert("end", "%s from %s (%s)%s%s" % (
                 article.get("name"), article.get("owner"), article.get("weapon"),
-                " on the Kirby copy" if article.get("kirby_copy") else ""))
+                " on the Kirby copy" if article.get("kirby_copy") else "",
+                ", platform %s" % article["lvd"] if article.get("lvd") else ""))
+        names = [article.get("name") for article in self.articles
+                 if article.get("name") and article.get("owner") and article.get("weapon")]
+        for editor in (self.hurtbox_editor, self.platform_editor):
+            editor.set_choices("article", names)
 
     def _generator_argv(self, kind: str) -> list[str] | None:
         state = self.collect()

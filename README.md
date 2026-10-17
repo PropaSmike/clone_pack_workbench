@@ -57,18 +57,46 @@ CSK keeps the base's value over an `Optional` one.
 files for reuse its lowest), articles (listed from the folder; click one,
 pick its source fighter and weapon, Add) and, for a stage, every
 `stage.toml` key. Writes `config.json` and the manifest file, keeping lines
-you added by hand: the flat keys, `[[article]]` (a `base_article` one
-included), `[kirby]` and `[params]`; a `[[kirby.motion]]`, `[[kirby.mesh]]`,
-`[[global_motion]]` or `[[grab]]` table you wrote stays where it is. Global
-motions (a motion added to every fighter, a throw's opponent pose) and grab
-rules (command grabs) are written by hand in `fighter.toml`: see the engine's
-`docs/wiki/FIGHTERS.md`.
+you added by hand: the flat keys, `[kirby]` and `[params]`; a
+`[[kirby.motion]]` or `[[kirby.mesh]]` table you wrote stays where it is.
+The tables below are the panels'; each reads back what the file holds.
+
+- **Articles**: a **Platform (.lvd)** file in the article's model folder
+  makes it a platform (`lvd`). **Article hurtboxes** and **Article platform
+  vertices** list each article's `[[article.hurtbox]]` and
+  `[[article.lvd_vertex]]` tables.
+- **Switches with**: the one or two other clones sharing the player slot
+  (`switch`).
+- **Partner**: blank for the base's default, `none`, `copy` or another
+  clone's name (`partner`).
+- **Command inputs**: the game's own commands (`[commands] vanilla`), their
+  tuning and the clone's own `[[command]]`s. Click one to change it; Add
+  replaces the one of that name. Build an input on the stick: each click adds
+  the direction under the pointer, the middle is neutral, right click or
+  Undo takes the last one off. Its zones follow the stick ranges and the
+  neutral threshold. **Faces the opponent** turns the fighter toward its
+  opponent in a 1-on-1.
+- **Float**: Peach's float, written into the plugin. Blank fields keep her
+  values; **Throws mid-float** is the held item down special throws (her
+  turnip is `peachdaikon`). Saved in `clone_pack_gui.json`, since
+  `fighter.toml` has no float. A Peach or Daisy clone floats already.
+- **Glide**: Brawl's glide with Meta Knight's, Pit's or Charizard's values,
+  written into the plugin and saved in `clone_pack_gui.json`. It starts from
+  the float's input, so ticking one clears the other.
+- **Tether**: a donor's air tether and ledge grab (`[tether]`) and ledge
+  boxes of your own (`[[tether.box]]`). It names the donor articles to mint.
+- **HUD**: a borrowed HUD or the pack's own layout (`[hud]`).
+- **Grab rules**, **Motions on every fighter** and **Partner follow
+  params**: `[[grab]]`, `[[global_motion]]` and `[partner_params]`.
+
+Add checks a row with the engine's rules and replaces the row with the
+same name (or status, or article and vertex); click a row to change it.
 
 **Rename files** changes a part's name everywhere the pack carries it: type
 the new name, click the button, check the two names. Every folder and file
 whose name holds the old one is renamed (`fighter/<old>/`, `ef_<old>.eff`,
-`vc_<old>_c00`, `chara_0_<old>_00`, `<old>.marker`, Kirby's `copy_<old>` and
-`<old>d00...` animations), and every line of `config.json`, the manifests,
+`vc_<old>_c00`, `chara_0_<old>_00`, `<old>.marker`, Kirby's `copy_<old>`,
+`<old>d00...` animations and `vc_kirby_copy_<old>`), and every line of `config.json`, the manifests,
 `msg_name.xmsbt` and the saved state that mentions it is edited, whole word
 only (`wawa` never touches `wawaman`). Files that hold the name inside their
 bytes (`plugin.nro`, `.eff`, `.bntx`, `.prc`, sound banks) are listed, not
@@ -159,13 +187,24 @@ copy it or save it as `lib.rs`. Every argument carries a comment. Per
 fighter: `fighter!`, a `<NAME>_COSTUMES` constant that drives the manifest,
 the CSK maps and the ParamConfig slots, the `Manifest` and `register` in
 `main`, then the Smashline agents (the fighter, one per article, Kirby when
-the clone has copy statuses). What only a hand-written `fighter.toml` says
+the clone has copy statuses). A floating clone also gets `float::register`
+and the float's agent; its two statuses follow the base's own, so yours
+start two past the base's status count. A gliding clone gets the glide's
+agent. Where only you can write the code, the tab leaves a blank function
+with the calls in comments: the tether's statuses (the donor's own calls,
+its articles by your names), the HUD (the calls the picked HUD takes) and a
+reader for each of your commands. What only a hand-written `fighter.toml`
+says
 (a `base_article`, `[kirby]` `first` and `model`, `[[kirby.motion]]` and
 `[[kirby.mesh]]`, `save_no`, `exhibit_year`) reaches the `Manifest` too, so
-a pack can drop the file and keep them. `[[global_motion]]` and `[[grab]]`
-tables are added after it, each behind a check of the engine's capability
-(`CAP_GLOBAL_MOTIONS`, `CAP_GRAB_RULES`): an engine without the feature
-refuses the whole manifest. With the plugin flag: `register_css_entry`
+a pack can drop the file and keep them, and so do article hurtboxes and
+platforms (`article_hurtbox`, `article_lvd`). `[[global_motion]]`, `[[grab]]`,
+`[hud]`, `[tether]` and `[partner_params]` tables are added after it, and
+`switch_with`, `partner` and `partner_with`, each behind a check of the
+engine's capability (`CAP_GLOBAL_MOTIONS`, `CAP_GRAB_RULES`, `CAP_HUD`,
+`CAP_TETHER`, `CAP_ENTRY_GROUPS`, and `CAP_ANY_BASE_GROUPS` for a partner or
+switch group beyond the game's own): an engine without the feature refuses
+the whole manifest. With the plugin flag: `register_css_entry`
 (CSK's call, one layout per costume) and `register_params` (ParamConfig's
 calls with the clone's kind). Per item: `item!`, the `ItemManifest` and
 `register`, and `register_item_labels` for the label and name fields. With
@@ -209,8 +248,12 @@ carries the `v2` module (`Manifest`, `fighter!`, `item!`); so do
 An older engine ignores them; a pack for it registers by hand (the engine's
 `DEPRECATED.md`). A call the engine lacks prints
 `was not applied: EngineUnavailable` in the log. `[[global_motion]]` and
-`[[grab]]` need an engine newer than `0.4.2-beta.1`; an older one refuses a
-`fighter.toml` that has them, so the Rust tab checks first.
+`[[grab]]` need an engine newer than `0.4.2-beta.1`; `[[article.hurtbox]]`,
+`[[article.lvd_vertex]]`, `[hud]`, `[tether]`, `switch` and `partner` one
+newer than `0.5.0-beta.1`; `[commands]` and `[[command]]` one with
+`CAP_COMMAND_INPUTS`. An older one refuses a `fighter.toml` that has them,
+so the Rust tab checks first. The float and the glide need only a
+`clone_engine_api` that has `float` and `glide`.
 
 One item or stage per pack: `item.toml` and `stage.toml` are written flat,
 which every engine reads. Two or more: one `[[item]]` or `[[stage]]` block
@@ -273,8 +316,9 @@ With `--pack-dir`, a file the pack ships is declared where the base keeps its
 counterpart (a result-screen prop goes to `result/cNN`) and replaces the
 base's: its own `ef_<clone>.eff` means none of the base's effects or trails, a
 `model.numdlb` means none of the base's model files in that folder, a copy
-model means none of the base's hat. Animations, cameras and sound files are
-borrowed one by one, so a voice bank without its `.tonelabel` gets the base's,
+model means none of the base's hat. A copy voice bank
+(`vc_kirby_copy_<clone>`) goes in every `kirbycopy/cNN` group. Animations,
+cameras and sound files are borrowed one by one, so a voice bank without its `.tonelabel` gets the base's,
 and the crowd chant is the base's until you ship `vc_<clone>_cheer_cNN`. A
 costume the pack has no file for takes it from the nearest costume below that
 has it. Past `c07` the base's `c00` is borrowed. What cannot carry another
@@ -316,7 +360,17 @@ checked against the folders: the base is a fighter, every `[[article]]` has
 its files, the costume count covers the body model, a `[kirby]` table has a
 copy model, `staffroll = true` has its texture, a global motion's `animation`
 is shipped in some fighter's motion folder (a `victim` one in the clone's
-own). A `[[grab]]` status is a number or one of the engine's names. When the pack folder holds
+own). A `[[grab]]` status is a number or one of the engine's names. A
+`switch` group is checked against the `fighter.toml` of the packs beside
+it: a member none of them declares is a warning (a plugin may register it);
+two fighters on one base, an Ice Climbers member, or Pyra, Mythra or a
+Trainer Pokemon mixed with other bases are an error; a group on other bases
+and a Pyra/Mythra or Trainer fighter no group lists get a note. A `partner`
+is checked the same way, with a note for one on the clone's own base and
+for the named fighter's own pack. `[partner_params]` keys must be the Ice
+Climbers' own names; off popo a key other than `nana_delay` and
+`nana_opt_dst` gets a note, and a `nana_delay` above 15 a warning. A Lucas
+tether gets a note about its `air_catch_pose`. When the pack folder holds
 its Rust source under `src/`, a custom work id past a base's `_TERM` is
 warned about: a clone's work arrays are its base's size.
 

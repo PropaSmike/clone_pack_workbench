@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The fighter.toml tables behind the gimmick panels: their donors, key orders, checks and TOML text."""
+"""The manifest tables behind the table panels: their donors, key orders, checks and TOML text."""
 
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ GRAB_STATUSES = ("SPECIAL_N", "SPECIAL_S", "SPECIAL_HI", "SPECIAL_LW", "ATTACK",
                  "ATTACK_S3", "ATTACK_HI3", "ATTACK_LW3", "ATTACK_S4", "ATTACK_HI4", "ATTACK_LW4",
                  "ATTACK_AIR", "CATCH", "CATCH_PULL", "CATCH_DASH", "CATCH_DASH_PULL", "CATCH_TURN",
                  "CATCH_WAIT", "THROW")
+OWN_STATUSES = ("own 0", "own 1", "own 2", "own 3")
 VICTIM_STATUSES = ("CAPTURE_PULLED", "CAPTURE_WAIT", "CATCHED_GANON", "CATCHED_AIR_GANON",
                    "CLUNG_GANON", "CLUNG_CAPTAIN", "KOOPA_DIVED", "SHOULDERED_DONKEY_START", "SWALLOWED",
                    "BITTEN_WARIO_START", "CLUNG_DIDDY", "CAPTURE_YOSHI", "CATCHED_REFLET",
@@ -32,13 +33,34 @@ HURTBOX_NUMBERS = {key: {name: index for index, name in enumerate(names)}
 ORDERS = {
     "grab": ("status", "victim", "then", "node", "offset", "catch"),
     "global_motion": ("name", "template", "animation", "victim"),
+    "kirby_motion": ("name", "animation", "template", "scripts", "game", "sound", "effect", "expression",
+                     "flags", "loop", "blend_frames", "cancel_frame", "xlu", "no_stop_intp", "animation_unk",
+                     "no_extra"),
+    "kirby_mesh": ("name", "visible"),
     "hurtbox": ("node", "size", "offset", "offset2", "part", "height", "status", "shape"),
     "lvd_vertex": ("vertex", "joint", "offset", "joint_left"),
     "tether_box": ("p1", "p2"),
+    "ladder": ("x", "y", "height", "width"),
+    "barrel": ("x", "y", "model", "rotation", "rotation_max", "rotation_speed", "always_rotate",
+               "full_rotate", "auto_fire", "fire_rotation", "fire_delay", "speed", "decrease", "gravity",
+               "fall_speed", "width", "height", "path", "path_speed"),
+    "spring": ("x", "y", "model", "rotation", "speed", "width", "height", "offset_x", "offset_y",
+               "launch_frame", "joint"),
+    "door": ("x", "y", "width", "height", "offset_x", "offset_y", "air", "player"),
+    "mode": ("id", "name", "description", "runs_as", "scene", "skip", "after_battle", "script", "button",
+             "order"),
+    "sequence": ("id", "code", "runs_as", "scene", "skip", "after_battle"),
+    "layout": ("scene", "file", "over_side_panel", "under_movies"),
+    "preload": ("after", "files"),
+    "patch": ("module", "script", "root"),
+    "mii_hat": ("id", "base", "model_type", "hair_model_types", "owned", "disp_order", "swing", "is_patch"),
+    "mii_outfit": ("id", "fighter", "base", "gender", "name", "owned", "disp_order", "swing", "is_patch"),
 }
 REQUIRED = {
     "grab": ("status",),
     "global_motion": ("name",),
+    "kirby_motion": ("name", "animation"),
+    "kirby_mesh": ("name",),
     "hurtbox": ("node", "size"),
     "lvd_vertex": ("vertex", "joint"),
     "tether_box": ("p1", "p2"),
@@ -46,14 +68,22 @@ REQUIRED = {
 HEADERS = {
     "grab": "[[grab]]",
     "global_motion": "[[global_motion]]",
+    "kirby_motion": "[[kirby.motion]]",
+    "kirby_mesh": "[[kirby.mesh]]",
     "hurtbox": "[[article.hurtbox]]",
     "lvd_vertex": "[[article.lvd_vertex]]",
     "tether_box": "[[tether.box]]",
 }
+STAGE_TABLES = ("ladder", "barrel", "spring", "door")
+MENU_TABLES = ("mode", "sequence", "layout", "preload", "patch")
+MII_TABLES = ("mii_hat", "mii_outfit")
+for _table in STAGE_TABLES + MENU_TABLES + MII_TABLES:
+    HEADERS[_table] = "[[%s]]" % _table
 PLAIN_KEYS = ("article", "file", "key", "value")
-TEXT_KINDS = ("str",)
-LIST_KINDS = ("vec2", "vec3")
-NAMED_KINDS = ("status", "part", "height", "hit_status", "shape")
+TEXT_KINDS = ("str", "text")
+LIST_KINDS = ("vec2", "vec3", "numbers")
+TEXT_LIST_KINDS = ("texts",)
+NAMED_KINDS = ("status", "part", "height", "hit_status", "shape", "mode")
 
 TETHER = {
     "samus": {"articles": ("samus/gbeam",), "lasso": ("gbeam", None, 1), "joint": "gbeam27"},
@@ -107,24 +137,43 @@ LAYOUT_CALLS = (
 )
 
 
-def _manifest():
+def _tool(name: str):
     root = str(Path(__file__).resolve().parent.parent)
     if root not in sys.path:
         sys.path.insert(0, root)
     try:
-        import fighter_manifest
+        return __import__(name)
     except ImportError:
         return None
-    return fighter_manifest
+
+
+def _manifest():
+    return _tool("fighter_manifest")
 
 
 def schema(table: str) -> dict:
+    if table in STAGE_TABLES:
+        stage = _tool("lint_stage_pack")
+        return dict(stage.GIMMICK_KEYS[table]) if stage is not None else {}
+    if table in MENU_TABLES:
+        menu = _tool("lint_menu_pack")
+        return dict(menu.KEYS[table]) if menu is not None else {}
+    if table in MII_TABLES:
+        mii = _tool("lint_mii_pack")
+        return dict(mii.KEYS[table]) if mii is not None else {}
     manifest = _manifest()
     if manifest is None:
         return {}
     return {"grab": manifest.GRAB_KEYS, "global_motion": manifest.MOTION_KEYS,
+            "kirby_motion": {key: kind for key, kind in manifest.MOTION_KEYS.items() if key != "victim"},
+            "kirby_mesh": manifest.MESH_KEYS,
             "hurtbox": manifest.HURTBOX_KEYS, "lvd_vertex": manifest.LVD_VERTEX_KEYS,
             "tether_box": manifest.TETHER_BOX_KEYS}.get(table, {})
+
+
+def is_plain(table: str, key: str) -> bool:
+    """A key the panel keeps as typed, outside any TOML table of its own."""
+    return key in PLAIN_KEYS and table not in STAGE_TABLES + MENU_TABLES + MII_TABLES
 
 
 def to_toml(table: str, key: str, text: str) -> str:
@@ -135,6 +184,9 @@ def to_toml(table: str, key: str, text: str) -> str:
         return text if text.startswith('"') else '"%s"' % text
     if kind in LIST_KINDS and not text.startswith("["):
         return "[%s]" % text
+    if kind in TEXT_LIST_KINDS and not text.startswith("["):
+        items = [item.strip() for item in text.split(",") if item.strip()]
+        return "[%s]" % ", ".join(item if item.startswith('"') else '"%s"' % item for item in items)
     if kind in NAMED_KINDS:
         try:
             int(text, 0)
@@ -150,12 +202,23 @@ def display(text: str) -> str:
     if len(text) >= 2 and text[0] == text[-1] == '"':
         return text[1:-1]
     if text.startswith("[") and text.endswith("]"):
-        return text[1:-1].strip()
+        items = [item.strip() for item in text[1:-1].split(",")]
+        return ", ".join(item[1:-1] if len(item) >= 2 and item[0] == item[-1] == '"' else item
+                         for item in items if item)
     return text
 
 
 def row_problem(table: str, row: dict) -> str:
-    """What fighter.toml would refuse in this row, from the engine's own rules."""
+    """What the manifest would refuse in this row, from the engine's own rules."""
+    if table in STAGE_TABLES:
+        stage = _tool("lint_stage_pack")
+        return stage.gimmick_problem(table, row) if stage is not None else ""
+    if table in MENU_TABLES:
+        menu = _tool("lint_menu_pack")
+        return menu.block_problem(table, row) if menu is not None else ""
+    if table in MII_TABLES:
+        mii = _tool("lint_mii_pack")
+        return mii.block_problem(table, row) if mii is not None else ""
     manifest = _manifest()
     if manifest is None:
         return ""
@@ -201,8 +264,31 @@ def table_lines(table: str, row: dict) -> list[str]:
     """One row as a fighter.toml table: its keys in the engine's order, then the rest."""
     order = ORDERS.get(table, ())
     keys = [key for key in order if key in row] + [key for key in row if key not in order
-                                                   and key not in PLAIN_KEYS]
+                                                   and not is_plain(table, key)]
     return ["", HEADERS[table]] + ["%s = %s" % (key, row[key]) for key in keys]
+
+
+def family_names(state: dict) -> list[str]:
+    """The family members a part lists, its own resource name first, each once."""
+    text = state.get("family_members") or state.get("members") or ""
+    if isinstance(text, (list, tuple)):
+        text = ",".join(str(name) for name in text)
+    names = [name.strip().strip('"') for name in str(text).strip("[]").split(",") if name.strip().strip('"')]
+    if not names:
+        return []
+    resource = state.get("resource_name") or names[0]
+    return [resource] + [name for name in dict.fromkeys(names) if name != resource]
+
+
+def member_names(resource: str, members: list[str]) -> list[str]:
+    """Resource names for a clone of a family: the clone's own name, then its name with each
+    member's part past the owner's (galleommissile -> <name>_missile)."""
+    owner = members[0]
+    names = [resource]
+    for member in members[1:]:
+        tail = member[len(owner):] if member.startswith(owner) and len(member) > len(owner) else member
+        names.append("%s_%s" % (resource, tail.strip("_")))
+    return names
 
 
 def numbers(text: str) -> list[float]:

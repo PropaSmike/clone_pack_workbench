@@ -59,6 +59,8 @@ TETHER_KEYS = {"from": "str"}
 TETHER_BOX_KEYS = {"p1": "vec2", "p2": "vec2"}
 TETHER_DONORS = ("samus", "samusd", "luigi", "younglink", "szerosuit", "lucas", "toonlink")
 MAX_TETHER_BOXES = 8
+MOVE_LIST_KEYS = {"pages": "int", "image_pages": "list"}
+MAX_MOVE_LIST_PAGES = 32
 SWITCH_BASES = ("eflame", "elight", "pzenigame", "pfushigisou", "plizardon")
 GRAB_KEYS = {"status": "status", "victim": "status", "then": "status", "node": "str",
              "offset": "vec3", "catch": "bool"}
@@ -103,6 +105,14 @@ def status_kind(name):
     if bare.upper().startswith("FIGHTER_STATUS_KIND_"):
         bare = bare[len("FIGHTER_STATUS_KIND_"):]
     return STATUS_NAMES.get(bare.upper())
+
+
+def own_status(name):
+    """N of "own N", a status of the fighter's own counted from the end of its base's table, or None."""
+    parts = name.split()
+    if len(parts) != 2 or parts[0] != "own" or not parts[1].isdigit() or int(parts[1]) >= 0x1000:
+        return None
+    return int(parts[1])
 
 
 class ManifestError(ValueError):
@@ -150,10 +160,16 @@ def parse_scalar(text, kind, line, key):
     if kind == "status":
         if text.startswith('"'):
             name = parse_scalar(text, "str", line, key)
+            own = own_status(name)
+            if own is not None:
+                if key == "victim":
+                    raise ManifestError(line, "victim is a status of the fighter caught; own N is for status "
+                                              "and then")
+                return "own %d" % own
             value = status_kind(name)
             if value is None:
-                raise ManifestError(line, '%s: "%s" is not a known status name; write its number'
-                                    % (key, name))
+                raise ManifestError(line, '%s: "%s" is not a known status name; write own N for one of your '
+                                          "own, or its number" % (key, name))
         else:
             value = parse_scalar(text, "int", line, key)
         if value < 0:
@@ -344,6 +360,9 @@ def parse_lines(lines, first_line=1):
                 fighter["tether"] = fighter.get("tether") or {"boxes": []}
                 fighter["tether"]["boxes"].append({})
                 section = ("tether_box", fighter["tether"]["boxes"][-1])
+            elif (name, array) == ("move_list", False):
+                fighter["move_list"] = fighter.get("move_list") or {}
+                section = ("move_list", fighter["move_list"])
             elif (name, array) == ("partner_params", False):
                 section = ("partner_params", None)
             elif (name, array) == ("commands", False):
@@ -388,7 +407,7 @@ def parse_lines(lines, first_line=1):
                  "grab": GRAB_KEYS, "hurtbox": HURTBOX_KEYS, "lvd_vertex": LVD_VERTEX_KEYS,
                  "hud": HUD_KEYS, "final": FINAL_KEYS, "tether": TETHER_KEYS,
                  "tether_box": TETHER_BOX_KEYS, "commands": COMMANDS_KEYS,
-                 "command": COMMAND_KEYS}[kind]
+                 "command": COMMAND_KEYS, "move_list": MOVE_LIST_KEYS}[kind]
         if key not in table:
             label = {"global_motion": "motion", "tether_box": "tether.box"}.get(kind, kind)
             raise ManifestError(number, "unknown %s key %s" % (label, key))
@@ -404,6 +423,11 @@ def parse_lines(lines, first_line=1):
         if kind == "final" and key == "from" and parsed not in FINAL_DONORS:
             raise ManifestError(number, 'final from "%s" is not a Final Smash a clone can borrow; use %s'
                                 % (parsed, ", ".join('"%s"' % name for name in FINAL_DONORS)))
+        if kind == "move_list" and key == "image_pages":
+            try:
+                parsed = [int(page, 0) for page in parsed]
+            except ValueError:
+                raise ManifestError(number, "an image page must be a whole number")
         if kind == "tether" and key == "from" and parsed not in TETHER_DONORS:
             raise ManifestError(number, 'tether from "%s" has no tether; use %s'
                                 % (parsed, ", ".join('"%s"' % name for name in TETHER_DONORS)))
@@ -445,6 +469,17 @@ def check(fighter):
                         % name)
     if fighter.get("partner_params") and not has_partner(fighter):
         problems.append("%s has partner_params but no partner" % name)
+    move_list = fighter.get("move_list")
+    if move_list is not None:
+        pages = move_list.get("pages")
+        if pages is None:
+            problems.append("[move_list] needs pages")
+        elif not 1 <= pages <= MAX_MOVE_LIST_PAGES:
+            problems.append("move_list pages must be 1 to %d" % MAX_MOVE_LIST_PAGES)
+        else:
+            for page in move_list.get("image_pages") or []:
+                if not 0 <= page < pages:
+                    problems.append("move_list image page %d is past the last page, %d" % (page, pages - 1))
     tether = fighter.get("tether")
     if tether is not None:
         if len(tether["boxes"]) > MAX_TETHER_BOXES:

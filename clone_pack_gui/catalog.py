@@ -103,11 +103,21 @@ class Catalog:
                       in self._table("item_kinds.tsv", ("kind", "name", "root")))
 
     def item_bases(self) -> list[tuple[int, str]]:
-        """The item kinds a clone can be built on: rooted at item/ and in the arc."""
+        """The item kinds a clone can be built on: rooted at item/ and in the arc, and every
+        Assist Trophy, Pokemon and boss family's first member."""
         present = set(self.item_dirs())
+        owners = {name for name, (category, _) in self.item_families().items() if category != "item"}
         return sorted((int(kind), name) for kind, name, root
                       in self._table("item_kinds.tsv", ("kind", "name", "root"))
-                      if root == "item" and (not present or name in present))
+                      if (root == "item" and (not present or name in present)) or name in owners)
+
+    def item_families(self) -> dict[str, tuple[str, list[str]]]:
+        """Every item family by its first member: its category and members, in the game's order."""
+        return {owner: (category, members.split(",")) for owner, category, members
+                in self._table("item_families.tsv", ("owner", "category", "members"))}
+
+    def item_family(self, name: str) -> tuple[str, list[str]] | None:
+        return self.item_families().get(name)
 
     def weapons(self) -> list[tuple[int, str, str]]:
         return [(int(kind), const, owner) for kind, const, owner

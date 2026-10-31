@@ -16,8 +16,20 @@ from . import backups, gimmicks
 FIGHTER = "fighter"
 ITEM = "item"
 STAGE = "stage"
+MENU = "menu"
+MII = "mii"
+ENEMY = "enemy"
 UNKNOWN = "unknown"
-KINDS = (FIGHTER, ITEM, STAGE)
+KINDS = (FIGHTER, ITEM, STAGE, MENU, MII, ENEMY)
+MENU_MANIFEST = "menu.toml"
+MENU_TABLES = ("mode", "sequence", "layout", "preload", "patch")
+MII_MANIFEST = "mii.toml"
+ENEMY_MANIFEST = "enemy.toml"
+ENEMY_KEYS = ("name", "base")
+ENEMY_FOLDERS = ("model/body/c00", "motion/body/c00", "param", "script/animcmd")
+MII_TABLES = ("mii_hat", "mii_outfit")
+MII_TREES = ("miihat", "miibody")
+MENU_STATE_KEYS = ("namespace", "luac", "lua_folder")
 
 STATE_FILE = "clone_pack_gui.json"
 NON_ASSET_SUFFIXES = {"yml", "yaml", "lua", "md", "txt", "json", "toml", "py",
@@ -28,21 +40,26 @@ PATCH_FOLDER_SUFFIXES = (".nus3audio", ".nus3bank")
 COSTUME_NAME_RE = re.compile(r"_c(\d{2,3})(?=[_.])")
 ADDED_SLOT_LEFTOVERS = ("ui/param/database/ui_chara_db.prcxml",)
 COLOR_RE = re.compile(r"/c(\d{2,3})(?=/|$)")
+COSTUME_FOLDER_RE = re.compile(r"c\d{2,3}")
+COSTUME_PATH_RE = re.compile(r"/c\d{2,3}/")
+PATH_DELIMITERS = frozenset(" \t\r\n\"'`,[]{}<>=")
 LABEL_RE = re.compile(r'label="([^"]+)"\s*>\s*<text>(.*?)</text>', re.S)
 COPY_RE = re.compile(r"^copy_(.+?)_(.+)$")
 ARTICLE_SKIP = {"body", "kirbycopy", "cmn"}
 MESSAGE_FILE = ("ui", "message", "msg_name.xmsbt")
 ASSIGN_RE = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+?)\s*$")
 
-ITEM_KEYS = ("base_kind", "resource_name", "base_item", "agent_name", "ui_id",
+ITEM_KEYS = ("base_kind", "resource_name", "base_item", "members", "agent_name", "ui_id",
              "training_order", "spawn_per", "spawn_min", "spawn_max", "spawn_from")
 STAGE_KEYS = ("place", "display_name", "id_name", "forms", "ships_battle_tree",
               "series", "disp_order", "donor", "resource_place", "bgm",
-              "bgm_setting_no", "bgm_selector", "content_donor", "content_donor_tree",
-              "carry_donor_scenery")
+              "bgm_setting_no", "bgm_selector", "dynamic_collisions", "paused_motions",
+              "content_donor", "content_donor_tree", "carry_donor_scenery")
 STAGE_ENGINE_KEYS = ("place", "display_name", "id_name", "forms", "ships_battle_tree",
                      "series", "disp_order", "donor", "resource_place", "bgm",
-                     "bgm_setting_no", "bgm_selector")
+                     "bgm_setting_no", "bgm_selector", "dynamic_collisions", "paused_motions")
+STAGE_TABLES = ("ladder", "barrel", "spring", "door")
+STAGE_LIST_KEYS = ("dynamic_collisions", "paused_motions")
 FIGHTER_KEYS = ("name", "base", "display_name", "costumes", "color_start", "series",
                 "disp_order", "narration", "staffroll", "css", "ui_chara", "fighter_kind_name",
                 "owns_param_resources", "partner", "switch")
@@ -61,6 +78,12 @@ def detect_kinds(folder: Path) -> list[str]:
     for kind, manifest in ((FIGHTER, FIGHTER_MANIFEST), (ITEM, "item.toml"), (STAGE, "stage.toml")):
         if (folder / kind).is_dir() or (manifest and (folder / manifest).is_file()):
             found.append(kind)
+    if (folder / MENU_MANIFEST).is_file() or (folder / "ui" / "script" / "menu").is_dir():
+        found.append(MENU)
+    if (folder / MII_MANIFEST).is_file() or any((folder / tree).is_dir() for tree in MII_TREES):
+        found.append(MII)
+    if (folder / ENEMY_MANIFEST).is_file() or (folder / "enemy").is_dir():
+        found.append(ENEMY)
     return found
 
 
@@ -71,7 +94,8 @@ def detect(folder: Path) -> str:
 
 
 def manifest_name(kind: str) -> str | None:
-    return {ITEM: "item.toml", STAGE: "stage.toml", FIGHTER: FIGHTER_MANIFEST}.get(kind)
+    return {ITEM: "item.toml", STAGE: "stage.toml", FIGHTER: FIGHTER_MANIFEST,
+            MENU: MENU_MANIFEST, MII: MII_MANIFEST, ENEMY: ENEMY_MANIFEST}.get(kind)
 
 
 def header_of(line: str) -> str | None:
@@ -162,7 +186,9 @@ ARTICLE_CHILD_TABLES = ("[[article.hurtbox]]", "[[article.lvd_vertex]]")
 ARTICLE_CARRIED_KEYS = ("lvd",)
 ARTICLE_ROWS = (("hurtbox", "article_hurtboxes"), ("lvd_vertex", "article_lvd_vertices"))
 PANEL_TABLES = {"[hud]": "hud", "[tether]": "tether", "[[tether.box]]": "tether", "[[grab]]": "grabs",
-                "[[global_motion]]": "global_motions", "[partner_params]": "partner_params"}
+                "[[global_motion]]": "global_motions", "[partner_params]": "partner_params",
+                "[move_list]": "move_list", "[[kirby.motion]]": "kirby_motions",
+                "[[kirby.mesh]]": "kirby_meshes"}
 TABLE_ASSIGN_RE = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_.]*)\s*=\s*(.+?)\s*$")
 
 
@@ -210,6 +236,11 @@ def panel_table_lines(state: dict) -> list[str]:
     params = [row for row in state.get("partner_params") or [] if row.get("key")]
     if params:
         out += ["", "[partner_params]"] + ["%s = %s" % (row["key"], row["value"]) for row in params]
+    move_list = state.get("move_list") or {}
+    if move_list.get("pages"):
+        out += ["", "[move_list]", "pages = %d" % move_list["pages"]]
+        if move_list.get("image_pages"):
+            out.append("image_pages = [%s]" % ", ".join(str(page) for page in move_list["image_pages"]))
     return out
 
 
@@ -271,10 +302,37 @@ def fighter_kirby_lines(state: dict, existing: list[str] | None) -> list[str]:
         values["statuses"] = statuses
     if state.get("kirby_copy_full_model"):
         values["full_model"] = True
-    if not values and not existing:
+    model = state.get("kirby_model")
+    if not values and not existing and not model:
         return []
     lines, _ = merge_lines(list(existing or []), values, ("statuses", "full_model"))
+    if model:
+        lines = [line for line in lines if line.split("=", 1)[0].strip() != "model"]
+        lines.append("model = %s" % format_value(model))
     return ["", "[kirby]"] + [line for line in lines if line.strip()]
+
+
+def legacy_kirby_rows(state: dict, header: str) -> list[dict]:
+    """Rows of one Kirby table from the raw text older saved states kept."""
+    rows: list[dict] = []
+    current = None
+    for line in (state.get("kirby_tables") or "").splitlines():
+        if line.strip().startswith("["):
+            current = {} if strip_comment(line).strip() == header else None
+            if current is not None:
+                rows.append(current)
+        elif current is not None:
+            current.update(table_texts([line]))
+    return rows
+
+
+def kirby_row_lines(state: dict) -> list[str]:
+    """[[kirby.motion]] and [[kirby.mesh]] from the panels."""
+    out: list[str] = []
+    for table, key in (("kirby_motion", "kirby_motions"), ("kirby_mesh", "kirby_meshes")):
+        for row in state.get(key) or []:
+            out += gimmicks.table_lines(table, row)
+    return out
 
 
 def command_scalar(text: str):
@@ -369,6 +427,7 @@ def write_fighter_manifest(path: Path, state: dict) -> list[str]:
     out = list(head)
     out += fighter_article_lines(state.get("articles"), state.get("base_articles"), children)
     out += fighter_kirby_lines(state, kirby_existing)
+    out += kirby_row_lines(state)
     out += param_lines
     if "commands" in state or "command_settings" in state:
         out += fighter_command_lines(state)
@@ -436,13 +495,15 @@ def fighter_manifest_from_lines(lines: list[str]) -> dict:
     values = parse_lines(head)
     articles = []
     base_articles = []
-    kirby_tables = []
+    kirby_motions = []
+    kirby_meshes = []
     final_tables = []
     global_motions = []
     grabs = []
     hud: dict = {}
     tether: dict = {"from": "", "boxes": []}
     partner_params = []
+    move_list: dict = {}
     article_hurtboxes = []
     article_lvd_vertices = []
     article = None
@@ -478,8 +539,10 @@ def fighter_manifest_from_lines(lines: list[str]) -> dict:
                 values["kirby_statuses"] = kirby["statuses"]
             if kirby.get("full_model"):
                 values["kirby_copy_full_model"] = True
-        elif header in ("[[kirby.motion]]", "[[kirby.mesh]]"):
-            kirby_tables.append("\n".join([header] + [line.rstrip() for line in body if line.strip()]))
+        elif header == "[[kirby.motion]]":
+            kirby_motions.append(table_texts(body))
+        elif header == "[[kirby.mesh]]":
+            kirby_meshes.append(table_texts(body))
         elif header == "[[global_motion]]":
             global_motions.append(table_texts(body))
         elif header == "[[grab]]":
@@ -494,6 +557,12 @@ def fighter_manifest_from_lines(lines: list[str]) -> dict:
             tether["boxes"].append(table_texts(body))
         elif header == "[partner_params]":
             partner_params += [{"key": key, "value": text} for key, text in table_texts(body).items()]
+        elif header == "[move_list]":
+            listed = parse_lines(body)
+            if isinstance(listed.get("pages"), int):
+                move_list["pages"] = listed["pages"]
+            if isinstance(listed.get("image_pages"), list):
+                move_list["image_pages"] = [int(page) for page in listed["image_pages"] if str(page).isdigit()]
         elif header == "[commands]":
             command_settings.update(command_values(body))
         elif header == "[[command]]":
@@ -526,13 +595,16 @@ def fighter_manifest_from_lines(lines: list[str]) -> dict:
     state["base_articles"] = base_articles
     state["kirby_first"] = kirby.get("first") if isinstance(kirby.get("first"), int) else None
     state["kirby_model"] = kirby.get("model") if isinstance(kirby.get("model"), str) else None
-    state["kirby_tables"] = "\n\n".join(kirby_tables)
+    state["kirby_tables"] = ""
+    state["kirby_motions"] = kirby_motions
+    state["kirby_meshes"] = kirby_meshes
     state["final_tables"] = "\n\n".join(final_tables)
     state["global_motions"] = global_motions
     state["grabs"] = grabs
     state["hud"] = hud
     state["tether"] = tether
     state["partner_params"] = partner_params
+    state["move_list"] = move_list
     state["article_hurtboxes"] = article_hurtboxes
     state["article_lvd_vertices"] = article_lvd_vertices
     state["command_settings"] = command_settings
@@ -543,11 +615,13 @@ def fighter_manifest_from_lines(lines: list[str]) -> dict:
 def manifest_table(kind_or_path) -> str:
     """The [[table]] header that separates one declaration from the next."""
     name = Path(str(kind_or_path)).name
-    return {"item.toml": "item", "stage.toml": "stage"}.get(name, name)
+    return {"item.toml": "item", "stage.toml": "stage", MENU_MANIFEST: MENU,
+            MII_MANIFEST: MII, ENEMY_MANIFEST: ENEMY}.get(name, name)
 
 
 def identity_key(kind_or_path) -> str:
-    return "place" if manifest_table(kind_or_path) == "stage" else "resource_name"
+    return {"stage": "place", MENU: "namespace", MII: "id", ENEMY: "name"}.get(manifest_table(kind_or_path),
+                                                               "resource_name")
 
 
 def identity(section: dict, kind_or_path) -> str:
@@ -612,17 +686,166 @@ def split_blocks(lines: list[str], table: str) -> tuple[list[str], list[list[str
     return head, blocks
 
 
+def first_table(lines) -> int:
+    """The index of the first table header; keys after it belong to that table."""
+    for index, line in enumerate(lines):
+        if strip_comment(line).strip().startswith("["):
+            return index
+    return len(lines)
+
+
 def parse_lines(lines) -> dict:
-    """Every assignment in these lines, ignoring comments and table headers."""
+    """Every assignment before the first table header, ignoring comments."""
     values: dict = {}
-    for line in lines:
+    for line in lines[:first_table(lines)]:
         stripped = line.strip()
-        if not stripped or stripped.startswith("#") or stripped.startswith("["):
+        if not stripped or stripped.startswith("#"):
             continue
         match = ASSIGN_RE.match(line)
         if match:
             values[match.group(1)] = parse_value(match.group(2))
     return values
+
+
+def stage_table_of(line: str) -> str | None:
+    """The gimmick table a stage.toml header opens: [[ladder]] or [[stage.ladder]]."""
+    compact = "".join(strip_comment(line).split())
+    for table in STAGE_TABLES:
+        if compact in ("[[%s]]" % table, "[[stage.%s]]" % table):
+            return table
+    return None
+
+
+def stage_table_rows(lines) -> dict:
+    """The gimmick tables in a stage block, {table: [row]}, each row its keys' TOML text."""
+    rows: dict = {}
+    current = None
+    for line in lines[first_table(lines):]:
+        table = stage_table_of(line)
+        if table:
+            current = {}
+            rows.setdefault(table, []).append(current)
+            continue
+        if strip_comment(line).strip().startswith("["):
+            current = None
+            continue
+        match = ASSIGN_RE.match(strip_comment(line))
+        if match and current is not None:
+            current[match.group(1)] = match.group(2).strip()
+    return rows
+
+
+def stage_table_lines(rows: dict, nested: bool) -> list[str]:
+    """The gimmick tables as stage.toml text, ladders first, each key in the engine's order."""
+    out: list[str] = []
+    for table in STAGE_TABLES:
+        order = gimmicks.ORDERS.get(table, ())
+        for row in rows.get(table) or []:
+            keys = [key for key in order if key in row] + [key for key in row if key not in order]
+            out += ["", "[[stage.%s]]" % table if nested else "[[%s]]" % table]
+            out += ["%s = %s" % (key, row[key]) for key in keys]
+    return out
+
+
+def menu_table_rows(lines) -> dict:
+    """menu.toml's tables, {table: [row]}, each row its keys' TOML text."""
+    rows: dict = {}
+    current = None
+    for line in lines:
+        text = strip_comment(line).strip()
+        if text.startswith("[[") and text.endswith("]]"):
+            current = {}
+            rows.setdefault(text[2:-2].strip(), []).append(current)
+            continue
+        match = ASSIGN_RE.match(text)
+        if match and current is not None:
+            current[match.group(1)] = match.group(2).strip()
+    return rows
+
+
+def menu_namespace(folder: Path, rows: dict | None = None) -> str:
+    """The folder under ui/script/menu/ the pack's scripts live in: from its scripts, else from disk."""
+    for table in ("mode", "patch"):
+        for row in (rows or {}).get(table) or []:
+            script = gimmicks.display(row.get("script", ""))
+            parts = script.split("/")
+            if len(parts) >= 3 and parts[0] == "menu":
+                return parts[1]
+    root = Path(folder) / "ui" / "script" / "menu"
+    if root.is_dir():
+        names = sorted(entry.name for entry in root.iterdir() if entry.is_dir() and entry.name != "main")
+        if names:
+            return names[0]
+    return ""
+
+
+def read_menu_manifest(folder: Path) -> dict:
+    """The pack's one menu part: the namespace its scripts use and every table of menu.toml."""
+    path = Path(folder) / MENU_MANIFEST
+    lines = path.read_text(encoding="utf-8", errors="replace").splitlines() if path.is_file() else []
+    rows = menu_table_rows(lines)
+    part = {"tables": rows}
+    namespace = menu_namespace(folder, rows)
+    if namespace:
+        part["namespace"] = namespace
+    return part
+
+
+def menu_lines(rows: dict, tables: tuple = MENU_TABLES) -> list[str]:
+    """The tables as manifest text in this order of tables, each key in the engine's order."""
+    out: list[str] = []
+    for table in tables + tuple(name for name in rows if name not in tables):
+        order = gimmicks.ORDERS.get(table, ())
+        for row in rows.get(table) or []:
+            keys = [key for key in order if key in row] + [key for key in row if key not in order]
+            out += ["", "[[%s]]" % table] + ["%s = %s" % (key, row[key]) for key in keys]
+    return out
+
+
+def write_menu_manifest(folder: Path, part: dict) -> list[str]:
+    """menu.toml from the part's tables, keeping the comments above the first table; a file whose
+    tables already match is left as it is. Returns the tables written."""
+    path = Path(folder) / MENU_MANIFEST
+    lines = path.read_text(encoding="utf-8", errors="replace").splitlines() if path.is_file() else []
+    wanted = {table: rows for table, rows in (part.get("tables") or {}).items() if rows}
+    if path.is_file() and menu_table_rows(lines) == wanted:
+        return []
+    head = lines[:first_table(lines)]
+    while head and not head[-1].strip():
+        head.pop()
+    if not head:
+        head = ["# Modes, codes, layouts, preloads and menu script patches: docs/wiki/MENUS.md."]
+    text = "\n".join(head + menu_lines(wanted)).rstrip("\n") + "\n"
+    backups.keep(path)
+    path.write_text(text, encoding="utf-8", newline="\n")
+    return [table for table in MENU_TABLES if table in wanted] + sorted(
+        table for table in wanted if table not in MENU_TABLES)
+
+
+def read_mii_manifest(folder: Path) -> dict:
+    """The pack's one Mii part: every [[mii_hat]] and [[mii_outfit]] of mii.toml."""
+    path = Path(folder) / MII_MANIFEST
+    lines = path.read_text(encoding="utf-8", errors="replace").splitlines() if path.is_file() else []
+    return {"tables": menu_table_rows(lines)}
+
+
+def write_mii_manifest(folder: Path, part: dict) -> list[str]:
+    """mii.toml from the part's tables, keeping the comments above the first table; a file whose
+    tables already match is left as it is. Returns the tables written."""
+    path = Path(folder) / MII_MANIFEST
+    lines = path.read_text(encoding="utf-8", errors="replace").splitlines() if path.is_file() else []
+    wanted = {table: rows for table, rows in (part.get("tables") or {}).items() if rows}
+    if path.is_file() and menu_table_rows(lines) == wanted:
+        return []
+    head = lines[:first_table(lines)]
+    while head and not head[-1].strip():
+        head.pop()
+    if not head:
+        head = ["# Mii hats and outfits this pack adds: docs/wiki/MII_PARTS.md."]
+    text = "\n".join(head + menu_lines(wanted, MII_TABLES)).rstrip("\n") + "\n"
+    backups.keep(path)
+    path.write_text(text, encoding="utf-8", newline="\n")
+    return [table for table in MII_TABLES if table in wanted]
 
 
 def read_manifests(path: Path) -> list[dict]:
@@ -631,10 +854,16 @@ def read_manifests(path: Path) -> list[dict]:
     if not path.is_file():
         return []
     lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
-    head, blocks = split_blocks(lines, manifest_table(path))
-    if not blocks:
-        return [parse_lines(head)]
-    return [parse_lines(block) for block in blocks]
+    table = manifest_table(path)
+    head, blocks = split_blocks(lines, table)
+    blocks = blocks or [head]
+    found = []
+    for block in blocks:
+        values = parse_lines(block)
+        if table == "stage":
+            values["gimmicks"] = stage_table_rows(block)
+        found.append(values)
+    return found
 
 
 def read_manifest(path: Path) -> dict:
@@ -644,8 +873,10 @@ def read_manifest(path: Path) -> dict:
 
 
 def merge_lines(lines: list[str], values: dict, order=()) -> tuple[list[str], set]:
-    """Set these keys in place, keep every other line, append what is new."""
+    """Set these keys in place, keep every other line, add what is new above the first table."""
     lines = list(lines)
+    end = first_table(lines)
+    lines, tables = lines[:end], lines[end:]
     written = set()
     for index, line in enumerate(lines):
         match = ASSIGN_RE.match(line)
@@ -656,11 +887,30 @@ def merge_lines(lines: list[str], values: dict, order=()) -> tuple[list[str], se
             lines[index] = "%-13s = %s" % (key, format_value(values[key]))
             written.add(key)
     missing = [key for key in (order or values) if key in values and key not in written]
+    gap: list[str] = []
+    if tables:
+        while lines and not lines[-1].strip():
+            gap.append(lines.pop())
     if missing and lines and lines[-1].strip():
         lines.append("")
     for key in missing:
         lines.append("%-13s = %s" % (key, format_value(values[key])))
-    return lines, written | set(missing)
+    if tables:
+        lines += gap or ([""] if lines else [])
+    return lines + tables, written | set(missing)
+
+
+def merge_stage_block(lines: list[str], values: dict, order, nested: bool) -> tuple[list[str], set]:
+    """merge_lines, then the gimmick tables rewritten from values when they differ from the file's;
+    unchanged tables keep their lines and comments."""
+    lines, written = merge_lines(lines, values, order)
+    wanted = {table: rows for table, rows in (values.get("gimmicks") or {}).items() if rows}
+    if "gimmicks" not in values or stage_table_rows(lines) == wanted:
+        return lines, written
+    body = lines[:first_table(lines)]
+    while body and not body[-1].strip():
+        body.pop()
+    return body + stage_table_lines(wanted, nested), written | ({"gimmicks"} if wanted else set())
 
 
 def write_manifest(path: Path, values: dict, order=()) -> list[str]:
@@ -691,9 +941,15 @@ def write_manifests(path: Path, sections: list[dict], order=()) -> list[str]:
     known = {identity(parse_lines(block), table): block for block in blocks}
     while head and not head[-1].strip():
         head.pop()
+
+    def merge(block: list[str], section: dict, nested: bool) -> tuple[list[str], set]:
+        if table == "stage":
+            return merge_stage_block(block, section, order, nested)
+        return merge_lines(block, section, order)
+
     if len(sections) == 1:
-        flat, written = merge_lines(head + known.get(identity(sections[0], table), []),
-                                    sections[0], order)
+        flat, written = merge(head + known.get(identity(sections[0], table), []),
+                              sections[0], False)
         text = "\n".join(flat).rstrip("\n") + "\n"
         backups.keep(path)
         path.write_text(text, encoding="utf-8", newline="\n")
@@ -701,7 +957,7 @@ def write_manifests(path: Path, sections: list[dict], order=()) -> list[str]:
     out = list(head)
     written = set()
     for section in sections:
-        block, done = merge_lines(known.get(identity(section, table), []), section, order)
+        block, done = merge(known.get(identity(section, table), []), section, True)
         written |= done
         while block and not block[0].strip():
             block.pop(0)
@@ -1021,17 +1277,48 @@ def apply_renumber(folder: Path, plan: dict) -> list[str]:
 NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 NAME_TEXT_SUFFIXES = {".toml", ".json", ".xmsbt", ".prcxml", ".xml"}
 NAME_BINARY_SUFFIXES = {".nro", ".prc", ".nus3bank", ".nus3audio", ".eff", ".bntx"}
-TREE_OF_KIND = {FIGHTER: "fighter", ITEM: "item", STAGE: "stage"}
+TREE_OF_KIND = {FIGHTER: "fighter", ITEM: "item", STAGE: "stage", MENU: "ui/script/menu",
+                MII: "miihat", ENEMY: "enemy"}
 
 
 def name_pattern(name: str) -> re.Pattern:
     """The name the way the game's paths and labels carry it: on its own between
     characters that are not letters or digits (fighter/wawa/, vc_wawa_c00,
-    nam_chr1_00_wawa, ui_chara_wawa), or run into the dNN of a Kirby copy
-    animation (wawad00specialn.nuanmb). wawaman is another name."""
+    nam_chr1_00_wawa, ui_chara_wawa), or run into the body of Kirby's copy
+    animation folder (fighter/kirby/motion/wawabody/). wawaman is another name."""
     escaped = re.escape(name)
-    return re.compile(r"(?<![a-z0-9])%s(?![a-z0-9])|(?<![a-z0-9])%s(?=d\d\d[a-z])"
+    return re.compile(r"(?<![a-z0-9])%s(?![a-z0-9])|(?<![a-z0-9])%s(?=body(?![a-z0-9]))"
                       % (escaped, escaped))
+
+
+def in_costume_folder(relative: Path) -> bool:
+    """Whether a path lies below a costume folder (c00, c120): its name is the one models, motion
+    lists and the game ask for, so a rename leaves it alone."""
+    return any(COSTUME_FOLDER_RE.fullmatch(part) for part in relative.parts[:-1])
+
+
+def rename_text(text: str, pattern: re.Pattern, new: str, kept_names=frozenset()) -> tuple[str, int]:
+    """The text with the name replaced, except inside a path below a costume folder
+    (fighter/wawa/model/body/c00/wawa.marker keeps its file name) and in a bare file name the
+    rename keeps. Returns the text and how many it replaced."""
+    count = 0
+
+    def swap(match: re.Match) -> str:
+        nonlocal count
+        left = match.start()
+        while left > 0 and text[left - 1] not in PATH_DELIMITERS:
+            left -= 1
+        right = match.end()
+        while right < len(text) and text[right] not in PATH_DELIMITERS:
+            right += 1
+        before, after = text[left:match.start()], text[match.end():right]
+        token = before + match.group(0) + after
+        if COSTUME_PATH_RE.search("/" + before) or ("/" not in token and token.lower() in kept_names):
+            return match.group(0)
+        count += 1
+        return new
+
+    return pattern.sub(swap, text), count
 
 
 def read_text_any(path: Path) -> tuple[str, str]:
@@ -1047,29 +1334,41 @@ def rename_plan(folder: Path, old: str, new: str) -> dict:
     every file and directory whose own name holds it, deepest first so a file
     moves before its folder does. edits: the text files that mention it
     (config.json, the manifests, the saved state, msg_name.xmsbt, prcxml).
-    stuck: binary files that hold it and need a rebuild or a hand edit."""
+    stuck: binary files that hold it and need a rebuild or a hand edit. kept:
+    what lies below a costume folder and keeps its name, as do the references
+    to it."""
     folder = Path(folder)
     pattern = name_pattern(old)
-    moves, edits, stuck = [], [], []
-    for path in sorted(folder.rglob("*"), key=lambda entry: len(entry.parts), reverse=True):
+    moves, edits, stuck, kept = [], [], [], []
+    entries = sorted(folder.rglob("*"), key=lambda entry: len(entry.parts), reverse=True)
+    for path in entries:
         relative = path.relative_to(folder)
-        if path.is_file():
-            suffix = path.suffix.lower()
-            if suffix in NAME_TEXT_SUFFIXES:
-                try:
-                    text, _ = read_text_any(path)
-                except UnicodeDecodeError:
-                    text = ""
-                if pattern.search(text):
-                    edits.append(relative)
-            elif suffix in NAME_BINARY_SUFFIXES and pattern.search(
-                    path.read_bytes().decode("latin-1")):
-                stuck.append(relative)
+        if in_costume_folder(relative):
+            if pattern.search(path.name):
+                kept.append(relative)
+            continue
         if pattern.search(path.name):
             moves.append((relative, relative.with_name(pattern.sub(new, path.name))))
+    kept_names = frozenset(path.name.lower() for path in kept)
+    for path in entries:
+        relative = path.relative_to(folder)
+        if not path.is_file() or in_costume_folder(relative):
+            continue
+        suffix = path.suffix.lower()
+        if suffix in NAME_TEXT_SUFFIXES:
+            try:
+                text, _ = read_text_any(path)
+            except UnicodeDecodeError:
+                text = ""
+            if rename_text(text, pattern, new, kept_names)[1]:
+                edits.append(relative)
+        elif suffix in NAME_BINARY_SUFFIXES and pattern.search(
+                path.read_bytes().decode("latin-1")):
+            stuck.append(relative)
     edits.sort()
     stuck.sort()
-    return {"old": old, "new": new, "moves": moves, "edits": edits, "stuck": stuck}
+    kept.sort()
+    return {"old": old, "new": new, "moves": moves, "edits": edits, "stuck": stuck, "kept": kept}
 
 
 def rename_refusal(folder: Path, kind: str, old: str, new: str, vanilla) -> str:
@@ -1117,11 +1416,13 @@ def apply_rename(folder: Path, plan: dict) -> list[str]:
     folder = Path(folder)
     pattern = name_pattern(plan["old"])
     new = plan["new"]
+    kept = plan.get("kept") or []
+    kept_names = frozenset(Path(path).name.lower() for path in kept)
     lines = []
     for relative in plan["edits"]:
         path = folder / relative
         text, encoding = read_text_any(path)
-        changed, count = pattern.subn(new, text)
+        changed, count = rename_text(text, pattern, new, kept_names)
         backups.keep(path, folder)
         path.write_bytes(changed.encode(encoding))
         lines.append("edited %s (%d)" % (relative.as_posix(), count))
@@ -1133,6 +1434,10 @@ def apply_rename(folder: Path, plan: dict) -> list[str]:
             continue
         path.rename(destination)
         lines.append("renamed %s -> %s" % (source.as_posix(), target.name))
+    if kept:
+        lines.append("%d file(s) below costume folders keep '%s' in their names, as do the paths "
+                     "that point at them" % (len(kept), plan["old"]))
+        lines += ["    " + line for line in folder_summary(kept, limit=12)]
     if plan["stuck"]:
         lines.append("%d file(s) still hold '%s' inside: rebuild or hand edit"
                      % (len(plan["stuck"]), plan["old"]))
@@ -1323,6 +1628,19 @@ def scan(folder: Path, fighters=(), items=(), places=()) -> dict:
     if len(own_places) > 1:
         notes.append("stage trees for %s" % ", ".join(own_places))
 
+    if (folder / MENU_MANIFEST).is_file() or (folder / "ui" / "script" / "menu").is_dir():
+        namespace = menu_namespace(folder)
+        found[MENU].append({"namespace": namespace} if namespace else {})
+        if namespace:
+            notes.append("menu scripts under ui/script/menu/%s" % namespace)
+
+    if (folder / MII_MANIFEST).is_file() or any((folder / tree).is_dir() for tree in MII_TREES):
+        found[MII].append(read_mii_manifest(folder))
+        hats = sorted(entry.name for entry in (folder / "miihat").iterdir()
+                      if entry.is_dir()) if (folder / "miihat").is_dir() else []
+        if hats:
+            notes.append("Mii hats under miihat/: %s" % ", ".join(hats))
+
     found["notes"] = notes
     return found
 
@@ -1361,6 +1679,31 @@ def scaffold(folder: Path, kind: str, values: dict) -> list[str]:
         made.append("stage/%s/normal" % resource)
         add_declaration(folder / "stage.toml", values, STAGE_KEYS)
         made.append("stage.toml")
+    elif kind == MENU:
+        namespace = values.get("namespace") or "my_menu"
+        resource = namespace
+        (folder / "ui" / "script" / "menu" / namespace).mkdir(parents=True, exist_ok=True)
+        made.append("ui/script/menu/%s" % namespace)
+        if not (folder / MENU_MANIFEST).is_file() or (values.get("tables") or {}):
+            write_menu_manifest(folder, values)
+            made.append(MENU_MANIFEST)
+    elif kind == ENEMY:
+        resource = values.get("name") or "my_enemy"
+        for tree in ENEMY_FOLDERS:
+            (folder / "enemy" / resource / tree).mkdir(parents=True, exist_ok=True)
+        (folder / "effect" / "enemy" / resource).mkdir(parents=True, exist_ok=True)
+        made.append("enemy/%s/{model,motion,param,script}, effect/enemy/%s" % (resource, resource))
+        add_declaration(folder / ENEMY_MANIFEST, {"name": resource, "base": values.get("base") or "nabbit"},
+                        ENEMY_KEYS)
+        made.append(ENEMY_MANIFEST)
+    elif kind == MII:
+        resource = "mii_parts"
+        for tree in MII_TREES:
+            (folder / tree).mkdir(parents=True, exist_ok=True)
+        made.append("miihat, miibody")
+        if not (folder / MII_MANIFEST).is_file() or (values.get("tables") or {}):
+            write_mii_manifest(folder, values)
+            made.append(MII_MANIFEST)
     info = folder / "info.toml"
     if not info.is_file():
         display = values.get("display_name") or resource

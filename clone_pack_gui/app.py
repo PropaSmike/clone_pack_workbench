@@ -7,6 +7,7 @@ import contextlib
 import io
 import json
 import os
+import subprocess
 import sys
 import traceback
 from pathlib import Path
@@ -14,19 +15,24 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
-from . import backups, emit, gimmicks, guide, optimize, packs, prc, stickpad, vtables
+from . import backups, emit, enemy_code, gimmicks, guide, menu_presets, optimize, packs, prc, stickpad, vtables
 from .tables import Field, TableEditor
 from .catalog import (Catalog, OWNER_SURFACE, VL_SURFACE, is_float_field,
                       is_label_field, is_name_field)
 
 TITLE = "Clone Pack Workbench"
-KINDS = (packs.FIGHTER, packs.ITEM, packs.STAGE)
+KINDS = (packs.FIGHTER, packs.ITEM, packs.STAGE, packs.MENU, packs.MII, packs.ENEMY)
 PARAM_TABLES = ("fighter_param", "param_motion", "common", "param_thrown", "vl.prc")
 ITEM_PRC_SURFACE = "param.prc"
 ITEM_PARAM_TABLES = ("item_common", "item_owner_param", ITEM_PRC_SURFACE)
 PREFILL_TYPES = ("f32", "float", "i32", "u32", "int", "bool", "i8", "u8", "i16", "u16")
 CHANGED = "#1a6e2e"
-SURFACES = {packs.FIGHTER: PARAM_TABLES, packs.ITEM: ITEM_PARAM_TABLES, packs.STAGE: ()}
+SURFACES = {packs.FIGHTER: PARAM_TABLES, packs.ITEM: ITEM_PARAM_TABLES, packs.STAGE: (), packs.MENU: (),
+            packs.MII: (), packs.ENEMY: ()}
+ENEMY_FOLDERS = ("yellowdevil", "subetenoyaminoou", "flyingman", "metalface", "nabbit")
+ENEMY_STATE_KEYS = ("arrive_frame", "arrive_x", "arrive_y", "stay_seconds", "walk_speed")
+NO_ENEMY_PARAMS = (
+    "An enemy's values live in its own enemy/<name>/model/body/c00/param.prc; this tab sets none.")
 ANY_FILE = "any file"
 NO_STAGE_PARAMS = (
     "The engine changes no stage value at runtime, so there is nothing to set "
@@ -35,6 +41,18 @@ NO_STAGE_PARAMS = (
     "zones and collision in the .lvd. Everything else is in stage.toml "
     "(Identity tab)."
 )
+NO_MENU_PARAMS = (
+    "A menu pack has no parameters. menu.toml (Identity tab) holds its modes, codes, layouts, "
+    "preloads and script patches; the battles a mode starts are set up by its Lua or its plugin "
+    "(Rust tab)."
+)
+NO_MII_PARAMS = (
+    "A Mii pack has no parameters. mii.toml (Identity tab) lists its hats and outfits; each copies "
+    "every value of its base row, and the head and per hair type columns change the rest."
+)
+MII_HEADS = ("", "normal", "hat", "face_only", "term")
+MII_FIGHTERS = ("miifighter", "miiswordsman", "miigunner")
+TRISTATE = ("", "true", "false")
 SPAWN_CONTAINERS = ("box", "barrel", "capsule", "carrierbox", "kusudama")
 LEVELS = ("ERROR", "WARN", "INFO")
 
@@ -278,6 +296,10 @@ class Workbench(ttk.Frame):
             if manifest and (folder / manifest).is_file():
                 if kind == packs.FIGHTER:
                     declared = packs.read_fighter_manifests(folder / manifest)
+                elif kind == packs.MENU:
+                    declared = [packs.read_menu_manifest(folder)]
+                elif kind == packs.MII:
+                    declared = [packs.read_mii_manifest(folder)]
                 else:
                     declared = packs.read_manifests(folder / manifest)
                 self.merge_parts(kind, declared)
@@ -318,6 +340,8 @@ class Workbench(ttk.Frame):
                 kind = catalog.kind_of_item(item["base_item"])
                 if kind is not None:
                     item["base_kind"] = kind
+            if item.get("members") and not item.get("family_members"):
+                item["family_members"] = ", ".join(gimmicks.family_names(item))
         for note in found.get("notes") or []:
             self.log("    scan: " + note)
         self.identity.set_item_candidates(self.item_candidates)
@@ -399,6 +423,12 @@ class Workbench(ttk.Frame):
 
     def new_part(self) -> None:
         kind = self.kind.get()
+        if kind == packs.MENU:
+            self.log("a pack has one menu.toml: add modes, codes and layouts to it as rows")
+            return
+        if kind == packs.MII:
+            self.log("a pack has one mii.toml: add hats and outfits to it as rows")
+            return
         self.identity.collect()
         self.sections[kind].append({})
         self.index[kind] = len(self.sections[kind]) - 1
@@ -455,7 +485,8 @@ class Workbench(ttk.Frame):
 
     def vanilla_names(self, kind: str) -> list[str]:
         return {packs.FIGHTER: self.catalog.fighter_dirs, packs.ITEM: self.catalog.item_dirs,
-                packs.STAGE: self.catalog.stage_places}[kind]()
+                packs.STAGE: self.catalog.stage_places, packs.MENU: list, packs.MII: list,
+                packs.ENEMY: lambda: list(ENEMY_FOLDERS)}[kind]()
 
     def rename_part(self, kind: str, old: str, new: str, confirm=None) -> bool:
         """Rename what the pack ships for one part, then read the pack again.
@@ -570,9 +601,17 @@ class Workbench(ttk.Frame):
         keep = {}
         for kind, parts in self.sections.items():
             for section in parts:
+                if kind == packs.MII:
+                    continue
+                if kind == packs.MENU:
+                    if section.get("luac") or section.get("lua_folder"):
+                        keep.setdefault(kind, []).append(
+                            {key: section[key] for key in packs.MENU_STATE_KEYS if section.get(key)})
+                    continue
                 beyond = any(section.get(key) for key in
                              ("articles", "params", "item_params", "owner_params",
-                              "owner_prc_files", "item_common_prc", "hooks"))
+                              "owner_prc_files", "item_common_prc", "hooks", "family_members")
+                             + ENEMY_STATE_KEYS)
                 if section and (kind == packs.FIGHTER or beyond):
                     keep.setdefault(kind, []).append(section)
         if not keep:
@@ -828,6 +867,9 @@ class IdentityPanel(ttk.Frame):
         self._build_fighter()
         self._build_item()
         self._build_stage()
+        self._build_menu()
+        self._build_mii()
+        self._build_enemy()
         for kind, frame in self.frames.items():
             wrap_within(frame, self.fields[kind].hints)
         self.show(packs.FIGHTER)
@@ -895,6 +937,9 @@ class IdentityPanel(ttk.Frame):
         fields.entry("partner", "Partner",
                      hint="fighter.toml partner: blank = the base's default (an Ice Climbers clone gets a Nana-style partner), none = no partner, copy = a copy of this fighter follows it like Nana, or another clone's name (picked on its own, that clone then leads with this one following unless its Partner is none). Tune the follow in a [partner_params] table: off popo only nana_delay (frames behind, 15 at most) and nana_opt_dst (distance kept) change it")
         fields.flag("kirby_copy_full_model", "Kirby wears the whole body, not a cap")
+        fields.entry("kirby_model", "Extra copy model",
+                     hint="fighter.toml [kirby] model: one more model folder under fighter/kirby/model/, for a copy "
+                          "that shows two models at once; blank for none")
         fields.choice("kirby_copy_donor", "Kirby copy donor",
                       [""] + [name for _, name in catalog.fighter_bases()],
                       hint="whose copy model your clone borrows; blank takes the base's own hat")
@@ -949,6 +994,12 @@ class IdentityPanel(ttk.Frame):
         self._build_glide(frame, fields)
         self._build_tether(frame, fields)
         self._build_hud(frame, fields)
+        fields.entry("move_list_pages", "Move list pages", width=6,
+                     hint="extra pages below the specials, up to 32; the game alone stops at four. "
+                          "Labels nam_peculiar_NN_<name> and nam_peculiar_help_NN_<name>, NN from 00")
+        fields.entry("move_list_images", "Picture pages", width=20,
+                     hint="the pages that show ui/replace/skill/skill_1/skill_1_<name>_extra_page_<N>.bntx, "
+                          "counted from 0, comma separated")
         self._build_fighter_tables(frame, fields)
 
         fields.buttons((
@@ -958,7 +1009,30 @@ class IdentityPanel(ttk.Frame):
             ("Show Rust", lambda: self.app.tabs.select(self.app.rust)),
             ("Rename files", self.rename_files),
             ("Renumber costumes", self.renumber_costumes),
+            ("Make Final Smash folders", self.make_final_smash_folders),
         ))
+
+    def make_final_smash_folders(self) -> None:
+        """The folders a Final Smash scene and movie of the fighter's own go in."""
+        if not self.app.require_folder():
+            return
+        self.collect(quiet=True)
+        name = self.app.state.get("resource_name")
+        if not name:
+            messagebox.showinfo(TITLE, "Give the fighter a resource name first.")
+            return
+        made = []
+        for tree in ("model", "render", "lut", "motion"):
+            path = self.app.folder / "finalsmash" / name / "shared" / tree
+            path.mkdir(parents=True, exist_ok=True)
+            made.append(path)
+        movie = self.app.folder / "prebuilt;" / "movie" / "fighter" / name / "c00"
+        movie.mkdir(parents=True, exist_ok=True)
+        self.app.log("made finalsmash/%s/shared/{model,render,lut,motion} and prebuilt;/movie/fighter/%s/c00" % (name, name))
+        self.app.log("    lay the scene out like a vanilla one (model/<set>/, render/, lut/, motion/) and put "
+                     "<file>.h264 movies per costume; then Write config.json declares them and the Rust tab "
+                     "shows the calls")
+        self.app.rust.refresh()
 
     def _place(self, frame: ttk.Frame, fields: Fields, widget: tk.Widget) -> None:
         widget.grid(row=fields.row, column=0, columnspan=3, sticky="ew", pady=(10, 4))
@@ -1084,17 +1158,17 @@ class IdentityPanel(ttk.Frame):
         """[[grab]], [[global_motion]] and [partner_params]."""
         self.grab_editor = TableEditor(
             frame, "Grab rules", "grab",
-            [Field("status", "Grabber status", 16, "choice", gimmicks.GRAB_STATUSES),
+            [Field("status", "Grabber status", 16, "choice", gimmicks.GRAB_STATUSES + gimmicks.OWN_STATUSES),
              Field("victim", "Victim status", 24, "choice", ("",) + gimmicks.VICTIM_STATUSES),
-             Field("then", "Then", 16, "choice", ("",) + gimmicks.GRAB_STATUSES),
+             Field("then", "Then", 16, "choice", ("",) + gimmicks.OWN_STATUSES + gimmicks.GRAB_STATUSES),
              Field("node", "Hold at joint", 10), Field("offset", "Offset (x, y, z)", 12),
              Field("node", "held free, at no joint", widget="check", checked='""'),
              Field("catch", "calls set_catch", widget="check")],
             describe=self.describe_grab, identity=lambda row: row.get("status"), on_change=self.changed,
             per_row=3,
             hint="a CATCH box only catches in the game's grab statuses; a rule makes it catch in yours. Victim: the "
-                 "status the box gives the opponent (any if blank); then: your status once caught (a status number "
-                 "or name). The opponent is held at throw unless another joint is named")
+                 "status the box gives the opponent (any if blank); then: your status once caught (own N is your "
+                 "fighter's own status N, counted from 0). The opponent is held at throw unless another joint is named")
         self._place(frame, fields, self.grab_editor)
         self.motion_editor = TableEditor(
             frame, "Motions on every fighter", "global_motion",
@@ -1106,6 +1180,25 @@ class IdentityPanel(ttk.Frame):
                  "has, animation plays your file for fighters that ship it; victim = the opponent's half of a throw, "
                  "playing your file on them")
         self._place(frame, fields, self.motion_editor)
+        self.kirby_motion_editor = TableEditor(
+            frame, "Kirby copy motions", "kirby_motion",
+            [Field("name", "Name", 22), Field("animation", "Animation file", 26), Field("template", "Template", 18),
+             Field("scripts", "Scripts", 18), Field("blend_frames", "Blend frames", 5),
+             Field("cancel_frame", "Cancel frame", 5), Field("loop", "loops", widget="check")],
+            describe=self.describe_kirby_motion, identity=lambda row: row.get("name"), on_change=self.changed,
+            prepare=self.keep_unlisted_keys, per_row=3,
+            hint="a motion added to Kirby's motion list for your copy, played from fighter/kirby/motion/"
+                 "<name>body/c00/<animation>. Template borrows a copy motion's flags and scripts "
+                 "(mario_special_n); scripts names your own ACMD. Other keys a row already has stay")
+        self._place(frame, fields, self.kirby_motion_editor)
+        self.kirby_mesh_editor = TableEditor(
+            frame, "Kirby hat pieces", "kirby_mesh",
+            [Field("name", "Mesh", 26), Field("visible", "shown from the start", widget="check")],
+            describe=lambda row: "%s %s" % (gimmicks.display(row.get("name", "")),
+                                            "shown" if row.get("visible") == "true" else "hidden"),
+            identity=lambda row: row.get("name"), on_change=self.changed,
+            hint="[[kirby.mesh]]: whether a mesh of the copy hat shows before any animation sets it")
+        self._place(frame, fields, self.kirby_mesh_editor)
         self.partner_editor = TableEditor(
             frame, "Partner follow params", "partner",
             [Field("key", "Param", 36, "choice", gimmicks.partner_param_names()), Field("value", "Value", 8)],
@@ -1162,6 +1255,28 @@ class IdentityPanel(ttk.Frame):
         if row.get("catch") == "true":
             text += ", set_catch"
         return text
+
+    @staticmethod
+    def describe_kirby_motion(row: dict) -> str:
+        text = gimmicks.display(row.get("name", ""))
+        if "animation" in row:
+            text += " plays %s" % gimmicks.display(row["animation"])
+        if "template" in row:
+            text += ", as %s" % gimmicks.display(row["template"])
+        if row.get("loop") == "true":
+            text += ", loops"
+        extra = [key for key in row if key not in ("name", "animation", "template", "loop")]
+        if extra:
+            text += " (+%s)" % ", ".join(extra)
+        return text
+
+    def keep_unlisted_keys(self, row: dict, rows: list[dict]) -> dict:
+        """A row edited in the panel keeps the keys it has no field for."""
+        listed = {field.key for field in self.kirby_motion_editor.fields}
+        for known in rows:
+            if known.get("name") == row.get("name"):
+                return dict({key: value for key, value in known.items() if key not in listed}, **row)
+        return row
 
     @staticmethod
     def describe_motion(row: dict) -> str:
@@ -1354,6 +1469,9 @@ class IdentityPanel(ttk.Frame):
         state["tether"] = {"from": self.tether_from.get(), "boxes": self.tether_boxes.rows}
         state["grabs"] = self.grab_editor.rows
         state["global_motions"] = self.motion_editor.rows
+        state["kirby_motions"] = self.kirby_motion_editor.rows
+        state["kirby_meshes"] = self.kirby_mesh_editor.rows
+        state["kirby_tables"] = ""
         state["partner_params"] = self.partner_editor.rows
         state["article_hurtboxes"] = self.hurtbox_editor.rows
         state["article_lvd_vertices"] = self.platform_editor.rows
@@ -1379,6 +1497,8 @@ class IdentityPanel(ttk.Frame):
         self.tether_boxes.set_rows(tether.get("boxes"))
         self.grab_editor.set_rows(part.get("grabs"))
         self.motion_editor.set_rows(part.get("global_motions"))
+        self.kirby_motion_editor.set_rows(part.get("kirby_motions") or packs.legacy_kirby_rows(part, "[[kirby.motion]]"))
+        self.kirby_mesh_editor.set_rows(part.get("kirby_meshes") or packs.legacy_kirby_rows(part, "[[kirby.mesh]]"))
         self.partner_editor.set_rows(part.get("partner_params"))
         self.hurtbox_editor.set_rows(part.get("article_hurtboxes"))
         self.platform_editor.set_rows(part.get("article_lvd_vertices"))
@@ -1512,6 +1632,10 @@ class IdentityPanel(ttk.Frame):
                      hint="blank means it never drops by itself; the Assist trophy is 150")
         fields.entry("spawn_min", "Fewest at once", width=6)
         fields.entry("spawn_max", "Most at once", width=6)
+        fields.entry("family_members", "Family members", width=48,
+                     hint="an Assist Trophy, Poke Ball Pokemon or boss cloned with its members: their "
+                          "resource names in the base family's order, this item first (item.toml "
+                          "members). Fill family writes them from the base; blank for a plain item")
         frame = self.frames[packs.ITEM]
         sources = ttk.LabelFrame(frame, text="Also comes out of these containers",
                                  padding=6)
@@ -1531,6 +1655,7 @@ class IdentityPanel(ttk.Frame):
         fields.flag("declare_shipped", "Declare the files this pack ships (--pack-dir)")
         fields.buttons((
             ("Write item.toml", self.write_item_toml),
+            ("Fill family", self.fill_family),
             ("Write config.json", self.write_item_config),
             ("Rename files", self.rename_files),
         ))
@@ -1556,6 +1681,12 @@ class IdentityPanel(ttk.Frame):
         fields.entry("bgm_setting_no", "Playlist column", width=6,
                      hint="which column of that playlist, counted from 0")
         fields.flag("bgm_selector", "Gets the album selector")
+        fields.entry("dynamic_collisions", "Moving platform sets", width=40,
+                     hint="model sets whose collision follows a bone; each plays "
+                          "motion/<set>/<set>_00.nuanmb by itself (dynamic_collisions)")
+        fields.entry("paused_motions", "Paused motions", width=40,
+                     hint="model sets whose motion holds its first frame until the plugin starts it "
+                          "(paused_motions)")
         fields.choice("content_donor", "Content donor", [""] + places,
                       hint="tools only: the stage whose files fill gaps, if not the "
                            "behaviour donor")
@@ -1574,6 +1705,7 @@ class IdentityPanel(ttk.Frame):
             self.form_vars[form] = variable
             ttk.Checkbutton(forms, text=form, variable=variable).grid(
                 row=0, column=index, padx=4)
+        self._build_stage_gimmicks(frame, fields)
         fields.buttons((
             ("Write stage.toml", self.write_stage_toml),
             ("Write config.json", self.write_stage_config),
@@ -1581,12 +1713,464 @@ class IdentityPanel(ttk.Frame):
             ("Rename files", self.rename_files),
         ))
 
+    def _build_stage_gimmicks(self, frame: ttk.Frame, fields: Fields) -> None:
+        """[[ladder]], [[barrel]], [[spring]] and [[door]] on the stage's normal form."""
+        self.stage_editors = {}
+        specs = (
+            ("ladder", "Ladders",
+             [Field("x", "Foot x", 7), Field("y", "Foot y", 7), Field("height", "Height", 7),
+              Field("width", "Width", 7)],
+             "Ultimate's own ladder (75m's): climbed with up and down, stepped off at the top. It draws "
+             "nothing, so the ladder belongs in your stage model. Width 10 when blank"),
+            ("barrel", "Barrel cannons",
+             [Field("x", "Centre x", 7), Field("y", "Centre y", 7), Field("model", "Model set", 14),
+              Field("rotation", "Rotation", 6), Field("rotation_max", "Sweeps to", 6),
+              Field("rotation_speed", "Degrees/frame", 6), Field("fire_rotation", "Fires at", 6),
+              Field("fire_delay", "Fire delay", 6), Field("speed", "Shot speed", 6),
+              Field("decrease", "Decrease", 6), Field("gravity", "Gravity", 6),
+              Field("fall_speed", "Ends at speed", 6), Field("width", "Entry width", 6),
+              Field("height", "Entry height", 6), Field("path", "Path (x, y, ...)", 22),
+              Field("path_speed", "Path speed", 6),
+              Field("always_rotate", "turns when empty", widget="check"),
+              Field("full_rotate", "spins all the way", widget="check"),
+              Field("auto_fire", "fires by itself", widget="check")],
+             "Kongo Jungle's barrel with Brawl's turning and firing rules: degrees counter-clockwise from "
+             "facing right; without auto fire the attack button fires. A model set of the stage turns "
+             "with it (one set per barrel); path gives the shot x, y per frame"),
+            ("spring", "Springs",
+             [Field("x", "x", 7), Field("y", "y", 7), Field("model", "Model set", 14),
+              Field("rotation", "Lean", 6), Field("speed", "Launch speed", 6),
+              Field("width", "Width", 6), Field("height", "Height", 6), Field("offset_x", "Offset x", 6),
+              Field("offset_y", "Offset y", 6), Field("launch_frame", "Launch frame", 6),
+              Field("joint", "Hold joint", 12)],
+             "Windy Hill's spring: launches a fighter that lands on it along its lean (negative leans "
+             "right); speed 4 lifts Mario about 95. With a model set, launch frame plays its motion and "
+             "holds the fighter on the joint until then"),
+            ("door", "Doors",
+             [Field("x", "Walks to x", 7), Field("y", "y", 7), Field("width", "Width", 6),
+              Field("height", "Height", 6), Field("offset_x", "Offset x", 6), Field("offset_y", "Offset y", 6),
+              Field("player", "Only player", 4), Field("air", "entered airborne", widget="check")],
+             "stick up in the area enters FIGHTER_STATUS_KIND_GIMMICK_DOOR, Brawl's door; the fighter stays "
+             "in it until your plugin acts (the stage template's src/door.rs). Draws nothing"),
+        )
+        for table, title, row_fields, hint in specs:
+            editor = TableEditor(frame, title, table, row_fields, on_change=self.changed,
+                                 per_row=4, hint=hint + ". Up to 64 each; needs an engine newer than 0.6.0-beta.1")
+            self._place(frame, fields, editor)
+            self.stage_editors[table] = editor
+
+    def _build_menu(self) -> None:
+        """menu.toml: the pack's modes, codes, layouts, preloads and script patches."""
+        fields = self._frame(packs.MENU)
+        fields.entry("namespace", "Script folder", width=20,
+                     hint="ui/script/menu/<this>/ holds the pack's compiled Lua; its modules are "
+                          "menu/<this>/<name>")
+        fields.entry("lua_folder", "Lua sources", width=40,
+                     hint="the .lua files Compile Lua builds; keep them outside the pack, the game "
+                          "runs only .lc")
+        fields.entry("luac", "SSBU luac", width=40,
+                     hint="Lua 5.3 built with LUA_FLOAT_TYPE = LUA_FLOAT_FLOAT (MENUS.md, \"Lua\"); "
+                          "blank uses SSBU_LUAC")
+        frame = self.frames[packs.MENU]
+        tool = import_tool("lint_menu_pack")
+        scenes = ("",) + (tool.SCENES if tool is not None else ("IngameCallSequenceScene",))
+        runs_as = ("",) + (tool.COMMON_MODES if tool is not None else ("melee_normal", "other_training"))
+        skips = ("", "rules", "stage_select", "rules, stage_select")
+        after = ("", "menu", "vanilla")
+        self.menu_editors = {}
+        specs = (
+            ("mode", "Modes", [
+                Field("id", "Id", 16), Field("name", "Name", 22), Field("description", "Description", 44),
+                Field("script", "Script", 30, "choice"), Field("button", "Picture layout", 44, "choice"),
+                Field("runs_as", "Runs as", 16, "choice", runs_as),
+                Field("scene", "Scene", 26, "choice", scenes), Field("skip", "Skips", 18, "choice", skips),
+                Field("after_battle", "After battle", 8, "choice", after), Field("order", "Order", 5)],
+             self.describe_mode, lambda row: row.get("id"), 2,
+             "a row on the modes page (X on the main menu; the Clone Engine Modes pack draws it). Id: lower "
+             "case letters, digits and _. Runs as is the game's mode: melee_normal is Smash, other_training "
+             "Training (MENUS.md lists them all); a script with enter runs as a screen of the page "
+             "instead. Scene IngameCallSequenceScene goes straight into "
+             "the battle; skips and after battle need Smash and no scene. The picture layout is drawn "
+             "512 x 796, its main .bflyt named after its folder"),
+            ("sequence", "Sequences", [
+                Field("id", "Id", 16), Field("code", "Code", 11),
+                Field("runs_as", "Runs as", 18, "choice", runs_as),
+                Field("scene", "Scene", 26, "choice", scenes), Field("skip", "Skips", 18, "choice", skips),
+                Field("after_battle", "After battle", 8, "choice", after)],
+             None, lambda row: row.get("id") or row.get("code"), 3,
+             "a main menu button pointed at it starts the game's mode it runs as. Point a button at it "
+             "from a script patch: sequence = prg_func.engine_call(\"engine.sequence\", \"<id>\")"),
+            ("layout", "Layouts", [
+                Field("scene", "Scene", 10, "choice", ("main_menu",)), Field("file", "File", 48, "choice"),
+                Field("over_side_panel", "over the side panel and footer", widget="check"),
+                Field("under_movies", "under movies", widget="check")],
+             None, lambda row: row.get("file"), 2,
+             "the main menu builds this layout too; Lua finds it in LayoutRootList, named after its main "
+             ".bflyt. Up to 16 installed in all"),
+            ("preload", "Preloads", [Field("after", "After", 48), Field("files", "Files", 48)],
+             None, None, 2, "whenever the game requests After, it requests Files too (paths under ui/)"),
+            ("patch", "Script patches", [
+                Field("module", "Module", 36), Field("script", "Script", 30, "choice"),
+                Field("root", "Root", 12, "choice", ("", "script", "script_patch"))],
+             None, lambda row: (row.get("module"), row.get("root")), 3,
+             "whenever the game loads Module (a path under ui/script/ without .lc), it runs Script instead; "
+             "requiring Module inside it gives the module as it was. Root script_patch for the stage "
+             "select's and the stage builder's"),
+        )
+        for table, title, row_fields, describe, identity, per_row, hint in specs:
+            editor = TableEditor(frame, title, table, row_fields, describe=describe, identity=identity,
+                                 on_change=self.changed, per_row=per_row, hint=hint)
+            self._place(frame, fields, editor)
+            self.menu_editors[table] = editor
+        self._build_menu_presets(frame, fields)
+        fields.buttons((
+            ("Write menu.toml", self.write_menu_toml),
+            ("Compile Lua", self.compile_lua),
+            ("Show Rust", lambda: self.app.tabs.select(self.app.rust)),
+        ))
+
+    @staticmethod
+    def describe_mode(row: dict) -> str:
+        text = '%s "%s"' % (gimmicks.display(row.get("id", "")), gimmicks.display(row.get("name", "")))
+        if "runs_as" in row:
+            text += ", runs as %s" % row["runs_as"]
+            if "scene" in row:
+                text += " in %s" % gimmicks.display(row["scene"])
+        elif "script" in row:
+            text += ", a screen of the page"
+        if "skip" in row:
+            text += ", skips %s" % gimmicks.display(row["skip"])
+        if "after_battle" in row:
+            text += ", after the battle: %s" % gimmicks.display(row["after_battle"])
+        if "order" in row:
+            text += ", order %s" % row["order"]
+        return text
+
+    def _build_enemy(self) -> None:
+        """enemy.toml: an enemy of its own on one of the game's, and when the plugin brings it out."""
+        fields = self._frame(packs.ENEMY)
+        fields.entry("name", "Name", hint="enemy.toml name: its folders enemy/<name>/ and effect/enemy/<name>/, "
+                                          "lower case letters, digits and _")
+        fields.choice("base", "Base enemy", list(enemy_code.BASES),
+                      hint="the game's enemy it copies; off its home stage only Flying Man fights by itself, "
+                           "and Nabbit gets the Rust tab's walk")
+        fields.entry("arrive_frame", "Comes out at frame", width=8, hint="the battle frame the plugin brings it out at")
+        fields.entry("arrive_x", "At x", width=8)
+        fields.entry("arrive_y", "At y", width=8)
+        fields.entry("stay_seconds", "Stays (seconds)", width=8)
+        fields.entry("walk_speed", "Walk speed", width=8, hint="Nabbit: units per frame of the Rust tab's walk")
+        fields.buttons((
+            ("Write enemy.toml", self.write_enemy_toml),
+            ("Write config.json", self.write_enemy_config),
+            ("Fix motion list", self.fix_enemy_motion_list),
+            ("Show Rust", lambda: self.app.tabs.select(self.app.rust)),
+        ))
+
+    def enemy_names(self) -> list[str]:
+        return [part["name"] for part in self.app.sections[packs.ENEMY] if part.get("name")]
+
+    def write_enemy_toml(self) -> None:
+        if not self.app.require_folder():
+            return
+        self.collect()
+        parts = [{key: part[key] for key in packs.ENEMY_KEYS if part.get(key)}
+                 for part in self.app.sections[packs.ENEMY] if part.get("name")]
+        if not parts:
+            messagebox.showinfo(TITLE, "Give the enemy a name first.")
+            return
+        written = packs.write_manifests(self.app.folder / packs.ENEMY_MANIFEST, parts, packs.ENEMY_KEYS)
+        self.app.log("enemy.toml: wrote %s" % ", ".join(written))
+        self.app.present = packs.detect_kinds(self.app.folder)
+        self.app.mark_present()
+        self.app.save_state()
+
+    def write_enemy_config(self) -> None:
+        if not self.app.require_folder():
+            return
+        self.collect()
+        tool = import_tool("lint_enemy_pack")
+        names = self.enemy_names()
+        if tool is None or not names:
+            self.app.log("needs lint_enemy_pack.py beside this GUI and a named enemy")
+            return
+        tool.write_config(str(self.app.folder), names)
+        self.app.log("config.json: the folders and files of %s" % ", ".join(names))
+
+    def fix_enemy_motion_list(self) -> None:
+        if not self.app.require_folder():
+            return
+        self.collect()
+        tool = import_tool("lint_enemy_pack")
+        if tool is None:
+            return
+        for name in self.enemy_names():
+            if os.path.isfile(tool.motion_list(str(self.app.folder), name)):
+                tool.fix_motion_list(str(self.app.folder), name)
+                self.app.log("%s: motion_list.bin names enemy/%s/motion/body/c00 now" % (name, name))
+            else:
+                self.app.log("%s: no enemy/%s/motion/body/c00/motion_list.bin yet" % (name, name))
+
+    def _build_mii(self) -> None:
+        """mii.toml: the hats and outfits the pack adds to the Mii Fighter menus."""
+        fields = self._frame(packs.MII)
+        frame = self.frames[packs.MII]
+        self.mii_editors = {}
+        specs = (
+            ("mii_hat", "Hats", [
+                Field("id", "Id", 18), Field("base", "Base hat", 18, "choice"),
+                Field("model_type", "Head", 10, "choice", MII_HEADS),
+                Field("hair_model_types", "Per hair type", 28), Field("disp_order", "Order", 6),
+                Field("swing", "Swing bones", 6, "choice", TRISTATE),
+                Field("is_patch", "Patch look", 6, "choice", TRISTATE)],
+             self.describe_hat, 4,
+             "files go in miihat/<id>/model/body/c00 to c11, one folder per favourite colour. The base is "
+             "the game's hat whose row it copies: camera, placement per hair type, everything not set "
+             "here. Head: normal keeps the hair, hat trims it, face_only hides it, term hides the whole "
+             "Mii head (masks). Per hair type: 12=face_only, 40=hat"),
+            ("mii_outfit", "Outfits", [
+                Field("id", "Id", 18), Field("fighter", "Fighter", 12, "choice", MII_FIGHTERS),
+                Field("base", "Base outfit", 18, "choice"),
+                Field("gender", "Gender", 8, "choice", ("", "male", "female", "both")),
+                Field("name", "Icon name", 14), Field("disp_order", "Order", 6),
+                Field("swing", "Swing bones", 6, "choice", TRISTATE),
+                Field("is_patch", "Patch look", 6, "choice", TRISTATE)],
+             self.describe_outfit, 4,
+             "ids start with b_ and end in _m or _f like the game's. Files go in "
+             "fighter/<fighter>/model/<id>/c00 to c11 and fighter/<fighter>/motion/<id>/c00 (copy the "
+             "base's update, ik, flip and scharge .prc). The icon is mii_body_0_<icon name>, the id "
+             "without _m or _f unless set"),
+        )
+        for table, title, row_fields, describe, per_row, hint in specs:
+            editor = TableEditor(frame, title, table, row_fields, describe=describe,
+                                 identity=lambda row: row.get("id"), on_change=self.changed,
+                                 per_row=per_row, hint=hint)
+            self._place(frame, fields, editor)
+            self.mii_editors[table] = editor
+        fields.buttons((
+            ("Write mii.toml", self.write_mii_toml),
+            ("Write folders to config.json", self.write_mii_config),
+        ))
+
+    @staticmethod
+    def describe_hat(row: dict) -> str:
+        text = 'hat "%s" from %s' % (gimmicks.display(row.get("id", "")), gimmicks.display(row.get("base", "")))
+        if "model_type" in row:
+            text += ", head %s" % gimmicks.display(row["model_type"])
+        if "hair_model_types" in row:
+            text += ", per hair type %s" % gimmicks.display(row["hair_model_types"])
+        return text
+
+    @staticmethod
+    def describe_outfit(row: dict) -> str:
+        text = 'outfit "%s" for %s from %s' % (gimmicks.display(row.get("id", "")),
+                                               gimmicks.display(row.get("fighter", "")),
+                                               gimmicks.display(row.get("base", "")))
+        if "gender" in row:
+            text += ", %s" % gimmicks.display(row["gender"])
+        return text
+
+    def refresh_mii_choices(self) -> None:
+        """Offer the game's hats and outfits as bases."""
+        if not getattr(self, "mii_editors", None):
+            return
+        tool = import_tool("lint_mii_pack")
+        vanilla = tool.load_vanilla(str(self.app.catalog.arc_index)) if tool is not None else None
+        vanilla = vanilla or {"mii_hat": set(), "mii_outfit": set()}
+        self.mii_editors["mii_hat"].set_choices("base", sorted(vanilla["mii_hat"]))
+        self.mii_editors["mii_outfit"].set_choices("base", sorted(vanilla["mii_outfit"]))
+
+    def write_mii_toml(self) -> None:
+        if not self.app.require_folder():
+            return
+        self.collect()
+        written = packs.write_mii_manifest(self.app.folder, self.app.part(packs.MII))
+        self.app.log("mii.toml: %s" % ("wrote " + ", ".join("[[%s]]" % table for table in written)
+                                        if written else "already holds these tables"))
+        self.app.present = packs.detect_kinds(self.app.folder)
+        self.app.mark_present()
+        self.app.save_state()
+        self.app.log_kept()
+
+    def write_mii_config(self) -> None:
+        """Each hat's and outfit's folders into config.json, from the files the pack ships."""
+        if not self.app.require_folder():
+            return
+        self.collect()
+        tool = import_tool("lint_mii_pack")
+        if tool is None:
+            self.app.log("lint_mii_pack.py is not beside this GUI")
+            return
+        rows = (self.app.part(packs.MII).get("tables") or {})
+        text = "\n".join(line for table in packs.MII_TABLES for row in rows.get(table) or []
+                         for line in ["[[%s]]" % table] + ["%s = %s" % item for item in row.items()])
+        parts, problems = tool.parse(text)
+        if problems:
+            self.app.log("mii.toml rows: %s" % problems[0][1])
+            return
+        written = tool.write_config(str(self.app.folder), parts)
+        if written is None:
+            self.app.log("config.json is not valid JSON; nothing written")
+            return
+        self.app.log("config.json: %s" % ("wrote the folders of " + ", ".join(written)
+                                           if written else "already lists every part's folders"))
+        self.app.files.refresh()
+
+    def _build_menu_presets(self, frame: ttk.Frame, fields: Fields) -> None:
+        """A ready-made mode: its [[mode]] row and its Lua, written in one go."""
+        box = ttk.LabelFrame(frame, text="Ready-made mode", padding=6)
+        self.preset_vars = {key: tk.StringVar() for key in
+                            ("preset", "id", "name", "fighter", "cpu", "stage", "boss", "movie")}
+        self.preset_vars["preset"].set(menu_presets.PRESETS[0])
+        for key, value in menu_presets.DEFAULTS.items():
+            self.preset_vars[key].set(value)
+        rows = (("preset", "Kind", menu_presets.PRESETS), ("id", "Id", None), ("name", "Name", None),
+                ("fighter", "Fighter", None), ("cpu", "CPU", None), ("stage", "Stage", None),
+                ("boss", "Boss", menu_presets.BOSSES), ("movie", "Movie", None))
+        for index, (key, label, choices) in enumerate(rows):
+            row, column = divmod(index, 4)
+            ttk.Label(box, text=label).grid(row=row, column=column * 2, sticky="w", pady=2)
+            if choices:
+                widget = ttk.Combobox(box, textvariable=self.preset_vars[key], values=choices, width=16)
+            else:
+                widget = ttk.Entry(box, textvariable=self.preset_vars[key], width=22 if key != "movie" else 34)
+            widget.grid(row=row, column=column * 2 + 1, sticky="w", padx=(4, 10), pady=2)
+        ttk.Button(box, text="Add mode", command=self.add_preset_mode).grid(row=2, column=0, sticky="w",
+                                                                             pady=(6, 0))
+        ttk.Label(box, foreground="#555", justify="left",
+                  text="duel: your fighter against a CPU, straight into the battle. pick: the players pick "
+                       "fighters, then fight on Stage. boss: the game's boss battle against Boss. movie: a "
+                       "stream:/movie/... WebM full screen. Add mode writes <id>.lua into Lua sources and the "
+                       "row into Modes; then Compile Lua and Write menu.toml. Names, not numbers: "
+                       "ui_chara_..., ui_stage_...").grid(row=3, column=0, columnspan=8, sticky="w", pady=(4, 0))
+        self._place(frame, fields, box)
+
+    def add_preset_mode(self) -> None:
+        if not self.app.require_folder():
+            return
+        self.collect(quiet=True)
+        part = self.app.part(packs.MENU)
+        namespace = part.get("namespace")
+        values = {key: variable.get().strip() for key, variable in self.preset_vars.items()}
+        tool = import_tool("lint_menu_pack")
+        if not namespace:
+            messagebox.showinfo(TITLE, "Give the menu a script folder first.")
+            return
+        if values["preset"] not in menu_presets.PRESETS:
+            messagebox.showinfo(TITLE, "Pick a kind: %s." % ", ".join(menu_presets.PRESETS))
+            return
+        if tool is not None and not tool.valid_mode_id(values["id"]):
+            messagebox.showinfo(TITLE, "The id is lower case letters, digits and _, up to %d." % tool.MAX_MODE_ID)
+            return
+        if values["preset"] == "movie" and not (values["movie"].startswith("stream:/movie/")
+                                                 and len(values["movie"]) <= 62):
+            messagebox.showinfo(TITLE, "The movie is a stream:/movie/<folder>/<name>.webm path of up to 62 bytes.")
+            return
+        name = values["name"] or values["id"].replace("_", " ").title()
+        source = Path(part["lua_folder"]) if part.get("lua_folder") else self.app.folder.parent / "lua"
+        path = source / ("%s.lua" % values["id"])
+        if path.is_file() and not messagebox.askyesno(TITLE, "%s exists. Replace it?" % path):
+            return
+        source.mkdir(parents=True, exist_ok=True)
+        path.write_text(menu_presets.lua_source(values["preset"], name, values), encoding="utf-8", newline="\n")
+        editor = self.menu_editors["mode"]
+        row = menu_presets.mode_row(values["preset"], values["id"], name, namespace)
+        editor.rows = [known for known in editor.rows if known.get("id") != row["id"]] + [row]
+        editor.refresh()
+        self.changed()
+        self.app.log("mode %s (%s): wrote %s and its [[mode]] row; Compile Lua, then Write menu.toml"
+                     % (values["id"], values["preset"], path))
+        if values["preset"] == "movie":
+            self.app.log("    ship the movie as %s (VP9 and Vorbis)"
+                         % values["movie"].replace("stream:/", "stream;/", 1))
+
+    def refresh_menu_choices(self) -> None:
+        """Offer the scripts and layouts the pack ships."""
+        folder = self.app.folder
+        if folder is None or not getattr(self, "menu_editors", None):
+            return
+        root = folder / "ui" / "script"
+        modules = sorted(path.relative_to(root).with_suffix("").as_posix()
+                         for path in root.rglob("*.lc")) if root.is_dir() else []
+        layouts = sorted(path.relative_to(folder).as_posix().lower()
+                         for path in (folder / "ui" / "layout").rglob("layout.arc")) \
+            if (folder / "ui" / "layout").is_dir() else []
+        self.menu_editors["mode"].set_choices("script", modules)
+        self.menu_editors["mode"].set_choices("button", [""] + layouts)
+        self.menu_editors["patch"].set_choices("script", modules)
+        self.menu_editors["layout"].set_choices("file", layouts)
+
+    def write_menu_toml(self) -> None:
+        if not self.app.require_folder():
+            return
+        self.collect()
+        written = packs.write_menu_manifest(self.app.folder, self.app.part(packs.MENU))
+        self.app.log("menu.toml: %s" % ("wrote " + ", ".join("[[%s]]" % table for table in written)
+                                         if written else "already holds these tables"))
+        self.app.log("    the Lint tab checks it against every pack installed beside this one")
+        self.app.present = packs.detect_kinds(self.app.folder)
+        self.app.mark_present()
+        self.app.save_state()
+        self.app.log_kept()
+
+    def compile_lua(self) -> None:
+        """Every .lua of the source folder into ui/script/menu/<folder>/<name>.lc, with the SSBU luac."""
+        if not self.app.require_folder():
+            return
+        self.collect(quiet=True)
+        part = self.app.part(packs.MENU)
+        namespace = part.get("namespace")
+        if not namespace:
+            messagebox.showinfo(TITLE, "Give the menu a script folder first.")
+            return
+        source = Path(part["lua_folder"]) if part.get("lua_folder") else self.app.folder.parent / "lua"
+        luac = part.get("luac") or os.environ.get("SSBU_LUAC", "")
+        if not luac or not Path(luac).is_file():
+            messagebox.showinfo(TITLE, "Point SSBU luac at a luac built for Smash: Lua 5.3 with "
+                                       "LUA_FLOAT_TYPE set to LUA_FLOAT_FLOAT.")
+            return
+        sources = sorted(source.glob("*.lua")) if source.is_dir() else []
+        if not sources:
+            self.app.log("no .lua files in %s" % source)
+            return
+        target_dir = self.app.folder / "ui" / "script" / "menu" / namespace
+        target_dir.mkdir(parents=True, exist_ok=True)
+        tool = import_tool("lint_menu_pack")
+        for lua in sources:
+            target = target_dir / (lua.stem + ".lc")
+            backups.keep(target, self.app.folder)
+            try:
+                result = subprocess.run([luac, "-s", "-o", str(target), str(lua)],
+                                        capture_output=True, text=True)
+            except OSError as error:
+                self.app.log("%s did not run: %s" % (luac, error))
+                return
+            if result.returncode:
+                self.app.log("%s: %s" % (lua.name, (result.stderr or result.stdout).strip()))
+                continue
+            problem = tool.bytecode_problem(target.read_bytes()) if tool is not None else ""
+            self.app.log("compiled %s to ui/script/menu/%s/%s.lc%s" % (
+                lua.name, namespace, lua.stem, "; " + problem if problem else ""))
+        self.app.log_kept()
+        self.app.save_state()
+        self.refresh_menu_choices()
+
     def rename_files(self) -> None:
         """Rename the part's folders, files and labels from the name on disk to
         the name on the form, after a look at what that touches."""
         if not self.app.require_folder():
             return
         kind = self.app.kind.get()
+        if kind == packs.MENU:
+            self.app.log("a menu pack's names are its own folders and module paths; rename them on "
+                         "disk and in the rows")
+            return
+        if kind == packs.MII:
+            self.app.log("a hat's or outfit's id is its folder name; rename the folders and the row")
+            return
+        if kind == packs.ENEMY:
+            self.app.log("an enemy's name is its folder name under enemy/ and effect/enemy/; rename them "
+                         "and the name, then Write config.json")
+            return
         self.collect(quiet=True)
         typed = packs.identity(self.app.state, kind)
         on_disk = packs.own_names(self.app.folder, packs.TREE_OF_KIND[kind],
@@ -1607,6 +2191,11 @@ class IdentityPanel(ttk.Frame):
             message = ["Rename %s to %s?" % (plan["old"], plan["new"]), "",
                        "%d folders and files renamed, %d text file(s) edited."
                        % (len(plan["moves"]), len(plan["edits"]))]
+            if plan.get("kept"):
+                message += ["", "%d file(s) below costume folders (c00, c01, ...) keep their names, "
+                                "and the paths that point at them stay as they are:"
+                            % len(plan["kept"])]
+                message += ["  " + line for line in packs.folder_summary(plan["kept"])]
             if plan["stuck"]:
                 message += ["", "%d file(s) still carry the old name inside and need a "
                                 "rebuild or a hand edit:" % len(plan["stuck"])]
@@ -1733,13 +2322,30 @@ class IdentityPanel(ttk.Frame):
         self.command_picked = None
         self.refresh_commands()
         self.load_float(fighter_part.get("float") or {})
+        listed = fighter_part.get("move_list") or {}
+        self.fields[packs.FIGHTER].vars["move_list_pages"].set(str(listed.get("pages") or ""))
+        self.fields[packs.FIGHTER].vars["move_list_images"].set(
+            ", ".join(str(page) for page in listed.get("image_pages") or []))
         self.load_gimmicks(fighter_part)
         chosen =spawn_list(self.app.part(packs.ITEM).get("spawn_from"))
         for source, variable in self.spawn_vars.items():
             variable.set(source in chosen)
-        forms = self.app.part(packs.STAGE).get("forms") or ["normal"]
+        stage = self.app.part(packs.STAGE)
+        forms = stage.get("forms") or ["normal"]
         for form, variable in self.form_vars.items():
             variable.set(form in forms)
+        for key in packs.STAGE_LIST_KEYS:
+            self.fields[packs.STAGE].vars[key].set(", ".join(spawn_list(stage.get(key))))
+        for table, editor in self.stage_editors.items():
+            editor.set_rows((stage.get("gimmicks") or {}).get(table) or [])
+        menu = self.app.part(packs.MENU)
+        for table, editor in self.menu_editors.items():
+            editor.set_rows((menu.get("tables") or {}).get(table) or [])
+        self.refresh_menu_choices()
+        mii = self.app.part(packs.MII)
+        for table, editor in self.mii_editors.items():
+            editor.set_rows((mii.get("tables") or {}).get(table) or [])
+        self.refresh_mii_choices()
 
     def collect(self, quiet: bool = False) -> dict:
         """Read every field of the visible form into the shared state. A field
@@ -1774,6 +2380,13 @@ class IdentityPanel(ttk.Frame):
                 except ValueError:
                     values.pop(key, None)
             whole_numbers(values, ("disp_order", "kirby_statuses"))
+            pages_text = str(values.pop("move_list_pages", "")).strip()
+            images = [int(page) for page in str(values.pop("move_list_images", "")).replace(" ", "").split(",")
+                      if page.isdigit()]
+            if pages_text.isdigit() and int(pages_text) > 0:
+                state["move_list"] = {"pages": int(pages_text), "image_pages": images}
+            else:
+                state["move_list"] = {}
         elif kind == packs.ITEM:
             text = values.pop("base_item", "")
             name, number = split_choice(text)
@@ -1796,6 +2409,21 @@ class IdentityPanel(ttk.Frame):
                              "range" % (values.get("bgm"), columns, column))
             state["forms"] = [form for form, variable in self.form_vars.items()
                               if variable.get()]
+            for key in packs.STAGE_LIST_KEYS:
+                values[key] = [name.strip().strip('"') for name in spawn_list(values.get(key))
+                               if name.strip().strip('"')] or ""
+            state["gimmicks"] = {table: [dict(row) for row in editor.rows]
+                                 for table, editor in self.stage_editors.items() if editor.rows}
+        elif kind == packs.MENU:
+            known = dict(state.get("tables") or {})
+            for table, editor in self.menu_editors.items():
+                known[table] = [dict(row) for row in editor.rows]
+            state["tables"] = {table: rows for table, rows in known.items() if rows}
+        elif kind == packs.MII:
+            known = dict(state.get("tables") or {})
+            for table, editor in self.mii_editors.items():
+                known[table] = [dict(row) for row in editor.rows]
+            state["tables"] = {table: rows for table, rows in known.items() if rows}
         for key, value in values.items():
             if value in ("", None):
                 state.pop(key, None)
@@ -1953,6 +2581,14 @@ class IdentityPanel(ttk.Frame):
                 continue
             values = {key: part[key] for key in keys if key in part}
             if kind == packs.ITEM:
+                names = gimmicks.family_names(part)
+                if names:
+                    values["members"] = names
+                else:
+                    values.pop("members", None)
+            if kind == packs.STAGE:
+                values["gimmicks"] = part.get("gimmicks") or {}
+            if kind == packs.ITEM:
                 if values.get("spawn_from"):
                     values["spawn_from"] = ", ".join(spawn_list(values["spawn_from"]))
                 elif "spawn_from" in values:
@@ -1999,6 +2635,25 @@ class IdentityPanel(ttk.Frame):
                          % (len(engine_rules) + len(config_rules)))
         self.app.save_state()
         self.app.log_kept()
+
+    def fill_family(self) -> None:
+        """Family members from the base item: the clone's name, then one per member of the base's family."""
+        fields = self.fields[packs.ITEM]
+        base, _ = split_choice(fields.vars["base_item"].get())
+        resource = fields.vars["resource_name"].get().strip()
+        family = self.app.catalog.item_family(base) if base else None
+        if not resource or not family or len(family[1]) < 2 and family[0] == "item":
+            messagebox.showinfo(TITLE, "Pick a resource name and a base whose family has members "
+                                       "(an Assist Trophy, a Pokemon, a boss, or an item that fires shots).")
+            return
+        category, members = family
+        names = gimmicks.member_names(resource, members)
+        fields.vars["family_members"].set(", ".join(names))
+        self.app.log("family: %s is a %s family of %d (%s); members %s"
+                     % (base, category, len(members), ", ".join(members), ", ".join(names)))
+        root = "assist" if category == "assist" else "item"
+        self.app.log("    each member loads its own files from %s/<member>/; without them it plays "
+                     "with the base's" % root)
 
     def write_item_toml(self) -> None:
         if not self.app.require_folder():
@@ -2341,7 +2996,9 @@ class ParamsPanel(ttk.Frame):
             self.table_box.configure(state="disabled")
             self.field_list.clear()
             self.rule_list.clear()
-            self.note.configure(text=NO_STAGE_PARAMS)
+            self.note.configure(text={packs.MENU: NO_MENU_PARAMS, packs.MII: NO_MII_PARAMS,
+                                      packs.ENEMY: NO_ENEMY_PARAMS}.get(
+                kind, NO_STAGE_PARAMS))
             self.enable(False)
             return
         self.table_box.configure(state="normal")
@@ -2862,6 +3519,12 @@ class LintPanel(ttk.Frame):
             wanted.append(("lint_clone_pack", False))
         if packs.STAGE in present:
             wanted.append(("lint_stage_pack", True))
+        if packs.MENU in present:
+            wanted.append(("lint_menu_pack", False))
+        if packs.MII in present:
+            wanted.append(("lint_mii_pack", False))
+        if packs.ENEMY in present:
+            wanted.append(("lint_enemy_pack", False))
         index = str(self.app.catalog.arc_index)
         self.findings = []
         for module_name, is_stage in wanted:
@@ -3225,13 +3888,29 @@ class RustPanel(ttk.Frame):
         """One file for every part of the pack that takes code."""
         parts = self.parts()
         fighters = self.described(packs.FIGHTER) if packs.FIGHTER in parts else []
+        folder = self.app.folder
+        if folder is not None:
+            fighters = [dict(part, final_smash_folders=any(
+                path.is_dir() for path in (folder / "finalsmash" / str(part.get("resource_name")),
+                                           folder / "prebuilt;" / "movie" / "fighter" / str(part.get("resource_name")))))
+                        for part in fighters]
         items = self.described(packs.ITEM) if packs.ITEM in parts else []
-        text = emit.plugin_source(fighters, items)
+        stages = ([part for part in self.app.sections[packs.STAGE] if part.get("place")]
+                  if packs.STAGE in parts else [])
+        menu = self.app.part(packs.MENU) if packs.MENU in parts else None
+        enemies = ([part for part in self.app.sections[packs.ENEMY] if part.get("name")]
+                   if packs.ENEMY in parts else [])
+        text = emit.plugin_source(fighters, items, stages, menu, enemies)
         if text:
             return text
         if packs.STAGE in parts:
             return ("A stage needs no code: stage.toml and config.json are enough. "
-                    "Add a plugin.nro only for behaviour stage.toml cannot describe.\n")
+                    "Add a plugin.nro only for behaviour stage.toml cannot describe; "
+                    "doors and paused motions wait for one, and this tab writes it "
+                    "once the stage has them.\n")
+        if packs.MII in parts:
+            return ("Mii hats and outfits need no code: mii.toml and config.json are enough. The engine "
+                    "adds their rows when the game loads its Mii tables.\n")
         return "Nothing to emit yet.\n"
 
     def refresh(self) -> None:

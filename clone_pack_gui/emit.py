@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import re
 
-from . import gimmicks
+from . import enemy_code, gimmicks
 
 
 def identifier(name: str) -> str:
@@ -333,12 +333,16 @@ def fighter_manifest_lines(state: dict, constant: str) -> list[str]:
     if isinstance(statuses, int) and statuses > 0:
         lines.append("    .kirby(%d) // status numbers reserved for Kirby's copy" % statuses)
     if isinstance(state.get("kirby_first"), int):
-        lines.append("    .kirby_first(%#x) // the first of those numbers, pinned" % state["kirby_first"])
+        lines.append("    .kirby_first(%d) // the first of those numbers, pinned" % state["kirby_first"])
     if state.get("kirby_copy_full_model"):
         lines.append("    .kirby_full_model() // Kirby gets the whole body, not a hat")
     if state.get("kirby_model"):
         lines.append("    .kirby_model(%s%s%s) // an extra model folder under fighter/kirby/model/" % (q, state["kirby_model"], q))
-    tables = (state.get("kirby_tables") or "").strip()
+    if "kirby_motions" in state or "kirby_meshes" in state:
+        tables = "\n".join(part for part in (row_tables("kirby_motion", state.get("kirby_motions")),
+                                             row_tables("kirby_mesh", state.get("kirby_meshes"))) if part)
+    else:
+        tables = (state.get("kirby_tables") or "").strip()
     if tables:
         fence = raw_fence(tables)
         lines.append("    .raw(r%s\"" % fence)
@@ -374,6 +378,7 @@ def fighter_manifest_lines(state: dict, constant: str) -> list[str]:
     else:
         lines += guarded_tables(state.get("tether_tables"), "CAP_TETHER",
                                 "the tether borrowed from another fighter and its ledge reach")
+    lines += move_list_lines(state)
     lines += command_lines(state)
     lines += entry_group_lines(state)
     lines += [
@@ -476,6 +481,20 @@ def status_total(base: str) -> str:
     return "*FIGHTER_%s_STATUS_KIND_%s" % (owner.upper(), "MAX" if owner in STATUS_TABLE_MAX else "NUM")
 
 
+def final_smash_lines(resource: str, constant: str) -> list[str]:
+    """The Final Smash's own scene and movie: the calls its statuses make, as comments."""
+    manager = "smashline::skyline_smash::app::lua_bind::FighterManager"
+    return [
+        "    // the Final Smash's scene and movie, from your Final Smash statuses:",
+        "    // let manager = clone_engine_api::fighter_manager();",
+        "    // %s::start_finalbg(manager, %s.kind().get().unwrap(), 1.0); // finalsmash/%s/shared/; "
+        "%s::exit_finalbg(manager) ends it" % (manager, constant, resource, manager),
+        "    // %s::prepare_movie(manager, smashline::skyline_smash::phx::Hash40::new("
+        "\"prebuilt:/movie/fighter/%s/c00/final_00.h264\")); // then start_movie(manager, 1.0) once "
+        "is_prepared_movie(manager), exit_movie(manager) once is_end_movie(manager)" % (manager, resource),
+    ]
+
+
 def float_call(settings: dict) -> str:
     """Float::PEACH with a builder call for each value the panel changed."""
     call = "Float::PEACH"
@@ -494,7 +513,7 @@ def float_call(settings: dict) -> str:
     return call
 
 
-def float_lines(state: dict, resource: str) -> list[str]:
+def float_lines(state: dict, resource: str, constant: str = "WAWA") -> list[str]:
     """Peach's float from clone_engine_api::float: its two statuses past the
     base's own, the way in and the aerial that keeps it going."""
     settings = state.get("float") or {}
@@ -509,8 +528,8 @@ def float_lines(state: dict, resource: str) -> list[str]:
     if isinstance(item, int) and not isinstance(item, bool) and item >= 0:
         note += "; down special throws %s mid-float" % (settings.get("item_name") or "item %d" % item)
     return [
-        "    let float_status = %s; // %s's status count: the float takes it and the next one, "
-        "so number statuses of your own from float_status + 2" % (status_total(base), base),
+        "    let float_status = %s.own_status(0); // the first status past %s's own: the float takes it and "
+        "the next one, so statuses of your own start at %s.own_status(2)" % (constant, base, constant),
         '    float::register("%s", %s, float_status); // %s' % (resource, call, note),
         '    Agent::new("%s") // the float, under the clone\'s own name' % resource,
         "        .on_start(float::on_start) // the way in, from the jump checks",
@@ -639,6 +658,17 @@ def guarded_calls(capability: str, calls: list[str]) -> list[str]:
             + ["    } else {",
                "        manifest // an older engine would refuse the whole manifest",
                "    };"])
+
+
+def move_list_lines(state: dict) -> list[str]:
+    move_list = state.get("move_list") or {}
+    if not move_list.get("pages"):
+        return []
+    calls = [".move_list(%d) // extra move list pages; the game alone stops at four" % move_list["pages"]]
+    if move_list.get("image_pages"):
+        calls.append(".move_list_images(&[%s]) // the pages that show a picture, counted from 0"
+                     % ", ".join(str(page) for page in move_list["image_pages"]))
+    return guarded_calls("CAP_MOVE_LIST_PAGES", calls)
 
 
 def hud_manifest_lines(state: dict) -> list[str]:
@@ -932,6 +962,18 @@ def hook_lines(kind: str, state: dict, constant: str, resource: str,
     return install, ["\n" + "\n\n".join(blocks) + "\n"]
 
 
+def article_agent_lines(owner: str, name: str) -> list[str]:
+    """An article's scripts and statuses, on Smashline's agent "<owner>_<article>"; a Kirby copy
+    article's owner is kirby."""
+    short = identifier(name).lower()
+    return ["    Agent::new(\"%s_%s\") // %s" % (owner, name, "a Kirby copy article's scripts and statuses"
+                                                if owner == "kirby" else "the article's scripts and statuses"),
+            "        // .game_acmd(\"game_fly\", %s_fly, Priority::Default)" % short,
+            "        // .status(Main, STATUS, %s_main) // a status kind of the source weapon or a new number"
+            % short,
+            "        .install();"]
+
+
 def fighter_part(state: dict, suffix: str = "", first: bool = True,
                  names_taken: set | None = None) -> dict:
     """What one fighter adds to the plugin: its declaration, its lines in main
@@ -941,7 +983,7 @@ def fighter_part(state: dict, suffix: str = "", first: bool = True,
     constant = identifier(resource)
     own = bool(state.get("own_css"))
     _, config_rules = split_rules(state)
-    uses = {"v2:fighter", "v2:Line", "v2:Manifest", "smashline:Agent", "smashline:Main", "smashline:Priority"}
+    uses = {"v2:fighter", "v2:Manifest", "smashline:Agent", "smashline:Main", "smashline:Priority"}
     if own:
         uses |= {"use std::collections::HashMap;", "use smash::hash40;",
                  "use the_csk_collection_api::*;"}
@@ -957,8 +999,10 @@ def fighter_part(state: dict, suffix: str = "", first: bool = True,
         "        // .status(Main, *FIGHTER_STATUS_KIND_SPECIAL_N, special_n_main)",
         "        .install();",
     ]
-    floating = float_lines(state, resource)
+    floating = float_lines(state, resource, constant)
     main += floating
+    if state.get("final_smash_folders"):
+        main += final_smash_lines(resource, constant)
     if len(floating) > 1:
         uses |= {"use clone_engine_api::float::{self, Float};", "use smashline::skyline_smash::lib::lua_const::*;",
                  "smashline:End", "smashline:Init", "smashline:Pre"}
@@ -996,26 +1040,9 @@ def fighter_part(state: dict, suffix: str = "", first: bool = True,
             main.append("    // %s ships files but has no source weapon yet: pick a source "
                         "fighter and weapon for it on the Identity tab." % name)
             continue
-        short = identifier(name).lower()
-        if article.get("kirby_copy"):
-            main += ["    %s.copy_article(\"%s\")" % (constant, name),
-                     "        // .status(Line::Main, STATUS, %s_main)" % short,
-                     "        .install();"]
-        else:
-            main += ["    Agent::new(\"%s_%s\")" % (resource, name),
-                     "        // .game_acmd(\"game_fly\", %s_fly, Priority::Default)" % short,
-                     "        .install();",
-                     "    %s.article(\"%s\")" % (constant, name),
-                     "        // .status(Line::Main, STATUS, %s_main)" % short,
-                     "        .install();"]
+        main += article_agent_lines("kirby" if article.get("kirby_copy") else resource, name)
     for name in renamed:
-        short = identifier(name).lower()
-        main += ["    Agent::new(\"%s_%s\")" % (resource, name),
-                 "        // .game_acmd(\"game_fly\", %s_fly, Priority::Default)" % short,
-                 "        .install();",
-                 "    %s.article(\"%s\")" % (constant, name),
-                 "        // .status(Line::Main, STATUS, %s_main)" % short,
-                 "        .install();"]
+        main += article_agent_lines(resource, name)
     statuses = state.get("kirby_statuses")
     if isinstance(statuses, int) and statuses > 0:
         main += ["    Agent::new(\"kirby\")",
@@ -1054,14 +1081,14 @@ def item_manifest_lines(state: dict, constant: str) -> list[str]:
         base_kind = int(base_kind)
     except (TypeError, ValueError):
         base_kind = 0
+    base = ("%s%s%s, // the vanilla item it is built on" % (q, state["base_item"], q) if state.get("base_item")
+            else "%d, // base kind: the vanilla item it is built on%s" % (base_kind, "" if base_kind else " (fill in)"))
     lines = [
         "    let manifest = ItemManifest::new(",
         "        %s%s%s, // resource name: files under item/%s, script name" % (q, resource, q, resource),
-        "        %d, // base kind: the vanilla item it is built on%s" % (base_kind, "" if base_kind else " (fill in)"),
+        "        " + base,
         "    )",
     ]
-    if state.get("base_item"):
-        lines.append("    .base_item(%s%s%s) // the base's name, for the log" % (q, state["base_item"], q))
     if state.get("agent_name"):
         lines.append("    .agent_name(%s%s%s) // script name" % (q, state["agent_name"], q))
     if state.get("ui_id"):
@@ -1086,6 +1113,10 @@ def item_manifest_lines(state: dict, constant: str) -> list[str]:
     if spawn_from:
         lines.append("    .spawn_from(&[%s]) // containers that can hold it"
                      % ", ".join("%s%s%s" % (q, name, q) for name in spawn_from))
+    members = gimmicks.family_names(state)
+    if members:
+        lines.append("    .members(&[%s]) // the family's members, in the base family's order"
+                     % ", ".join("%s%s%s" % (q, name, q) for name in members))
     for rule in state.get("item_params") or []:
         if not rule.get("field") or rule.get("style", "float") not in ("float", "int"):
             continue
@@ -1154,11 +1185,126 @@ def use_lines(uses: set) -> list[str]:
     return std + crates
 
 
-def plugin_source(fighters: list[dict], items: list[dict]) -> str:
+def text_list(value) -> list[str]:
+    if isinstance(value, str):
+        return [part.strip().strip('"') for part in value.split(",") if part.strip().strip('"')]
+    return [str(part) for part in value or []]
+
+
+def stage_part(stages: list[dict]) -> dict | None:
+    """What stage.toml cannot do on its own: its doors and paused motions wait for the plugin."""
+    doors = [stage.get("place", "") for stage in stages if (stage.get("gimmicks") or {}).get("door")]
+    paused = [name.lower() for stage in stages for name in text_list(stage.get("paused_motions"))]
+    if not doors and not paused:
+        return None
+    uses = {"smashline:Agent", "smashline:Main", "use smashline::skyline_smash::lua2cpp::L2CFighterCommon;"}
+    main = ['    Agent::new("fighter").on_line(Main, stage_frame).install(); // every fighter, once per frame']
+    decls: list[str] = []
+    if doors:
+        uses |= {"use core::sync::atomic::{AtomicU32, Ordering};",
+                 "use smashline::skyline_smash::app::lua_bind::*;",
+                 "use smashline::skyline_smash::lib::lua_const::*;"}
+        decls = ["const INSIDE_FRAMES: u32 = 60; // frames a fighter stays in a door",
+                 "static INSIDE: [AtomicU32; 8] = [const { AtomicU32::new(0) }; 8]; // frames each player "
+                 "has spent in one"]
+        body = ["// %s: a stage.toml door only puts the fighter in FIGHTER_STATUS_KIND_GIMMICK_DOOR; "
+                "what it does next is yours" % ", ".join(doors),
+                "unsafe extern \"C\" fn stage_frame(fighter: &mut L2CFighterCommon) {",
+                "    let boma = fighter.module_accessor;",
+                "    let entry = WorkModule::get_int(boma, *FIGHTER_INSTANCE_WORK_ID_INT_ENTRY_ID);",
+                "    let Some(inside) = INSIDE.get(entry as usize) else {",
+                "        return;",
+                "    };",
+                "    if StatusModule::status_kind(boma) != *FIGHTER_STATUS_KIND_GIMMICK_DOOR {",
+                "        inside.store(0, Ordering::Relaxed);",
+                "        return;",
+                "    }",
+                "    let frames = inside.fetch_add(1, Ordering::Relaxed);"]
+        if paused:
+            uses.add("use clone_engine_api::stage;")
+            body += ["    if frames == 0 {",
+                     "        let _ = stage::set_motion_frame(\"%s\", 0.0); // a paused_motions set, from its "
+                     "first frame" % paused[0],
+                     "        let _ = stage::set_motion_rate(\"%s\", 1.0); // 0 holds it, 0.5 half speed"
+                     % paused[0],
+                     "    }"]
+        body += ["    if frames == INSIDE_FRAMES {",
+                 "        // back out; a mode could start its next battle here instead",
+                 "        StatusModule::change_status_request(boma, *FIGHTER_STATUS_KIND_WAIT, false);",
+                 "    }",
+                 "}"]
+    else:
+        uses.add("use clone_engine_api::stage;")
+        body = ["// paused_motions hold their first frame until the plugin starts them, on the stage being played",
+                "unsafe extern \"C\" fn stage_frame(_fighter: &mut L2CFighterCommon) {",
+                "    if false {",
+                "        // the moment your set should move: a switch, a timer, a fighter in an area",
+                "        let _ = stage::set_motion_frame(\"%s\", 0.0); // frame" % paused[0],
+                "        let _ = stage::set_motion_rate(\"%s\", 1.0); // 0 holds it, 0.5 half speed" % paused[0],
+                "    }",
+                "    let _ = stage::motion(\"%s\"); // Ok(Motion { frame, rate }) while it is on stage" % paused[0],
+                "}"]
+    name = identifier(stages[0].get("place") or "stage").lower() + "_stage"
+    return {"uses": uses, "decls": decls, "main": main, "tail": ["\n".join(body) + "\n"], "name": name}
+
+
+def menu_part(menu: dict | None) -> dict | None:
+    """A menu pack's plugin: menu.toml needs none, so this is the part Lua cannot do, a battle set up
+    from code, answering the Lua's prg_func.engine_call."""
+    if not menu or not menu.get("namespace"):
+        return None
+    namespace = menu["namespace"]
+    call = "%s.setup" % namespace
+    modes = [gimmicks.display(row.get("id", "")) for row in (menu.get("tables") or {}).get("mode") or []
+             if row.get("id")]
+    uses = {"use clone_engine_api::menu;"}
+    main = ["    // Lua: prg_func.engine_call(\"%s\", ...) in a mode's decide or a button's func_decide" % call,
+            "    if let Err(error) = menu::register_call(\"%s\", setup) {" % call,
+            "        skyline::println!(\"[%s] %s refused: {error:?}\");" % (namespace, call),
+            "    }"]
+    for mode in modes:
+        main.append("    // menu::mode_sequence(\"%s\") is the code the engine gave that [[mode]]; compare it with "
+                    "menu::active_sequence() when the menu comes back" % mode)
+    tail = ["// answers %s: args holds what the Lua passed, up to 8 integers; the return goes back to it" % call,
+            "unsafe extern \"C\" fn setup(args: *const i64, count: usize) -> i64 {",
+            "    let _args = if args.is_null() { &[][..] } else { core::slice::from_raw_parts(args, count) };",
+            "    let players = [",
+            "        menu::battle_player(0, menu::PlayerType::Human, \"ui_chara_mario\", 0), // slot, type, fighter, "
+            "controller",
+            "        menu::battle_player(1, menu::PlayerType::Cpu, \"ui_chara_luigi\", -1),",
+            "    ];",
+            "    let stage = menu::battle_stage(\"ui_stage_battle_field\"); // never random",
+            "    let rules = menu::battle_rules(menu::Rules {",
+            "        kind: menu::RuleKind::Stock, // Time, Stock or Stamina",
+            "        stock: 2,",
+            "        seconds: 0, // time limit, 0 for none",
+            "        items: 0, // item frequency, 0 for none",
+            "    }); // also turns pausing on; menu::battle_pause(false) turns it off",
+            "    if players.iter().chain([&stage, &rules]).any(|result| result.is_err()) {",
+            "        return -1;",
+            "    }",
+            "    // more for this battle, when the mode wants it:",
+            "    // let _ = menu::pause_exit(Some(menu::PauseExit { row: \"mel_pause_my_exit\", confirm: None })); "
+            "// a pause row of your own, a msg_melee label",
+            "    // let _ = menu::keep_music_into_battle(true); // the menu's song carries into the battle",
+            "    // let _ = clone_engine_api::hud_layout_every(\"ui/layout/hud/my_mode/layout.arc\"); "
+            "// a layout on every player's damage card",
+            "    // let _ = clone_engine_api::boss_gauge_battle(); // the game's boss HP bar; "
+            "boss_gauge(item, \"Name\") puts an item on it",
+            "    // during the battle: menu::change_fighter(slot, \"ui_chara_luigi\", 0) on a KO swaps that "
+            "player's fighter at the rebirth; menu::play_bgm(\"<ui_bgm_db label>\") changes the song",
+            "    0",
+            "}",
+            ""]
+    return {"uses": uses, "decls": [], "main": main, "tail": ["\n".join(tail)], "name": namespace}
+
+
+def plugin_source(fighters: list[dict], items: list[dict], stages=(), menu: dict | None = None,
+                  enemies=()) -> str:
     """One lib.rs for the pack: each part registers from a manifest in main
     (a fighter.toml or item.toml beside it is read first and wins), then adds
     its code. With several parts of one kind, each part's functions carry its
-    name."""
+    name. Stages register from stage.toml; their code is only what it cannot do."""
     names_taken: set = set()
     parts = [fighter_part(state, suffix(state) if len(fighters) > 1 else "",
                           first=index == 0, names_taken=names_taken)
@@ -1166,6 +1312,9 @@ def plugin_source(fighters: list[dict], items: list[dict]) -> str:
     taken = {identifier(state.get("resource_name", "wawa")) for state in fighters}
     parts += [item_part(state, suffix(state) if len(items) > 1 else "", taken, names_taken)
               for state in items]
+    for extra in (stage_part(list(stages)), menu_part(menu), enemy_code.enemy_part(list(enemies))):
+        if extra is not None:
+            parts.append(extra)
     if not parts:
         return ""
     uses: set = set()
@@ -1177,7 +1326,8 @@ def plugin_source(fighters: list[dict], items: list[dict]) -> str:
     lines += ["", "#[skyline::main(name = \"%s\")]" % parts[0]["name"], "pub fn main() {"]
     for part in parts:
         lines += part["main"]
-    lines += ["}", ""]
+    lines += ["    // v2::on_mods_mounted(on_mounted); // runs once ARCropolis has mounted the mods: "
+              "extern \"C\" fn on_mounted()", "}", ""]
     blocks = ["\n".join(lines)]
     for part in parts:
         blocks += part["tail"]

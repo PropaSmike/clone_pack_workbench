@@ -91,26 +91,116 @@ def load_vanilla(arc_index):
     return files, directories
 
 
-def read_stage_tomls(path):
-    """Every stage the manifest declares: one dict for a flat file, one per
-    [[stage]] block; an empty list when there is no file."""
+GIMMICK_TABLES = ("ladder", "barrel", "spring", "door")
+MAX_GIMMICKS = 64
+MAX_COORDINATE = 100000.0
+FULL_TURN = 360.0
+MAX_FIRE_DELAY = 3600
+MAX_PATH_POINTS = 1024
+MAX_MODEL_NAME = 64
+MAX_SPRING_SPEED = 100.0
+MAX_LAUNCH_FRAME = 600.0
+MAX_PLAYER = 8
+GIMMICK_KEYS = {
+    "ladder": {"x": "number", "y": "number", "height": "number", "width": "number"},
+    "barrel": {"x": "number", "y": "number", "model": "text", "rotation": "number",
+               "rotation_max": "number", "rotation_speed": "number", "always_rotate": "flag",
+               "full_rotate": "flag", "auto_fire": "flag", "fire_rotation": "number",
+               "fire_delay": "number", "speed": "number", "decrease": "number", "gravity": "number",
+               "fall_speed": "number", "width": "number", "height": "number", "path": "numbers",
+               "path_speed": "number"},
+    "spring": {"x": "number", "y": "number", "model": "text", "rotation": "number", "speed": "number",
+               "width": "number", "height": "number", "offset_x": "number", "offset_y": "number",
+               "launch_frame": "number", "joint": "text"},
+    "door": {"x": "number", "y": "number", "width": "number", "height": "number", "offset_x": "number",
+             "offset_y": "number", "air": "flag", "player": "number"},
+}
+GIMMICK_REQUIRED = {"ladder": ("x", "y", "height"), "barrel": ("x", "y"), "spring": ("x", "y"),
+                    "door": ("x", "y")}
+STAGE_LIST_KEYS = ("dynamic_collisions", "paused_motions")
+
+
+def gimmick_header(line):
+    """The gimmick table a header line opens, or None."""
+    compact = "".join(line.split())
+    for table in GIMMICK_TABLES:
+        if compact in ("[[%s]]" % table, "[[stage.%s]]" % table):
+            return table
+    return None
+
+
+def stage_value(raw):
+    """A stage.toml value as the engine reads it: (kind, value), or None when it reads none."""
+    raw = raw.strip()
+    if raw.startswith("[") and raw.endswith("]"):
+        items = [item.strip() for item in raw[1:-1].split(",") if item.strip()]
+        try:
+            numbers = [float(item) for item in items]
+        except ValueError:
+            numbers = None
+        if numbers:
+            return ("numbers", numbers)
+        texts = []
+        for item in items:
+            if len(item) < 2 or not (item.startswith('"') and item.endswith('"')):
+                return None
+            texts.append(item[1:-1])
+        return ("texts", texts)
+    if len(raw) >= 2 and raw.startswith('"') and raw.endswith('"'):
+        return ("text", raw[1:-1])
+    if raw in ("true", "false"):
+        return ("flag", raw == "true")
+    try:
+        return ("integer", int(raw))
+    except ValueError:
+        pass
+    try:
+        return ("real", float(raw))
+    except ValueError:
+        return None
+
+
+def empty_stage_block():
+    return {"settings": {}, "raw": {}, "tables": [], "problems": []}
+
+
+def scan_stage_toml(path):
+    """Each stage block: its settings, the raw text of its keys, its gimmick tables and the lines the
+    engine cannot read. An empty list when there is no file."""
     if not os.path.exists(path):
         return []
-    blocks = [{}]
+    blocks = [empty_stage_block()]
     headed = False
+    table = None
     with open(path, encoding="utf8") as handle:
-        for line in handle:
+        for number, line in enumerate(handle, 1):
             line = line.split("#", 1)[0].strip()
+            if not line:
+                continue
             if line == "[[stage]]":
-                if headed or blocks[0]:
-                    blocks.append({})
+                if headed or any(blocks[0].values()):
+                    blocks.append(empty_stage_block())
                 headed = True
+                table = None
                 continue
-            if not line or "=" not in line:
+            found = gimmick_header(line)
+            if found:
+                table = {"table": found, "line": number, "raw": {}, "lines": {}}
+                blocks[-1]["tables"].append(table)
                 continue
-            settings = blocks[-1]
+            if "=" not in line:
+                blocks[-1]["problems"].append((
+                    "ERROR", "line %d: %r is neither key = value nor a [[ladder]], [[barrel]], [[spring]] "
+                             "or [[door]] header; the engine refuses the whole stage.toml" % (number, line)))
+                continue
             key, _, value = line.partition("=")
             key, value = key.strip(), value.strip()
+            if table is not None:
+                table["raw"][key] = value
+                table["lines"][key] = number
+                continue
+            settings = blocks[-1]["settings"]
+            blocks[-1]["raw"][key] = value
             if value.startswith("[") and value.endswith("]"):
                 settings[key] = [
                     item.strip().strip('"').strip("'")
@@ -126,13 +216,287 @@ def read_stage_tomls(path):
                     settings[key] = int(value)
                 except ValueError:
                     settings[key] = value
-    return [block for block in blocks if block] or [{}]
+    return [block for block in blocks if any(block.values())] or [empty_stage_block()]
+
+
+def read_stage_tomls(path):
+    """Every stage the manifest declares: one dict for a flat file, one per
+    [[stage]] block; an empty list when there is no file."""
+    return [block["settings"] for block in scan_stage_toml(path)]
 
 
 def read_stage_toml(path):
     """The first stage declared, for a caller that handles one."""
     found = read_stage_tomls(path)
     return found[0] if found else {}
+
+
+def gimmick_value_verdict(table, key, kind):
+    """None when the engine takes the value, "ignored" when it skips it, "refused" when it refuses
+    the whole stage.toml over it."""
+    keys = GIMMICK_KEYS[table]
+    wanted = keys.get(key)
+    numbers = {name for name, value in keys.items() if value == "number"}
+    flags = {name for name, value in keys.items() if value == "flag"}
+    texts = {name for name, value in keys.items() if value == "text"}
+    if table == "ladder":
+        if kind in ("integer", "real"):
+            return None if wanted else "ignored"
+        return "refused" if wanted else "ignored"
+    if table == "barrel":
+        if kind in ("integer", "real"):
+            return None if key in numbers else "refused" if key in flags else "ignored"
+        if kind == "flag":
+            return None if key in flags else "refused" if key in numbers else "ignored"
+        if kind == "numbers":
+            return None if key == "path" else "ignored"
+        if kind == "text":
+            return None if key in texts else "refused" if key in flags | numbers else "ignored"
+        return "refused" if wanted else "ignored"
+    if table == "spring":
+        if kind in ("integer", "real"):
+            return None if key in numbers else "ignored"
+        if kind == "text":
+            return None if key in texts else "refused" if key in numbers else "ignored"
+        return "refused" if wanted else "ignored"
+    if kind == "integer":
+        return None if key in numbers else "refused" if key == "air" else "ignored"
+    if kind == "real":
+        if key in ("player", "air"):
+            return "refused"
+        return None if key in numbers else "ignored"
+    if kind == "flag":
+        return None if key in flags else "refused" if key in numbers else "ignored"
+    return "refused" if wanted else "ignored"
+
+
+GIMMICK_KIND_TEXT = {"number": "a number", "flag": "true or false", "text": "quoted text",
+                     "numbers": "a list of numbers"}
+
+
+def gimmick_problems(table, raw):
+    """What the engine says about one gimmick table written from these TOML texts: (level, message)
+    pairs, an ERROR meaning it refuses the whole stage.toml."""
+    findings = []
+    values = {}
+    header = "[[%s]]" % table
+    for key, text in raw.items():
+        parsed = stage_value(text)
+        if parsed is None:
+            findings.append(("ERROR", "%s %s = %s is not a value the engine reads" % (header, key, text)))
+            continue
+        verdict = gimmick_value_verdict(table, key, parsed[0])
+        if verdict == "refused":
+            wanted = ("a whole number" if (table, key) == ("door", "player")
+                      else GIMMICK_KIND_TEXT[GIMMICK_KEYS[table][key]])
+            findings.append(("ERROR", "%s %s = %s: %s takes %s" % (header, key, text, key, wanted)))
+            continue
+        if verdict == "ignored":
+            findings.append(("WARN", "%s %s = %s is ignored%s" % (
+                header, key, text, "" if key in GIMMICK_KEYS[table] else "; the table has no key %s" % key)))
+            continue
+        values[key] = parsed[1]
+    if any(level == "ERROR" for level, _ in findings):
+        return findings
+
+    def bad(message):
+        findings.append(("ERROR", "%s %s" % (header, message)))
+
+    for key in GIMMICK_REQUIRED[table]:
+        if key not in values:
+            bad("needs %s" % key)
+    if any(level == "ERROR" for level, _ in findings):
+        return findings
+
+    def coordinate(key, default=0.0):
+        value = values.get(key, default)
+        if abs(value) > MAX_COORDINATE:
+            bad("%s = %s is past %d" % (key, value, MAX_COORDINATE))
+
+    def size(key, default):
+        value = values.get(key, default)
+        if value <= 0 or value > MAX_COORDINATE:
+            bad("%s = %s must be above 0 and at most %d" % (key, value, MAX_COORDINATE))
+
+    def angle(key, default):
+        value = values.get(key, default)
+        if not 0 <= value <= FULL_TURN:
+            bad("%s = %s must be 0 to 360 degrees" % (key, value))
+
+    def model_name(key):
+        if key in values:
+            model = values[key].lower()
+            if not model or len(model) > MAX_MODEL_NAME or not re.fullmatch(r"[a-z0-9_]+", model):
+                bad('%s = "%s" must be a model set name: lower case letters, digits and _, up to %d'
+                    % (key, values[key], MAX_MODEL_NAME))
+
+    coordinate("x")
+    coordinate("y")
+    if table == "ladder":
+        size("height", 0)
+        size("width", 10.0)
+    elif table == "barrel":
+        rotation = values.get("rotation", 0.0)
+        angle("rotation", 0.0)
+        angle("rotation_max", rotation)
+        angle("fire_rotation", rotation)
+        if abs(values.get("rotation_speed", 0.0)) > FULL_TURN:
+            bad("rotation_speed = %s is past 360 degrees per frame" % values["rotation_speed"])
+        if not 0 <= values.get("fire_delay", 0) <= MAX_FIRE_DELAY:
+            bad("fire_delay = %s must be 0 to %d frames" % (values["fire_delay"], MAX_FIRE_DELAY))
+        for key in ("speed", "decrease", "gravity", "fall_speed"):
+            coordinate(key)
+        model_name("model")
+        path = values.get("path", [])
+        if len(path) % 2 or len(path) == 2 or len(path) // 2 > MAX_PATH_POINTS:
+            bad("path holds %d numbers; it takes x, y pairs, at least two points and at most %d"
+                % (len(path), MAX_PATH_POINTS))
+        elif any(abs(value) > MAX_COORDINATE for value in path):
+            bad("path has a point past %d" % MAX_COORDINATE)
+        path_speed = values.get("path_speed", 1.0)
+        if path_speed <= 0 or path_speed > MAX_PATH_POINTS:
+            bad("path_speed = %s must be above 0 and at most %d" % (path_speed, MAX_PATH_POINTS))
+        size("width", 20.0)
+        size("height", 15.0)
+    elif table == "spring":
+        model_name("model")
+        joint = values.get("joint")
+        if joint is not None and (not joint or len(joint) > MAX_MODEL_NAME
+                                  or not re.fullmatch(r"[A-Za-z0-9_]+", joint)):
+            bad('joint = "%s" must be a joint name: letters, digits and _, up to %d'
+                % (joint, MAX_MODEL_NAME))
+        if not 0 <= values.get("launch_frame", 0.0) <= MAX_LAUNCH_FRAME:
+            bad("launch_frame = %s must be 0 to %d" % (values["launch_frame"], MAX_LAUNCH_FRAME))
+        speed = values.get("speed", 4.0)
+        if speed <= 0 or speed > MAX_SPRING_SPEED:
+            bad("speed = %s must be above 0 and at most %d" % (speed, MAX_SPRING_SPEED))
+        if abs(values.get("rotation", 0.0)) > FULL_TURN:
+            bad("rotation = %s is past 360 degrees" % values["rotation"])
+        size("width", 10.0)
+        size("height", 6.0)
+        coordinate("offset_x")
+        coordinate("offset_y")
+    else:
+        size("width", 15.0)
+        size("height", 20.0)
+        coordinate("offset_x")
+        coordinate("offset_y")
+        player = values.get("player")
+        if player is not None and not 1 <= player <= MAX_PLAYER:
+            bad("player = %s must be 1 to %d" % (player, MAX_PLAYER))
+    return findings
+
+
+def gimmick_problem(table, raw):
+    """The first thing the engine refuses in one gimmick table, or ""."""
+    for level, message in gimmick_problems(table, raw):
+        if level == "ERROR":
+            return message
+    return ""
+
+
+def stage_set_shipped(paths, vanilla_dirs, place, resource_place, model_set):
+    """Whether stage/<place>/normal/model/<set> is shipped, or found where the stage loads from."""
+    prefix = "stage/%s/normal/model/%s/" % (place, model_set)
+    if any(path.lower().startswith(prefix) for path in paths):
+        return True
+    if resource_place and vanilla_dirs:
+        return "stage/%s/normal/model/%s" % (resource_place, model_set) in vanilla_dirs
+    return False
+
+
+def stage_motion_shipped(paths, vanilla_files, place, resource_place, model_set):
+    wanted = "stage/%s/normal/motion/%s/%s_00.nuanmb" % (place, model_set, model_set)
+    if wanted in {path.lower() for path in paths}:
+        return True
+    if resource_place and vanilla_files:
+        return ("stage/%s/normal/motion/%s/%s_00.nuanmb" % (resource_place, model_set, model_set)
+                in vanilla_files)
+    return False
+
+
+def check_gimmicks(mod_dir, block, paths, vanilla_files, vanilla_dirs):
+    """stage.toml's moving sets and gimmick tables against the engine's rules and the stage's files."""
+    findings = list(block["problems"])
+    settings = block["settings"]
+    place = settings.get("place", "")
+    resource_place = settings.get("resource_place")
+    plugin = os.path.isfile(os.path.join(mod_dir, "plugin.nro"))
+    for key in STAGE_LIST_KEYS:
+        if key not in block["raw"]:
+            continue
+        parsed = stage_value(block["raw"][key])
+        if parsed is None or parsed[0] != "texts":
+            findings.append(("ERROR", "%s = %s must be a list of quoted model set names; the engine refuses "
+                                      "the whole stage.toml" % (key, block["raw"][key])))
+            continue
+        for model_set in (name.lower() for name in parsed[1]):
+            if not stage_set_shipped(paths, vanilla_dirs, place, resource_place, model_set):
+                findings.append(("WARN", "%s names %s, but stage/%s/normal/model/%s/ is not shipped"
+                                 % (key, model_set, place, model_set)))
+            if not stage_motion_shipped(paths, vanilla_files, place, resource_place, model_set):
+                findings.append(("WARN", "%s names %s, but stage/%s/normal/motion/%s/%s_00.nuanmb is not "
+                                         "shipped, so %s" % (
+                                             key, model_set, place, model_set, model_set,
+                                             "nothing moves its collision" if key == "dynamic_collisions"
+                                             else "there is no motion to hold")))
+        if key == "paused_motions" and parsed[1] and not plugin:
+            findings.append(("WARN", "paused_motions hold their first frame until a plugin starts them, "
+                                     "and this pack has no plugin.nro"))
+        if key == "dynamic_collisions":
+            try:
+                with open(os.path.join(mod_dir, "config_stage.toml"), encoding="utf8",
+                          errors="replace") as handle:
+                    text = handle.read().lower()
+            except OSError:
+                text = ""
+            for model_set in (name.lower() for name in parsed[1]):
+                if re.search(r"\b%s\b" % re.escape(model_set), text):
+                    findings.append(("WARN", "config_stage.toml names %s too; bind a set in stage.toml or "
+                                             "in config_stage.toml, not both" % model_set))
+    counts = {}
+    for table in block["tables"]:
+        counts[table["table"]] = counts.get(table["table"], 0) + 1
+    for name, count in sorted(counts.items()):
+        if count > MAX_GIMMICKS:
+            findings.append(("ERROR", "%d [[%s]] tables; the engine takes up to %d and refuses the whole "
+                                      "stage.toml" % (count, name, MAX_GIMMICKS)))
+    drawn = {}
+    for table in block["tables"]:
+        name, line = table["table"], table["line"]
+        found = gimmick_problems(name, table["raw"])
+        findings += [(level, "line %d: %s" % (line, message)) for level, message in found]
+        if any(level == "ERROR" for level, _ in found):
+            continue
+        model = stage_value(table["raw"]["model"]) if "model" in table["raw"] else None
+        model = model[1].lower() if model and model[0] == "text" else None
+        if model:
+            drawn.setdefault(model, []).append("line %d [[%s]]" % (line, name))
+            if not stage_set_shipped(paths, vanilla_dirs, place, resource_place, model):
+                findings.append(("WARN", "line %d: [[%s]] model %s is not under stage/%s/normal/model/, so "
+                                         "the %s draws nothing" % (line, name, model, place, name)))
+        if name == "spring":
+            if model and "launch_frame" in table["raw"] and not stage_motion_shipped(
+                    paths, vanilla_files, place, resource_place, model):
+                findings.append(("WARN", "line %d: [[spring]] launch_frame plays %s_00.nuanmb, which "
+                                         "stage/%s/normal/motion/%s/ does not ship" % (line, model, place, model)))
+            if not model and ("launch_frame" in table["raw"] or "joint" in table["raw"]):
+                findings.append(("INFO", "line %d: [[spring]] launch_frame and joint need a model; without "
+                                         "one the launch is immediate" % line))
+    for model, users in sorted(drawn.items()):
+        if len(users) > 1:
+            findings.append(("WARN", "model set %s is drawn by %s; a set is drawn once, so give each its own"
+                             % (model, " and ".join(users))))
+    if counts.get("door") and not plugin:
+        findings.append(("WARN", "a door ends nothing by itself: the fighter stays in the door status until "
+                                 "a plugin acts, and this pack has no plugin.nro"))
+    if block["tables"]:
+        findings.append(("INFO", "ladders, barrels, springs and doors need an engine newer than 0.6.0-beta.1, "
+                                 "which refuses the whole stage.toml"))
+    elif any(key in block["raw"] for key in STAGE_LIST_KEYS):
+        findings.append(("INFO", "dynamic_collisions and paused_motions need an engine newer than 0.6.0-beta.1, "
+                                 "which ignores them"))
+    return findings
 
 
 def shipped_files(mod_dir):
@@ -665,7 +1029,8 @@ def lint(mod_dir, arc_index, write_config=False):
     """Every stage the pack declares, checked in turn. With several, each
     finding is prefixed by its place, and a `--write-config` for one stage
     carries the entries of the others, so the file ends up holding them all."""
-    declared = read_stage_tomls(os.path.join(mod_dir, "stage.toml"))
+    scanned = scan_stage_toml(os.path.join(mod_dir, "stage.toml"))
+    declared = [block["settings"] for block in scanned]
     if not declared or declared == [{}]:
         return [("ERROR", "no stage.toml in %s" % mod_dir)]
     places = [settings.get("place") for settings in declared if settings.get("place")]
@@ -678,8 +1043,8 @@ def lint(mod_dir, arc_index, write_config=False):
         ))
         if len(set(places)) != len(places):
             findings.append(("ERROR", "stage.toml declares the same place twice"))
-    for settings in declared:
-        found = lint_stage(mod_dir, arc_index, settings, places, write_config)
+    for settings, block in zip(declared, scanned):
+        found = lint_stage(mod_dir, arc_index, settings, places, write_config, block)
         if len(declared) > 1:
             found = [(level, "%s: %s" % (settings.get("place") or "?", message))
                      for level, message in found]
@@ -687,7 +1052,7 @@ def lint(mod_dir, arc_index, write_config=False):
     return findings
 
 
-def lint_stage(mod_dir, arc_index, settings, declared_places, write_config=False):
+def lint_stage(mod_dir, arc_index, settings, declared_places, write_config=False, block=None):
     findings = []
 
     def error(message):
@@ -1092,6 +1457,8 @@ def lint_stage(mod_dir, arc_index, settings, declared_places, write_config=False
     findings.extend(
         check_stage_config(mod_dir, place, donor if "donor" in settings else None)
     )
+    if block is not None:
+        findings.extend(check_gimmicks(mod_dir, block, paths, vanilla_files, vanilla_dirs))
 
     return findings
 

@@ -8,6 +8,7 @@ import io
 import os
 import re
 import sys
+import zlib
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 try:
@@ -167,11 +168,52 @@ def check_fighter_manifest(mod_dir, shipped, vanilla):
                                      "the ledge, so that animation must aim the right arm like "
                                      "Lucas's g04aircatchpose"))
         findings += check_partner_params(fighter)
+        findings += check_move_list(mod_dir, fighter, name, shipped)
+        own_articles = [article.get("name") for article in fighter["articles"]
+                        if not article.get("kirby")]
+        if base in SMASHLINE_2_NO_ARTICLE_BASES and own_articles:
+            findings.append(("WARN", f"fighter.toml: base {base!r} is fighter kind 94 or above; under "
+                                     "Smashline 2.0 it takes no articles, so "
+                                     f"{', '.join(repr(name) for name in own_articles)} would be refused "
+                                     "(ERROR_ARTICLE_OWNER). Smashline 1.6.7 and the engine's own "
+                                     "numbering still take them"))
     findings += check_switch_groups(mod_dir, fighters)
     findings += check_partners(mod_dir, fighters)
     return findings
 
 
+def check_move_list(mod_dir, fighter, name, shipped):
+    """[move_list] against the pack: each page's labels in msg_name.xmsbt, each picture page's texture."""
+    move_list = fighter.get("move_list") or {}
+    pages = move_list.get("pages")
+    if not pages:
+        return []
+    findings = [("INFO", "fighter.toml: [move_list] needs an engine newer than 0.6.0-beta.1, which refuses "
+                         "the whole fighter.toml")]
+    try:
+        with open(os.path.join(mod_dir, "ui", "message", "msg_name.xmsbt"), "rb") as handle:
+            raw = handle.read()
+        text = raw.decode("utf-16") if raw[:2] in (b"\xff\xfe", b"\xfe\xff") else raw.decode("utf-8", "replace")
+    except OSError:
+        text = ""
+    blank = [page for page in range(pages)
+             if 'label="nam_peculiar_%02d_%s"' % (page, name) not in text
+             or 'label="nam_peculiar_help_%02d_%s"' % (page, name) not in text]
+    if blank:
+        findings.append(("WARN", "fighter.toml: move list page(s) %s lack nam_peculiar_NN_%s or "
+                                 "nam_peculiar_help_NN_%s in ui/message/msg_name.xmsbt; they show blank text"
+                                 % (", ".join(str(page) for page in blank), name, name)))
+    for page in move_list.get("image_pages") or []:
+        picture = "ui/replace/skill/skill_1/skill_1_%s_extra_page_%d.bntx" % (name, page)
+        if picture not in shipped:
+            findings.append(("WARN", "fighter.toml: move list page %d shows a picture, but %s is not shipped; "
+                                     "it shows the game's blank one" % (page, picture)))
+    return findings
+
+
+SMASHLINE_2_NO_ARTICLE_BASES = ("ice_climber", "zenigame", "fushigisou", "lizardon", "ptrainer",
+                                "flame", "light", "element")
+MOTION_LIST_FOLDER = re.compile(r"^((?:item|assist)/[^/]+/motion/[^/]+/c\d{2,3})/motion_list\.bin$")
 SWITCH_SETS = (("eflame", "elight"), ("pzenigame", "pfushigisou", "plizardon"))
 GAME_SET_BASES = {base for shape in SWITCH_SETS for base in shape}
 
@@ -507,13 +549,15 @@ def lint(mod_dir, arc_index, cross_color_resources=()):
     findings.extend(lint_shares(config, shipped, vanilla))
     findings.extend(lint_costume_range(mod_dir, dir_files, added_dirs, bases, vanilla))
     findings.extend(lint_added_slot_leftovers(mod_dir, dir_files, added_dirs, shipped, vanilla))
-    findings.extend(lint_added_dirs(added_dirs, bases, dir_files, load_vanilla_dirs(arc_index)))
+    vanilla_dirs = load_vanilla_dirs(arc_index)
+    findings.extend(lint_added_dirs(added_dirs, bases, dir_files, vanilla_dirs))
     findings.extend(lint_effects(added_dirs, dir_files, shipped, shared_targets))
     findings.extend(lint_camera_slots(dir_files, added_dirs, bases, shipped))
     findings.extend(lint_camera_coverage(dir_files, bases, shipped))
     findings.extend(lint_article_lvd_names(shipped))
     findings.extend(lint_item_pack(mod_dir, added_dirs, bases, dir_files, shipped,
                                    resolved_share_targets))
+    findings.extend(lint_motion_list_folders(mod_dir, shipped, vanilla_dirs, added_dirs))
     findings.extend(lint_undeclared_shipped(added_dirs, dir_files, shipped))
     findings.extend(check_fighter_manifest(mod_dir, shipped, vanilla))
     findings.extend(check_work_ids(mod_dir))
@@ -814,6 +858,51 @@ def lint_undeclared_shipped(added_dirs, dir_files, shipped):
 ITEM_OWN_TREES = ("model", "param")
 
 
+def vanilla_item_kinds():
+    """The game's items by name, from the Workbench's table; empty when it is not beside this script."""
+    path = os.path.join(HERE, "clone_pack_gui", "data", "item_kinds.tsv")
+    kinds = {}
+    try:
+        with io.open(path, encoding="utf8") as handle:
+            next(handle, None)
+            for line in handle:
+                parts = line.rstrip("\n").split("\t")
+                if len(parts) >= 2 and parts[0].isdigit():
+                    kinds[parts[1]] = int(parts[0])
+    except OSError:
+        return {}
+    return kinds
+
+
+def vanilla_item_families():
+    """Every item family by its first member, from the Workbench's table: its members in order."""
+    path = os.path.join(HERE, "clone_pack_gui", "data", "item_families.tsv")
+    families = {}
+    try:
+        with io.open(path, encoding="utf8") as handle:
+            next(handle, None)
+            for line in handle:
+                parts = line.rstrip("\n").split("\t")
+                if len(parts) >= 3:
+                    families[parts[0]] = parts[2].split(",")
+    except OSError:
+        return {}
+    return families
+
+
+def item_names(text):
+    """The names of a members list, written as ["a", "b"] or "a, b"."""
+    return [name.strip().strip('"') for name in text.strip().strip("[]").split(",")
+            if name.strip().strip('"')]
+
+
+def item_kind_named(name, kinds):
+    name = name.strip().lower()
+    if name.startswith("item_kind_"):
+        name = name[len("item_kind_"):]
+    return kinds.get(name)
+
+
 def read_item_tomls(mod_dir):
     """Every item item.toml declares, one dict per [[item]] block or one for a
     flat file; None when there is no item.toml. Regex, not tomllib, for 3.8."""
@@ -837,6 +926,10 @@ def read_item_tomls(mod_dir):
                 continue
             if table != "item":
                 continue
+            listed = re.match(r'^(\w+)\s*=\s*(\[.*\])', line)
+            if listed:
+                blocks[-1][listed.group(1)] = listed.group(2)
+                continue
             found = re.match(r'^(\w+)\s*=\s*"?([^"\s]+)"?', line)
             if found:
                 blocks[-1][found.group(1)] = found.group(2)
@@ -850,6 +943,11 @@ def lint_item_pack(mod_dir, added_dirs, bases, dir_files, shipped, resolved_shar
         directory.split("/")[1]
         for directory in added_dirs
         if directory.startswith("item/") and directory.count("/") >= 1
+    })
+    assists = sorted({
+        directory.split("/")[1]
+        for directory in added_dirs
+        if directory.startswith("assist/") and directory.count("/") >= 1
     })
     if not namespaces:
         return findings
@@ -868,18 +966,46 @@ def lint_item_pack(mod_dir, added_dirs, bases, dir_files, shipped, resolved_shar
         for toml in tomls:
             resource = toml.get("resource_name")
             label = "item.toml" if len(tomls) == 1 else f"item.toml [[item]] '{resource}'"
-            if resource and resource not in namespaces:
+            if resource and resource not in namespaces and resource not in assists:
                 findings.append((
                     "ERROR",
                     f"item.toml resource_name '{resource}' does not match the added "
                     f"{', '.join('item/' + n for n in namespaces)}",
                 ))
+            kinds = vanilla_item_kinds()
+            named = item_kind_named(toml["base_item"], kinds) if toml.get("base_item") else None
             if "base_kind" not in toml:
-                findings.append(("ERROR", f"{label} has no base_kind"))
+                if not toml.get("base_item"):
+                    findings.append(("ERROR", f"{label} has no base_item, the vanilla item it is built on"))
+                elif kinds and named is None:
+                    findings.append(("ERROR", f"{label} base_item '{toml['base_item']}' is not an item the "
+                                              "game has; check the name, or write base_kind"))
+                else:
+                    findings.append(("INFO", f"{label} names its base by base_item alone, which needs an "
+                                             "engine newer than 0.6.0-beta.1"))
+            elif named is not None and str(named) != toml["base_kind"].strip():
+                findings.append(("WARN", f"{label} base_item '{toml['base_item']}' is item {named} but "
+                                         f"base_kind is {toml['base_kind']}; the engine builds on base_item"))
             if resource:
                 if resource in by_resource:
                     findings.append(("ERROR", f"item.toml declares '{resource}' twice"))
                 by_resource[resource] = toml
+            if toml.get("members"):
+                names = item_names(toml["members"])
+                if resource and (not names or names[0] != resource):
+                    names = [resource] + [name for name in names if name != resource]
+                for member in names[1:]:
+                    by_resource.setdefault(member, toml)
+                base = (toml.get("base_item") or "").strip().lower()
+                family = vanilla_item_families().get(base)
+                if family is None and base:
+                    findings.append(("ERROR", f"{label} lists members, but {base} has no family; "
+                                              "a single item needs no members"))
+                elif family is not None and len(family) != len(names):
+                    findings.append(("ERROR", f"{label} members names {len(names)}, but {base}'s family has "
+                                              f"{len(family)}: {', '.join(family)}; the engine refuses it"))
+                findings.append(("INFO", f"{label} clones the {base or 'base'} family: {', '.join(names)}; "
+                                         "members needs an engine newer than 0.6.0-beta.1"))
         if len(tomls) > 1:
             findings.append((
                 "INFO",
@@ -951,6 +1077,53 @@ def lint_item_pack(mod_dir, added_dirs, bases, dir_files, shipped, resolved_shar
                 f"item.toml base_item '{toml['base_item']}' but config links to "
                 f"{', '.join(sorted(linked_bases))}",
             ))
+    return findings
+
+
+def hash40(text):
+    lower = text.lower().encode("utf8")
+    return (len(lower) << 32) | (zlib.crc32(lower) & 0xffffffff)
+
+
+def lint_motion_list_folders(mod_dir, shipped, vanilla_dirs, added_dirs):
+    """An item's or Assist's motion_list.bin names the folder its animations load from in the u64 at
+    offset 8; a list copied from the base keeps the base's folder. An Assist clone's folders are
+    added like an item's."""
+    findings = []
+    known = {}
+    for directory in vanilla_dirs or ():
+        if directory.startswith(("item/", "assist/")) and "/motion/" in directory:
+            known[hash40(directory)] = directory
+    for path in sorted(shipped):
+        match = MOTION_LIST_FOLDER.match(path)
+        if not match:
+            continue
+        folder = match.group(1)
+        try:
+            with open(os.path.join(mod_dir, *path.split("/")), "rb") as handle:
+                head = handle.read(16)
+        except OSError:
+            continue
+        if len(head) < 16:
+            continue
+        named = int.from_bytes(head[8:16], "little")
+        if named == hash40(folder):
+            continue
+        where = known.get(named)
+        findings.append(("WARN", f"{path} names {where + '/' if where else 'another folder'} at offset 8, "
+                                 f"not {folder}/; the {path.split('/')[0]} loads every animation from the "
+                                 "folder named there, so its own files and new motions play nothing. "
+                                 f"Write hash40(\"{folder}\") = {hash40(folder):#012x} there"))
+    vanilla = set(vanilla_dirs or ())
+    for resource in sorted({path.split("/")[1] for path in shipped
+                            if path.startswith("assist/") and path.count("/") >= 2}):
+        folders = {path.rsplit("/", 1)[0] for path in shipped if path.startswith(f"assist/{resource}/")}
+        unlisted = sorted(folder for folder in folders if folder not in added_dirs and folder not in vanilla)
+        if unlisted:
+            findings.append(("WARN", f"{unlisted[0]}" + (f" and {len(unlisted) - 1} more Assist folder(s)"
+                                                          if len(unlisted) > 1 else "")
+                                     + " are not in config.json's new-dir-infos; an Assist clone adds its "
+                                       "folders as an item does, or it plays with the base's model and motions"))
     return findings
 
 

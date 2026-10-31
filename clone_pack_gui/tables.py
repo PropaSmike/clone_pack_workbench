@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A list of fighter.toml tables edited one row at a time: the fields, Add, Remove and the list."""
+"""A list of manifest tables edited one row at a time: the fields, Add, Remove and the list."""
 
 from __future__ import annotations
 
@@ -88,7 +88,7 @@ class TableEditor(ttk.LabelFrame):
             text = str(field.variable.get()).strip()
             if not text or field.key in row:
                 continue
-            row[field.key] = text if field.key in gimmicks.PLAIN_KEYS else gimmicks.to_toml(
+            row[field.key] = text if gimmicks.is_plain(self.table, field.key) else gimmicks.to_toml(
                 self.table, field.key, text)
         return row
 
@@ -102,7 +102,7 @@ class TableEditor(ttk.LabelFrame):
                                     and value == other.checked for other in self.fields):
                 field.variable.set("")
             else:
-                field.variable.set(value if field.key in gimmicks.PLAIN_KEYS else gimmicks.display(value))
+                field.variable.set(value if gimmicks.is_plain(self.table, field.key) else gimmicks.display(value))
 
     def add(self) -> None:
         row = self.read()

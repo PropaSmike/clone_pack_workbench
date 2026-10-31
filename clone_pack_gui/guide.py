@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import re
+import webbrowser
 from pathlib import Path
 
 import tkinter as tk
@@ -13,7 +14,9 @@ from tkinter import ttk
 README_NAMES = ("README.md", "clone_pack_tools_README.md")
 CODE_BACKGROUND = "#eef0f3"
 RULE = "#c8ccd2"
-INLINE = re.compile(r"(`[^`]+`|\*\*[^*]+?\*\*)")
+INLINE = re.compile(r"(`[^`]+`|\*\*[^*]+?\*\*|\[[^\]]+\]\([^)\s]+\))")
+LINK = re.compile(r"^\[([^\]]+)\]\(([^)\s]+)\)$")
+LINK_COLOUR = "#1a5fb4"
 BULLET = re.compile(r"^[*-] ")
 HEADING = re.compile(r"^(#{1,3}) +(.*?)\s*#*$")
 TABLE_RULE = re.compile(r"^\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?$")
@@ -40,15 +43,18 @@ def find_readme(root: Path) -> Path | None:
 
 
 def pieces(text: str) -> list[tuple[str, str | None]]:
-    """Inline markdown as (text, style) runs; style is "code", "bold" or None."""
+    """Inline markdown as (text, style) runs; style is "code", "bold", "link <url>" or None."""
     out = []
     for part in INLINE.split(text):
         if not part:
             continue
+        link = LINK.match(part)
         if part.startswith("`"):
             out.append((part[1:-1], "code"))
         elif part.startswith("**"):
             out.append((part[2:-2], "bold"))
+        elif link:
+            out.append((link.group(1).strip("`"), "link " + link.group(2)))
         else:
             out.append((part, None))
     return [(text.replace("\\|", "|"), style) for text, style in out]
@@ -143,6 +149,7 @@ class GuideWindow(tk.Toplevel):
         self.fonts = self._fonts()
         self.headings: list[str] = []
         self.rules: list[tk.Frame] = []
+        self.links: list[str] = []
 
         side = ttk.Frame(self, padding=(8, 8, 0, 8))
         side.grid(row=0, column=0, sticky="ns")
@@ -193,19 +200,21 @@ class GuideWindow(tk.Toplevel):
         bold = tkfont.Font(family=family, size=10, weight="bold")
         title = tkfont.Font(family=family, size=17, weight="bold")
         section = tkfont.Font(family=family, size=13, weight="bold")
+        sub = tkfont.Font(family=family, size=11, weight="bold")
         fixed = tkfont.nametofont("TkFixedFont").copy()
         fixed.configure(size=10)
         if "Consolas" in tkfont.families():
             fixed.configure(family="Consolas")
         hairline = tkfont.Font(family=family, size=1)
-        return {"body": body, "bold": bold, "title": title, "section": section,
+        return {"body": body, "bold": bold, "title": title, "section": section, "sub": sub,
                 "fixed": fixed, "hairline": hairline}
 
     def _tags(self) -> None:
         text, fonts = self.text, self.fonts
         text.tag_configure("title", font=fonts["title"], spacing3=10)
         text.tag_configure("section", font=fonts["section"], spacing1=18, spacing3=6)
-        text.tag_configure("sub", font=fonts["bold"], spacing1=10, spacing3=4)
+        text.tag_configure("sub", font=fonts["sub"], spacing1=14, spacing3=5)
+        text.tag_configure("link", foreground=LINK_COLOUR, underline=True)
         text.tag_configure("paragraph", spacing3=9)
         indent = fonts["body"].measure("•  ")
         text.tag_configure("bullet", lmargin1=10, lmargin2=10 + indent, spacing3=5)
@@ -266,12 +275,25 @@ class GuideWindow(tk.Toplevel):
         self._inline(title, tag)
         self.text.insert("end", "\n", tag)
         self.headings.append(mark)
-        self.contents.insert("end", ("   " if level > 1 else "") + plain(title))
+        self.contents.insert("end", "   " * (level - 1) + plain(title))
+
+    def _style(self, style: str | None, code: str) -> tuple:
+        """The text tags of one inline run: code, bold, or a link that opens in the browser."""
+        if style is None:
+            return ()
+        if style.startswith("link "):
+            name = "link%d" % len(self.links)
+            self.links.append(style[5:])
+            self.text.tag_bind(name, "<Button-1>",
+                               lambda _event, url=style[5:]: webbrowser.open(url))
+            self.text.tag_bind(name, "<Enter>", lambda _event: self.text.configure(cursor="hand2"))
+            self.text.tag_bind(name, "<Leave>", lambda _event: self.text.configure(cursor="arrow"))
+            return ("link", name)
+        return (code if style == "code" else style,)
 
     def _inline(self, text: str, base: str) -> None:
         for run, style in pieces(text):
-            tags = (base,) if style is None else (base, "inline" if style == "code" else style)
-            self.text.insert("end", run, tags)
+            self.text.insert("end", run, (base,) + self._style(style, "inline"))
 
     def _table(self, rows: list[list[str]], tag: str) -> None:
         if not rows:
@@ -294,9 +316,7 @@ class GuideWindow(tk.Toplevel):
                 if index:
                     self.text.insert("end", "\t", style)
                 for run, inline in pieces(cell):
-                    tags = style if inline is None else style + (
-                        "mono" if inline == "code" else inline,)
-                    self.text.insert("end", run, tags)
+                    self.text.insert("end", run, style + self._style(inline, "mono"))
             self.text.insert("end", "\n", style)
             if number == 0:
                 self._rule(tag)

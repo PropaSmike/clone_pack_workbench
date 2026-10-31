@@ -1312,7 +1312,7 @@ def plugin_source(fighters: list[dict], items: list[dict], stages=(), menu: dict
     taken = {identifier(state.get("resource_name", "wawa")) for state in fighters}
     parts += [item_part(state, suffix(state) if len(items) > 1 else "", taken, names_taken)
               for state in items]
-    for extra in (stage_part(list(stages)), menu_part(menu), enemy_code.enemy_part(list(enemies))):
+    for extra in (stage_part(list(stages)), menu_part(menu), enemy_code.enemy_part(list(enemies), names_taken)):
         if extra is not None:
             parts.append(extra)
     if not parts:

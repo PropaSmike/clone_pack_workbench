@@ -14,6 +14,14 @@ WEAPON = "weapon"
 WEAPON_COMMON = "weapon_common"
 ITEM = "item"
 ITEM_COMMON = "item_common"
+ENEMY = "enemy"
+ENEMY_OBJECT = "enemy_object"
+ENEMY_API = "clone_engine_api::enemy::"
+ENEMY_BASES = {"yellow_devil": "yellow_devil", "yellowdevil": "yellow_devil",
+               "dark_emperor": "dark_emperor", "subetenoyaminoou": "dark_emperor",
+               "flying_man": "flying_man", "flyingman": "flying_man",
+               "metal_face": "metal_face", "metalface": "metal_face", "nabbit": "nabbit"}
+ROUTED = (73, 74)
 
 L2CVALUE = "smashline::skyline_smash::lib::L2CValue"
 
@@ -60,7 +68,7 @@ def _load() -> dict:
                 "name": name, "constant": constant, "ints": int(ints), "floats": int(floats),
                 "ret": ret, "impls": int(impls), "note": note}
     grids: dict = {}
-    for space in (FIGHTER, WEAPON, ITEM, "common"):
+    for space in (FIGHTER, WEAPON, ITEM, ENEMY, "common"):
         table: dict = {}
         path = DATA / ("vtable_%s.tsv" % space)
         if path.is_file():
@@ -104,7 +112,15 @@ def tables(kind: str, state: dict) -> list[tuple[str, str]]:
     if kind == "item":
         return [(ITEM, "Item vtable (this item's own copy)"),
                 (ITEM_COMMON, "Item agent common (entries 0 to 9)")]
+    if kind == "enemy":
+        return [(ENEMY, "Enemy class vtable (this clone's own entries)"),
+                (ENEMY_OBJECT, "Enemy object vtable (this clone's own copy)")]
     return []
+
+
+def enemy_base(state: dict) -> str:
+    """The enemy.toml base as the catalog labels it: nabbit, flying_man, yellow_devil..."""
+    return ENEMY_BASES.get(str(state.get("base") or "nabbit").lower(), "nabbit")
 
 
 def _space(table: str) -> tuple[str, str]:
@@ -135,12 +151,16 @@ def _address(space: str, state: dict, article: str, slot: int) -> str:
         row = grids["common"].get("weapon_common")
     elif space == ITEM_COMMON:
         row = grids["common"].get("item_common:%s" % state.get("base_kind"))
+    elif space == ENEMY:
+        row = grids[ENEMY].get(enemy_base(state))
+    elif space == ENEMY_OBJECT:
+        row = grids[ENEMY].get(ENEMY_OBJECT)
     else:
         row = None
     if not row or slot >= len(row):
         return ""
     entry = row[slot]
-    if space in (FIGHTER, WEAPON, ITEM):
+    if space in (FIGHTER, WEAPON, ITEM, ENEMY, ENEMY_OBJECT):
         return "main+0x%s" % entry
     return entry.replace("extern=", "")
 
@@ -156,7 +176,8 @@ def signature(space: str, slot: int) -> dict:
     if row is None:
         return {"params": [], "ret": "", "offered": False, "why": "not in the catalog",
                 "constant": "", "name": "", "summary": ""}
-    first = [("item", "u64")] if space == ITEM else [("class", "u64"), ("object", "u64")]
+    first = {ITEM: [("item", "u64")], ENEMY: [("instance", "u64")],
+             ENEMY_OBJECT: [("object", "u64")]}.get(space, [("class", "u64"), ("object", "u64")])
     ints = max(row["ints"], len(first))
     params = list(first) + [("a%d" % index, "u64") for index in range(len(first), ints)]
     params += [("f%d" % index, "f64") for index in range(row["floats"])]
@@ -219,6 +240,8 @@ def hook_source(kind: str, state: dict, constant: str, resource: str, taken: set
         if not isinstance(slot, int):
             continue
         space, article = _space(table)
+        if space in (ENEMY, ENEMY_OBJECT):
+            continue
         sig = signature(space, slot)
         if not sig["offered"]:
             continue
@@ -262,3 +285,59 @@ def hook_source(kind: str, state: dict, constant: str, resource: str, taken: set
             "}",
         ]))
     return names, blocks
+
+
+def enemy_hook_source(state: dict, upper: str, resource: str, taken: set) -> tuple[list[str], list[str]]:
+    """(lines for main, functions) for an enemy's picked entries: enemies have no
+    #[hook], so each is a function its main hands to set_vtable_entry or
+    set_object_vtable_entry, calling the entry it replaced."""
+    registrations, blocks = [], []
+    driven = enemy_base(state) == "nabbit"
+    for hook in state.get("hooks") or []:
+        space = hook.get("table", "")
+        slot = hook.get("slot")
+        if space not in (ENEMY, ENEMY_OBJECT) or not isinstance(slot, int):
+            continue
+        sig = signature(space, slot)
+        if not sig["offered"]:
+            continue
+        object_table = space == ENEMY_OBJECT
+        module = "object_slot::" if object_table else "slot::"
+        slot_path = ENEMY_API + module + sig["constant"] if sig["constant"] else str(slot)
+        name = identifier("%s_%s%s" % (resource, "object_" if object_table else "", sig["name"] or "slot_%d" % slot))
+        if name in taken:
+            name = "%s_%d" % (name, slot)
+        taken.add(name)
+        params = ", ".join("%s: %s" % (param, kind) for param, kind in sig["params"])
+        types = ", ".join(kind for _, kind in sig["params"])
+        passed = ", ".join(param for param, _ in sig["params"])
+        ret = " -> %s" % sig["ret"] if sig["ret"] else ""
+        fallback = "0.0" if sig["ret"] == "f64" else "0"
+        address = _address(space, state, "", slot)
+        if object_table:
+            original = "%soriginal_object_entry(%s)" % (ENEMY_API, slot_path)
+            setter = "set_object_vtable_entry"
+            where = "enemy object vtable"
+            subject = "object is the enemy's battle object"
+        else:
+            original = "%soriginal_entry(%s_KIND.load(core::sync::atomic::Ordering::Acquire), %s)" % (
+                ENEMY_API, upper, slot_path)
+            setter = "set_vtable_entry"
+            where = "enemy class vtable"
+            subject = "instance is the enemy's class instance"
+        routed = " (a driven clone's original is the engine's routing to its driver)" \
+            if driven and not object_table and slot in ROUTED else ""
+        registrations.append("        let _ = %s%s(kind, %s, %s as *const ()); // %s slot %d of this clone"
+                             % (ENEMY_API, setter, slot_path, name, where, slot))
+        blocks.append("\n".join([
+            "// %s slot %d%s%s; signature %s%s" % (where, slot, (" " + sig["name"]) if sig["name"] else "",
+                                                 (", base " + address) if address else "", sig["summary"], routed),
+            "unsafe extern \"C\" fn %s(%s)%s {" % (name, params, ret),
+            "    let Some(original) = %s else {" % original,
+            "        return %s;" % fallback,
+            "    };",
+            "    let original: unsafe extern \"C\" fn(%s)%s = core::mem::transmute(original);" % (types, ret),
+            "    original(%s) // %s; add yours before or after" % (passed, subject),
+            "}",
+            ""]))
+    return registrations, blocks

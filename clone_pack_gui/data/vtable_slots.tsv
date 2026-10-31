@@ -430,3 +430,243 @@ item	177	UNK177	UNK177	2	0	u64	1	Item-only virtual
 item	178	UNK178	UNK178	1	0	u64	1	Item-only virtual
 item	179	HAVE	HAVE	3	0	u64	1	app::item::have
 item	180	UNK180	UNK180	3	0	u64	1	Item-only virtual
+enemy	0	UNK0		1	0	u64	5	own entry in yellow_devil, dark_emperor, flying_man, metal_face, nabbit
+enemy	1	UNK1		1	0	u64	5	own entry in yellow_devil, dark_emperor, flying_man, metal_face, nabbit
+enemy	2	UNK2		0	0	void	2	own entry in yellow_devil
+enemy	3	UNK3		0	0	void	2	own entry in yellow_devil
+enemy	4	JOINT_ROTATION	JOINT_ROTATION	1	0	u64	1	every base keeps the shared entry
+enemy	5	UNK5		1	0	void	1	every base keeps the shared entry
+enemy	6	UNK6		1	0	void	1	every base keeps the shared entry
+enemy	7	UNK7		1	0	void	1	every base keeps the shared entry
+enemy	8	UNK8		0	0	void	1	every base keeps the shared entry
+enemy	9	DAMAGE	DAMAGE	2	0	u64	5	own entry in yellow_devil, dark_emperor, flying_man, metal_face, nabbit
+enemy	10	UNK10		0	0	void	1	every base keeps the shared entry
+enemy	11	UNK11		1	0	u64	5	own entry in yellow_devil, dark_emperor, flying_man, metal_face, nabbit
+enemy	12	UNK12		2	0	u64	1	every base keeps the shared entry
+enemy	13	UNK13		1	0	u64	1	every base keeps the shared entry
+enemy	14	UNK14		2	0	u64	1	every base keeps the shared entry
+enemy	15	UNK15		1	0	u64	1	every base keeps the shared entry
+enemy	16	UNK16		0	0	void	1	every base keeps the shared entry
+enemy	17	UNK17		2	0	u64	2	own entry in nabbit
+enemy	18	UNK18		1	0	u64	2	own entry in nabbit
+enemy	19	UNK19		0	0	void	3	own entry in yellow_devil, dark_emperor
+enemy	20	UNK20		1	0	u64	2	own entry in nabbit
+enemy	21	UNK21		2	0	u64	2	own entry in metal_face
+enemy	22	UNK22		2	0	u64	4	own entry in yellow_devil, dark_emperor, metal_face
+enemy	23	UNK23		2	0	void	5	own entry in yellow_devil, dark_emperor, flying_man, metal_face, nabbit
+enemy	24	UNK24		0	0	void	1	every base keeps the shared entry
+enemy	25	UNK25		1	0	u64	5	own entry in yellow_devil, dark_emperor, flying_man, metal_face
+enemy	26	UNK26		1	0	u64	2	own entry in nabbit
+enemy	27	UNK27		0	0	void	1	every base keeps the shared entry
+enemy	28	UNK28		0	0	void	1	every base keeps the shared entry
+enemy	29	UNK29		2	0	f64	4	own entry in yellow_devil, dark_emperor, metal_face
+enemy	30	UNK30		0	0	u32	2	own entry in dark_emperor
+enemy	31	UNK31		2	0	u64	2	own entry in dark_emperor
+enemy	32	UNK32		0	0	u32	2	own entry in yellow_devil
+enemy	33	UNK33		0	0	u32	1	every base keeps the shared entry
+enemy	34	UNK34		0	0	u32	3	own entry in yellow_devil, dark_emperor
+enemy	35	UNK35		1	0	u32	1	every base keeps the shared entry
+enemy	36	UNK36		0	0	u32	3	own entry in yellow_devil, dark_emperor
+enemy	37	UNK37		1	0	u32	1	every base keeps the shared entry
+enemy	38	UNK38		1	0	u32	2	own entry in yellow_devil
+enemy	39	UNK39		1	0	u32	1	every base keeps the shared entry
+enemy	40	UNK40		1	0	u64	5	own entry in yellow_devil, dark_emperor, flying_man, metal_face, nabbit
+enemy	41	UNK41		1	0	u64	5	own entry in yellow_devil, dark_emperor, flying_man, metal_face, nabbit
+enemy	42	UNK42		1	0	u64	1	every base keeps the shared entry
+enemy	43	UNK43		2	0	u64	2	own entry in nabbit
+enemy	44	UNK44		1	0	u64	1	every base keeps the shared entry
+enemy	45	UNK45		2	0	u64	5	own entry in yellow_devil, dark_emperor, flying_man, nabbit
+enemy	46	UNK46		4	0	u64	1	every base keeps the shared entry
+enemy	47	UNK47		0	0	u32	1	every base keeps the shared entry
+enemy	48	UNK48		0	0	u32	1	every base keeps the shared entry
+enemy	49	UNK49		3	0	u64	1	every base keeps the shared entry
+enemy	50	UNK50		3	0	u64	2	own entry in flying_man
+enemy	51	UNK51		1	0	u64	1	every base keeps the shared entry
+enemy	52	UNK52		1	0	u64	2	own entry in dark_emperor
+enemy	53	UNK53		1	0	u64	4	own entry in yellow_devil, flying_man, metal_face
+enemy	54	UNK54		1	0	u64	1	every base keeps the shared entry
+enemy	55	UNK55		0	0	void	1	every base keeps the shared entry
+enemy	56	UNK56		1	0	u64	5	own entry in yellow_devil, dark_emperor, flying_man, metal_face, nabbit
+enemy	57	UNK57		1	0	u64	3	own entry in flying_man, nabbit
+enemy	58	UNK58		1	0	u64	2	own entry in nabbit
+enemy	59	UNK59		0	0	void	1	every base keeps the shared entry
+enemy	60	UNK60		1	0	u64	3	own entry in flying_man, nabbit
+enemy	61	UNK61		1	0	u64	2	own entry in flying_man
+enemy	62	UNK62		1	0	u64	3	own entry in flying_man, nabbit
+enemy	63	UNK63		0	0	void	1	every base keeps the shared entry
+enemy	64	UNK64		1	0	u32	5	own entry in yellow_devil, dark_emperor, flying_man, metal_face, nabbit
+enemy	65	UNK65		1	0	u32	3	own entry in metal_face, nabbit
+enemy	66	UNK66		1	0	u32	3	own entry in metal_face, nabbit
+enemy	67	UNK67		1	0	u32	4	own entry in flying_man, metal_face, nabbit
+enemy	68	UNK68		0	0	u32	3	own entry in metal_face, nabbit
+enemy	69	UNK69		2	1	u64	3	own entry in flying_man, nabbit
+enemy	70	UNK70		1	0	u32	4	own entry in flying_man, metal_face, nabbit
+enemy	71	UNK71		0	0	void	1	every base keeps the shared entry
+enemy	72	UNK72		1	0	u64	1	every base keeps the shared entry
+enemy	73	CHANGE_STATUS	CHANGE_STATUS	2	0	u64	5	(instance, status); the game changes the enemy's class status through it; a clone brought out undriven gets its first status here
+enemy	74	REQUEST_STATUS	REQUEST_STATUS	2	0	u64	5	(instance, status); the game asks for a class status through it; a driven clone gets its first status here
+enemy	75	INSTALL_STATUS	INSTALL_STATUS	8	0	u64	5	(instance, status, exec, a3, enter, a5, a6, a7); installs a status with its own exec and enter functions; the engine's drivers put their statuses in through it
+enemy	76	INSTALL_REQUEST	INSTALL_REQUEST	8	0	u64	5	(instance, status, exec, a3, enter, a5, a6, a7); REQUEST_STATUS's install, as INSTALL_STATUS
+enemy_object	0	DESTRUCTOR_1		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	1	DESTRUCTOR_2		5	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	2	INITIALIZE	INITIALIZE	5	0	u64	1	another entry than the item vtable's
+enemy_object	3	START	START	1	0	u64	1	another entry than the item vtable's
+enemy_object	4	UNK4		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	5	UNK5		1	0	u64	1	another entry than the item vtable's
+enemy_object	6	UNK6		2	0	u64	1	another entry than the item vtable's
+enemy_object	7	UNK7		2	0	u64	1	another entry than the item vtable's
+enemy_object	8	UNK8		2	2	u64	1	BattleObject; the item vtable holds the same entry
+enemy_object	9	UNK9		2	0	u64	1	another entry than the item vtable's
+enemy_object	10	UNK10		1	0	u64	1	another entry than the item vtable's
+enemy_object	11	UNK11		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	12	UNK12		0	0	u32	1	another entry than the item vtable's
+enemy_object	13	UNK13		0	0	u32	1	another entry than the item vtable's
+enemy_object	14	UNK14		0	0	void	1	another entry than the item vtable's
+enemy_object	15	UNK15		0	0	void	1	another entry than the item vtable's
+enemy_object	16	UNK16		0	0	void	1	another entry than the item vtable's
+enemy_object	17	UNK17		0	0	u32	1	another entry than the item vtable's
+enemy_object	18	UNK18		0	0	u32	1	another entry than the item vtable's
+enemy_object	19	UNK19		0	0	u32	1	another entry than the item vtable's
+enemy_object	20	UNK20		0	0	void	1	another entry than the item vtable's
+enemy_object	21	UNK21		0	0	u64	1	another entry than the item vtable's
+enemy_object	22	UNK22		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	23	UNK23		0	0	u32	1	another entry than the item vtable's
+enemy_object	24	UNK24		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	25	UNK25		0	0	void	1	another entry than the item vtable's
+enemy_object	26	UNK26		0	0	void	1	another entry than the item vtable's
+enemy_object	27	UNK27		0	0	void	1	another entry than the item vtable's
+enemy_object	28	UNK28		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	29	UNK29		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	30	UNK30		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	31	UNK31		0	0	u32	1	another entry than the item vtable's
+enemy_object	32	UNK32		0	0	u64	1	another entry than the item vtable's
+enemy_object	33	UNK33		0	0	void	1	another entry than the item vtable's
+enemy_object	34	UNK34		0	0	u32	1	another entry than the item vtable's
+enemy_object	35	UNK35		0	0	void	1	another entry than the item vtable's
+enemy_object	36	UNK36		0	0	void	1	another entry than the item vtable's
+enemy_object	37	UNK37		0	0	void	1	another entry than the item vtable's
+enemy_object	38	UNK38		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	39	UNK39		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	40	UNK40		0	0	u32	1	another entry than the item vtable's
+enemy_object	41	UNK41		0	0	void	1	another entry than the item vtable's
+enemy_object	42	UNK42		0	0	u32	1	another entry than the item vtable's
+enemy_object	43	UNK43		0	0	void	1	another entry than the item vtable's
+enemy_object	44	UNK44		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	45	UNK45		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	46	UNK46		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	47	UNK47		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	48	UNK48		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	49	UNK49		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	50	UNK50		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	51	UNK51		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	52	UNK52		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	53	UNK53		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	54	UNK54		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	55	UNK55		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	56	UNK56		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	57	UNK57		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	58	UNK58		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	59	UNK59		2	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	60	UNK60		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	61	UNK61		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	62	UNK62		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	63	UNK63		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	64	UNK64		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	65	UNK65		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	66	UNK66		3	0	u64	1	BattleObject; the item vtable holds the same entry
+enemy_object	67	UNK67		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	68	UNK68		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	69	UNK69		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	70	UNK70		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	71	UNK71		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	72	UNK72		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	73	UNK73		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	74	UNK74		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	75	UNK75		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	76	UNK76		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	77	UNK77		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	78	UNK78		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	79	UNK79		0	0	u32	1	another entry than the item vtable's
+enemy_object	80	UNK80		0	0	void	1	another entry than the item vtable's
+enemy_object	81	UNK81		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	82	UNK82		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	83	UNK83		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	84	UNK84		2	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	85	UNK85		0	0	u32	1	another entry than the item vtable's
+enemy_object	86	UNK86		0	0	f64	1	BattleObject; the item vtable holds the same entry
+enemy_object	87	UNK87		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	88	UNK88		0	0	u32	1	another entry than the item vtable's
+enemy_object	89	UNK89		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	90	UNK90		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	91	UNK91		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	92	UNK92		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	93	UNK93		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	94	UNK94		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	95	UNK95		0	0	u32	1	another entry than the item vtable's
+enemy_object	96	UNK96		0	0	f64	1	BattleObject; the item vtable holds the same entry
+enemy_object	97	UNK97		0	0	f64	1	BattleObject; the item vtable holds the same entry
+enemy_object	98	UNK98		3	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	99	UNK99		0	0	f64	1	BattleObject; the item vtable holds the same entry
+enemy_object	100	UNK100		0	0	f64	1	BattleObject; the item vtable holds the same entry
+enemy_object	101	UNK101		0	0	f64	1	BattleObject; the item vtable holds the same entry
+enemy_object	102	UNK102		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	103	UNK103		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	104	UNK104		1	0	u64	1	another entry than the item vtable's
+enemy_object	105	UNK105		1	0	u64	1	another entry than the item vtable's
+enemy_object	106	UPDATE_1	UPDATE_1	1	0	u64	1	(object); phase 1 of the 9 the BattleObjectManager runs each frame
+enemy_object	107	UPDATE_2	UPDATE_2	1	0	u64	1	(object); phase 2 of the 9 the BattleObjectManager runs each frame
+enemy_object	108	UPDATE_3	UPDATE_3	1	0	u64	1	(object); phase 3 of the 9 the BattleObjectManager runs each frame
+enemy_object	109	UPDATE_4	UPDATE_4	1	0	u64	1	(object); phase 4 of the 9 the BattleObjectManager runs each frame
+enemy_object	110	UPDATE_5	UPDATE_5	1	0	u64	1	(object); phase 5 of the 9 the BattleObjectManager runs each frame
+enemy_object	111	UPDATE_6	UPDATE_6	1	0	u64	1	(object); phase 6 of the 9 the BattleObjectManager runs each frame
+enemy_object	112	UPDATE_7	UPDATE_7	1	0	u64	1	(object); phase 7 of the 9 the BattleObjectManager runs each frame
+enemy_object	113	UPDATE_8	UPDATE_8	1	0	u64	1	(object); phase 8 of the 9 the BattleObjectManager runs each frame
+enemy_object	114	UPDATE_9	UPDATE_9	1	0	u64	1	(object); phase 9 of the 9 the BattleObjectManager runs each frame
+enemy_object	115	UNK115		1	0	u64	1	another entry than the item vtable's
+enemy_object	116	UNK116		1	0	u64	1	another entry than the item vtable's
+enemy_object	117	UNK117		1	0	u64	1	another entry than the item vtable's
+enemy_object	118	UNK118		1	0	u64	1	another entry than the item vtable's
+enemy_object	119	UNK119		2	0	u32	1	another entry than the item vtable's
+enemy_object	120	UNK120		1	0	u64	1	another entry than the item vtable's
+enemy_object	121	UNK121		1	0	u64	1	another entry than the item vtable's
+enemy_object	122	UNK122		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	123	UNK123		1	0	u64	1	another entry than the item vtable's
+enemy_object	124	UNK124		1	0	u64	1	BattleObject; the item vtable holds the same entry
+enemy_object	125	UNK125		1	0	u32	1	another entry than the item vtable's
+enemy_object	126	UNK126		0	0	f64	1	BattleObject; the item vtable holds the same entry
+enemy_object	127	UNK127		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	128	UNK128		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	129	UNK129		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	130	UNK130		0	0	void	1	another entry than the item vtable's
+enemy_object	131	UNK131		0	0	void	1	another entry than the item vtable's
+enemy_object	132	UNK132		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	133	UNK133		0	0	u32	1	another entry than the item vtable's
+enemy_object	134	UNK134		0	0	u32	1	another entry than the item vtable's
+enemy_object	135	UNK135		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	136	UNK136		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	137	UNK137		2	0	u64	1	another entry than the item vtable's
+enemy_object	138	UNK138		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	139	UNK139		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	140	UNK140		0	0	x8	1	another entry than the item vtable's
+enemy_object	141	UNK141		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	142	UNK142		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	143	UNK143		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	144	UNK144		1	0	u64	1	BattleObject; the item vtable holds the same entry
+enemy_object	145	UNK145		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	146	UNK146		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	147	UNK147		0	0	u32	1	another entry than the item vtable's
+enemy_object	148	UNK148		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	149	UNK149		0	0	void	1	another entry than the item vtable's
+enemy_object	150	UNK150		0	0	void	1	another entry than the item vtable's
+enemy_object	151	UNK151		0	0	void	1	another entry than the item vtable's
+enemy_object	152	UNK152		0	0	void	1	another entry than the item vtable's
+enemy_object	153	UNK153		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	154	UNK154		3	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	155	UNK155		0	0	f64	1	BattleObject; the item vtable holds the same entry
+enemy_object	156	UNK156		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	157	UNK157		0	0	void	1	another entry than the item vtable's
+enemy_object	158	UNK158		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	159	UNK159		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	160	UNK160		0	0	void	1	BattleObject; the item vtable holds the same entry
+enemy_object	161	UNK161		0	0	u32	1	BattleObject; the item vtable holds the same entry
+enemy_object	162	UNK162		0	0	u32	1	BattleObject; the item vtable holds the same entry

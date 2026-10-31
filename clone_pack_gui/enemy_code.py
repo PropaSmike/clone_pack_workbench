@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from . import vtables
+
 BASE_CONSTANTS = {"yellow_devil": "YELLOW_DEVIL", "yellowdevil": "YELLOW_DEVIL",
                   "dark_emperor": "DARK_EMPEROR", "subetenoyaminoou": "DARK_EMPEROR",
                   "flying_man": "FLYING_MAN", "flyingman": "FLYING_MAN",
@@ -30,8 +32,9 @@ def tag(name: str) -> str:
     return "".join(character if character.isalnum() else "_" for character in name).strip("_").upper() or "ENEMY"
 
 
-def enemy_lines(state: dict) -> tuple[list[str], list[str], list[str]]:
-    """One enemy's declarations, its lines in main and its functions."""
+def enemy_lines(state: dict, taken: set | None = None) -> tuple[list[str], list[str], list[str]]:
+    """One enemy's declarations, its lines in main and its functions, with a
+    function and its registration for each entry picked on the Vtables tab."""
     name = state.get("name") or "my_enemy"
     base = BASE_CONSTANTS.get(str(state.get("base") or "nabbit").lower(), "NABBIT")
     upper = tag(name)
@@ -73,10 +76,15 @@ def enemy_lines(state: dict) -> tuple[list[str], list[str], list[str]]:
     else:
         main.append("        // the game's own logic: Flying Man fights on any stage; the others are made for "
                     "their home stage")
-    main.append("        // clone_engine_api::enemy::set_vtable_entry(kind, clone_engine_api::enemy::slot::CHANGE_STATUS, "
-                "my_change as *const ()); // one class slot of this clone; original_entry gives the base's")
-    main.append("        // clone_engine_api::enemy::set_object_vtable_entry(kind, clone_engine_api::enemy::object_slot::UPDATE_9, "
-                "my_update as *const ()); // one object slot; original_object_entry gives the game's")
+    registrations, hooks = vtables.enemy_hook_source(state, upper, lower, taken if taken is not None else set())
+    if registrations:
+        main += registrations
+    else:
+        main.append("        // clone_engine_api::enemy::set_vtable_entry(kind, clone_engine_api::enemy::slot::CHANGE_STATUS, "
+                    "my_change as *const ()); // one class slot of this clone (the Vtables tab writes these); "
+                    "original_entry gives the base's")
+        main.append("        // clone_engine_api::enemy::set_object_vtable_entry(kind, clone_engine_api::enemy::object_slot::UPDATE_9, "
+                    "my_update as *const ()); // one object slot; original_object_entry gives the game's")
     main += ['        smashline::Agent::new("fighter").on_line(smashline::Main, %s_frame).install(); '
              "// every fighter, once per frame" % lower,
              "    }"]
@@ -145,19 +153,21 @@ def enemy_lines(state: dict) -> tuple[list[str], list[str], list[str]]:
         "    }",
         "}",
         ""]))
+    tail += hooks
     return decls, main, tail
 
 
-def enemy_part(states: list[dict]) -> dict | None:
+def enemy_part(states: list[dict], taken: set | None = None) -> dict | None:
     """Every enemy of the pack in one part: their clones, then one arm with all their kinds."""
     states = [state for state in states if state.get("name")]
     if not states:
         return None
+    taken = set() if taken is None else taken
     decls: list[str] = []
     main: list[str] = []
     tail: list[str] = []
     for state in states:
-        more_decls, more_main, more_tail = enemy_lines(state)
+        more_decls, more_main, more_tail = enemy_lines(state, taken)
         decls += more_decls
         main += more_main
         tail += more_tail

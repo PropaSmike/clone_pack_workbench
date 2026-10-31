@@ -242,13 +242,20 @@ signature read off the game:
 - a fighter: its own vtable, its agent's `L2CFighterCommon` entries, the
   entries Kirby runs while he holds its ability, and each article's weapon
   vtable and `L2CWeaponCommon`;
-- an item: its own vtable and its agent's first ten entries.
+- an item: its own vtable and its agent's first ten entries;
+- an enemy: its class vtable (77 entries, `CHANGE_STATUS` and
+  `REQUEST_STATUS` named) and its copy of the enemy object vtable (163
+  entries, `INITIALIZE`, `START`, `UPDATE_1` to `UPDATE_9` named).
 
 Double-click an entry, or select several and **Hook selected**; each becomes a
 `#[hook]` on the Rust tab that calls the original. The line under the table
 shows the whole entry under the pointer, or else the selected one. The
 fighter, weapon and item tables are this clone's own copies, so a hook there
-runs for it alone.
+runs for it alone. An enemy has no `#[hook]`: each entry becomes a function
+that calls `original_entry` (or `original_object_entry`) and a
+`set_vtable_entry` (or `set_object_vtable_entry`) line in main. The base's
+own enemies keep the game's entries. On a Nabbit clone, `CHANGE_STATUS` and
+`REQUEST_STATUS` call the engine's routing to its driver.
 
 The signature comes from every implementation of the entry in the game:
 
@@ -316,7 +323,8 @@ With several parts of a kind, each part's functions carry its name
 (`register_css_entry_wawa`); the first fighter is `fighter!`, the others a
 plain `static`, since `fighter!` also names the crate's default fighter. The
 entries picked on the Vtables tab follow as `#[hook]` functions, installed with
-`install_hooks!` after `register`.
+`install_hooks!` after `register`; an enemy's follow as plain functions, set on
+its kind right after `enemy::clone`.
 
 ## Converting an added-slot moveset
 
@@ -668,7 +676,7 @@ python lint_enemy_pack.py "path/to/your/mod folder"
   the `vtable_*.tsv` tables behind the Vtables tab. The fighter and weapon
   addresses, slot names and notes are incredibleplays'
   [`smash-vtables`](https://github.com/theincredibleplayer/smash-vtables)
-  (13.0.4); the item table, the common tables and the signatures were read off
+  (13.0.4); the item, enemy and common tables and the signatures were read off
   the game's code.
 - `docs/`: the parameter field lists for game version 13.0.4.
 - `arc_index/`: the file and folder paths inside `data.arc` (13.0.4), and

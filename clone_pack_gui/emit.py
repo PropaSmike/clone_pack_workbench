@@ -834,11 +834,12 @@ def glide_code(state: dict, resource: str, suffix: str) -> tuple[list[str], list
     for name, _, _ in GLIDE_FUNCTIONS:
         tail.append("unsafe extern \"C\" fn %s%s(fighter: &mut L2CFighterCommon) -> L2CValue {\n"
                     "    glide::%s(fighter, &%s)\n}" % (name, suffix, name, constant))
-    main = ['    Agent::new("%s") // Brawl\'s glide' % resource,
-            "        .on_line(Main, glide_entry%s) // the way in, checked every frame" % suffix]
+    main = ["    if glide::enabled() { // false when the player's settings.toml says gliding = false, for another glide mod",
+            '        Agent::new("%s") // Brawl\'s glide' % resource,
+            "            .on_line(Main, glide_entry%s) // the way in, checked every frame" % suffix]
     for name, line, status in GLIDE_FUNCTIONS:
-        main.append("        .status(%s, *FIGHTER_STATUS_KIND_%s, %s%s)" % (line, status, name, suffix))
-    main.append("        .install();")
+        main.append("            .status(%s, *FIGHTER_STATUS_KIND_%s, %s%s)" % (line, status, name, suffix))
+    main += ["            .install();", "    }"]
     uses = {"use clone_engine_api::glide::{self, Glide};", "use smashline::skyline_smash::lua2cpp::L2CFighterCommon;",
             "use smashline::skyline_smash::lib::L2CValue;", "use smashline::skyline_smash::lib::lua_const::*;",
             "smashline:Exec", "smashline:Init"}

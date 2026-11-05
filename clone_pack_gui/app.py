@@ -1084,7 +1084,9 @@ class IdentityPanel(ttk.Frame):
                                    "Knight's, Pit's or Charizard's values: jump held through the top of the midair "
                                    "jump glides. Hold frames: how long jump must be held (8). The motion list needs "
                                    "glide_start, glide, glide_attack, glide_end and glide_landing. It starts from "
-                                   "the float's input, so ticking one clears the other",
+                                   "the float's input, so ticking one clears the other. Players with another glide "
+                                   "mod set gliding = false in the engine's settings.toml, and the clone then "
+                                   "installs none of it",
                          foreground="#555", justify="left")
         hint.grid(row=1, column=0, columnspan=6, sticky="w", pady=(4, 0))
         box.columnconfigure(5, weight=1)

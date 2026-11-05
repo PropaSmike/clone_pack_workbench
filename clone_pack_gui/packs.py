@@ -15,6 +15,7 @@ from . import backups, gimmicks
 
 FIGHTER = "fighter"
 ITEM = "item"
+ITEM_ROOTS = ("item", "assist", "pokemon", "boss")
 STAGE = "stage"
 MENU = "menu"
 MII = "mii"
@@ -76,7 +77,8 @@ def detect_kinds(folder: Path) -> list[str]:
     folder = Path(folder)
     found = []
     for kind, manifest in ((FIGHTER, FIGHTER_MANIFEST), (ITEM, "item.toml"), (STAGE, "stage.toml")):
-        if (folder / kind).is_dir() or (manifest and (folder / manifest).is_file()):
+        trees = ITEM_ROOTS if kind == ITEM else (kind,)
+        if any((folder / tree).is_dir() for tree in trees) or (manifest and (folder / manifest).is_file()):
             found.append(kind)
     if (folder / MENU_MANIFEST).is_file() or (folder / "ui" / "script" / "menu").is_dir():
         found.append(MENU)
@@ -1077,12 +1079,25 @@ def write_state(folder: Path, sections: dict) -> Path:
 
 
 def own_names(folder: Path, tree: str, vanilla) -> list[str]:
-    """The names under a tree that are not a vanilla owner's, so the pack's own."""
-    root = Path(folder) / tree
-    if not root.is_dir():
-        return []
-    return sorted(entry.name for entry in root.iterdir()
-                  if entry.is_dir() and entry.name not in set(vanilla))
+    """The names under a tree that are not a vanilla owner's, so the pack's own.
+    An item's tree is whichever top folder its base lives in."""
+    names = set()
+    known = set(vanilla)
+    for name in (ITEM_ROOTS if tree == ITEM else (tree,)):
+        root = Path(folder) / name
+        if root.is_dir():
+            names.update(entry.name for entry in root.iterdir()
+                         if entry.is_dir() and entry.name not in known)
+    return sorted(names)
+
+
+def part_tree(folder: Path, kind: str, name: str) -> str:
+    """The top folder holding this part: an item's depends on its base."""
+    if kind == ITEM:
+        for root in ITEM_ROOTS:
+            if (Path(folder) / root / name).is_dir():
+                return root
+    return TREE_OF_KIND[kind]
 
 
 def costumes(folder: Path, tree: str, resource: str) -> list[int]:
@@ -1373,7 +1388,7 @@ def rename_plan(folder: Path, old: str, new: str) -> dict:
 
 def rename_refusal(folder: Path, kind: str, old: str, new: str, vanilla) -> str:
     """Why this rename must not happen, or an empty string."""
-    tree = TREE_OF_KIND[kind]
+    tree = part_tree(folder, kind, old)
     if not NAME_RE.match(new or ""):
         return "the new name must be lowercase letters, digits and underscores, starting with a letter"
     if new == old:
@@ -1478,11 +1493,12 @@ def base_from_config(config: dict, tree: str, resource: str, vanilla) -> str | N
     resource alone, since a pack may hold several parts of one kind."""
     known = set(vanilla)
     counts: dict[str, int] = {}
-    ours = "%s/%s/" % (tree, resource)
+    trees = ITEM_ROOTS if tree == ITEM else (tree,)
+    ours = tuple("%s/%s/" % (name, resource) for name in trees)
 
     def count(path) -> None:
         parts = str(path).split("/")
-        if len(parts) > 1 and parts[0] == tree and parts[1] != resource:
+        if len(parts) > 1 and parts[0] in trees and parts[1] != resource:
             if not known or parts[1] in known:
                 counts[parts[1]] = counts.get(parts[1], 0) + 1
 
@@ -1658,8 +1674,9 @@ def add_declaration(path: Path, values: dict, order=()) -> list[str]:
     return write_manifests(path, sections, order)
 
 
-def scaffold(folder: Path, kind: str, values: dict) -> list[str]:
-    """Create a new pack folder with the manifest and trees its kind needs."""
+def scaffold(folder: Path, kind: str, values: dict, item_root: str = "item") -> list[str]:
+    """Create a new pack folder with the manifest and trees its kind needs.
+    item_root: the top folder of an item's base, which is where a clone of it loads from."""
     folder = Path(folder)
     folder.mkdir(parents=True, exist_ok=True)
     made = []
@@ -1670,8 +1687,8 @@ def scaffold(folder: Path, kind: str, values: dict) -> list[str]:
         made.append("fighter/%s/{model,motion,sound,effect,camera}" % resource)
     elif kind == ITEM:
         for tree in ("model", "motion", "param", "script"):
-            (folder / "item" / resource / tree).mkdir(parents=True, exist_ok=True)
-        made.append("item/%s/{model,motion,param,script}" % resource)
+            (folder / item_root / resource / tree).mkdir(parents=True, exist_ok=True)
+        made.append("%s/%s/{model,motion,param,script}" % (item_root, resource))
         add_declaration(folder / "item.toml", values, ITEM_KEYS)
         made.append("item.toml")
     elif kind == STAGE:

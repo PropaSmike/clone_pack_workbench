@@ -950,16 +950,29 @@ def float_literal(value) -> str:
 
 def hook_lines(kind: str, state: dict, constant: str, resource: str,
                names_taken: set | None) -> tuple[list[str], list[str]]:
-    """The install line for main and the #[hook] functions, for the entries
-    this part picked on the Vtables tab."""
+    """The lines for main and the functions, for the entries this part picked on
+    the Vtables tab: Smashline 2.0's calls where it has one, #[hook] for the rest."""
     from . import vtables
-    names, blocks = vtables.hook_source(kind, state, constant, resource,
-                                        names_taken if names_taken is not None else set())
-    if not names:
+    taken = names_taken if names_taken is not None else set()
+    install, blocks = vtables.smashline_source(state, constant, resource, taken) if kind == "fighter" else ([], [])
+    names, hooks = vtables.hook_source(kind, state, constant, resource, taken)
+    blocks = blocks + hooks
+    if names:
+        install.append("    clone_engine_api::install_hooks!(%s); // the entries picked on the Vtables tab"
+                       % ", ".join(names))
+    if not blocks:
         return [], []
-    install = ["    clone_engine_api::install_hooks!(%s); // the entries picked on the Vtables tab"
-               % ", ".join(names)]
     return install, ["\n" + "\n\n".join(blocks) + "\n"]
+
+
+def hook_uses(install: list[str], hooks: list[str]) -> set:
+    """The names the Vtables tab's lines and functions need."""
+    from . import vtables
+    text = "\n".join(install + hooks)
+    uses = {"smashline:" + name for name in vtables.SMASHLINE_NAMES if re.search(r"\b%s\b" % name, text)}
+    if "#[hook(" in text:
+        uses |= {"v2:hook"} | ({"v2:slot"} if "slot::" in text else set())
+    return uses
 
 
 def article_agent_lines(owner: str, name: str) -> list[str]:
@@ -1057,7 +1070,7 @@ def fighter_part(state: dict, suffix: str = "", first: bool = True,
             tail.append(config)
     install, hooks = hook_lines("fighter", state, constant, resource, names_taken)
     if install:
-        uses |= {"v2:hook"} | ({"v2:slot"} if any("slot::" in block for block in hooks) else set())
+        uses |= hook_uses(install, hooks)
         main += install
         tail += hooks
     colors = int(state.get("color_count", 8) or 8)
@@ -1085,7 +1098,7 @@ def item_manifest_lines(state: dict, constant: str) -> list[str]:
             else "%d, // base kind: the vanilla item it is built on%s" % (base_kind, "" if base_kind else " (fill in)"))
     lines = [
         "    let manifest = ItemManifest::new(",
-        "        %s%s%s, // resource name: files under item/%s, script name" % (q, resource, q, resource),
+        "        %s%s%s, // resource name: the folder your files live in, script name" % (q, resource, q),
         "        " + base,
         "    )",
     ]
@@ -1163,7 +1176,7 @@ def item_part(state: dict, suffix: str = "", taken: set | None = None,
     tail = [labels] if labels else []
     install, hooks = hook_lines("item", state, constant, resource, names_taken)
     if install:
-        uses |= {"v2:hook"} | ({"v2:slot"} if any("slot::" in block for block in hooks) else set())
+        uses |= hook_uses(install, hooks)
         main += install
         tail += hooks
     return {"name": resource, "uses": uses,

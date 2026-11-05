@@ -475,7 +475,7 @@ class Workbench(ttk.Frame):
             return
         kind = self.kind.get()
         self.identity.collect()
-        made = packs.scaffold(self.folder, kind, self.state)
+        made = packs.scaffold(self.folder, kind, self.state, self.catalog.item_root(self.state.get("base_item")))
         for entry in made:
             self.log("added " + entry)
         self.log_kept()
@@ -582,7 +582,8 @@ class Workbench(ttk.Frame):
             return
         folder = Path(parent) / name
         self.identity.collect()
-        made = packs.scaffold(folder, self.kind.get(), dict(self.state))
+        made = packs.scaffold(folder, self.kind.get(), dict(self.state),
+                              self.catalog.item_root(self.state.get("base_item")))
         self.log("made %s" % folder)
         for entry in made:
             self.log("    " + entry)
@@ -1621,7 +1622,7 @@ class IdentityPanel(ttk.Frame):
         fields.choice("base_item", "Base item", named_choice(catalog.item_bases()),
                       hint="what your item is built on")
         fields.choice("resource_name", "Resource name", (),
-                      hint="your files live under item/<this>")
+                      hint="your files live under item/<this>, or assist/, pokemon/ or boss/ when the base is one")
         self.item_resource = fields.vars["resource_name"]
         box = fields.widgets["resource_name"]
         box.bind("<<ComboboxSelected>>", self.item_chosen)
@@ -2567,8 +2568,25 @@ class IdentityPanel(ttk.Frame):
         argv = self._generator_argv(packs.ITEM)
         if argv is not None:
             self.app.keep("config.json")
-            self.app.run_tool("make_clone_pack", argv)
+            code = self.app.run_tool("make_clone_pack", argv)
+            rest = argv[4:] + ([] if "--merge" in argv else ["--merge"])
+            for member, clone in self.family_pairs() if code == 0 else ():
+                self.app.run_tool("make_clone_pack", ["--base", member, "--clone", clone] + rest)
             self.app.files.refresh()
+
+    def family_pairs(self) -> list[tuple[str, str]]:
+        """(the base's member, your member) for the family past its first item, which the base and
+        resource name already are; empty for a plain item."""
+        state = self.collect()
+        names = gimmicks.family_names(state)
+        family = self.app.catalog.item_family(state.get("base_item"))
+        if not names or not family:
+            return []
+        if len(names) != len(family[1]):
+            self.app.log("family: %d members named, but %s's family has %d (%s); only %s was written"
+                         % (len(names), state.get("base_item"), len(family[1]), ", ".join(family[1]), names[0]))
+            return []
+        return list(zip(family[1][1:], names[1:]))
 
     def manifest_parts(self, kind: str) -> list[dict]:
         """Every part of this kind that names itself, the current one as the
@@ -2651,7 +2669,7 @@ class IdentityPanel(ttk.Frame):
         fields.vars["family_members"].set(", ".join(names))
         self.app.log("family: %s is a %s family of %d (%s); members %s"
                      % (base, category, len(members), ", ".join(members), ", ".join(names)))
-        root = "assist" if category == "assist" else "item"
+        root = category if category in packs.ITEM_ROOTS else "item"
         self.app.log("    each member loads its own files from %s/<member>/; without them it plays "
                      "with the base's" % root)
 
@@ -3262,13 +3280,15 @@ class ParamsPanel(ttk.Frame):
                        "Vanilla is the game's default for the base fighter; a value "
                        "that differs is green."))
         if table == ITEM_PRC_SURFACE:
-            resource = self.app.part(packs.ITEM).get("resource_name", "?")
+            part = self.app.part(packs.ITEM)
+            resource = part.get("resource_name", "?")
+            root = self.app.catalog.item_root(part.get("base_item"))
             if self.rows:
-                return ("%d of %d params from your files under item/%s/param, with the "
+                return ("%d of %d params from your files under %s/%s/param, with the "
                         "value each holds. These files load as they are: change values "
-                        "in the file." % (shown, len(self.rows), resource))
-            return ("No prc files under item/%s/param. Your item uses its base's file "
-                    "until it ships one." % resource)
+                        "in the file." % (shown, len(self.rows), root, resource))
+            return ("No prc files under %s/%s/param. Your item uses its base's file "
+                    "until it ships one." % (root, resource))
         if table == OWNER_SURFACE:
             name, number = self.owner_kind()
             if number is None:
@@ -3662,8 +3682,8 @@ VTABLE_COLUMNS = (
 
 
 class VtablePanel(ttk.Frame):
-    """Every vtable entry the part can hook, with its address and a signature
-    read off the game; the picked ones become #[hook] functions on the Rust tab."""
+    """Every vtable entry the part can hook, with its address and a signature read
+    off the game; the picked ones become Smashline 2.0 calls, or #[hook] where it has none."""
 
     def __init__(self, parent: tk.Misc, app: Workbench):
         super().__init__(parent, padding=10)
@@ -3703,20 +3723,30 @@ class VtablePanel(ttk.Frame):
         ttk.Button(buttons, text="Hook selected", command=lambda: self.set_picked(True)).pack(side="left")
         ttk.Button(buttons, text="Unhook selected", command=lambda: self.set_picked(False)).pack(side="left", padx=4)
         ttk.Button(buttons, text="Unhook this table", command=self.clear_table).pack(side="left")
+        ttk.Label(buttons, text="Costumes").pack(side="left", padx=(12, 4))
+        self.costumes_var = tk.StringVar()
+        self.costumes_entry = ttk.Entry(buttons, textvariable=self.costumes_var, width=12)
+        self.costumes_entry.pack(side="left")
+        self.costumes_button = ttk.Button(buttons, text="Set on selected", command=self.set_costumes)
+        self.costumes_button.pack(side="left", padx=4)
         self.summary = ttk.Label(buttons, text="", justify="left")
         self.summary.pack(side="left", padx=12)
         self.note = ttk.Label(self, foreground="#555", justify="left", text=(
-            "Double-click an entry, or select several and Hook selected; each becomes a "
-            "#[hook] on the Rust tab that calls the original, ready for your code before or "
-            "after it. The fighter and item tables are this clone's own copies, so a hook "
-            "there runs for it alone. An enemy's entries become a function and its "
+            "Double-click an entry, or select several and Hook selected; each calls the "
+            "original on the Rust tab, ready for your code before or after it. Fighter and "
+            "article weapon entries go through Smashline 2.0's replace_fighter_vtable and "
+            "replace_weapon_vtable (%s); the other tables have no Smashline call and "
+            "become #[hook]. Costumes limits picked fighter entries to those slots, as in 4, 5: "
+            "a costume any entry lists runs only the entries that list it. The fighter and "
+            "item tables are this clone's own copies, so a hook there runs for it alone. "
+            "An enemy's entries become a function and its "
             "set_vtable_entry line in main, on the clone's own entries; the base's enemies "
             "keep the game's. The signature is read off every implementation of the "
             "entry in the game: extra integer arguments are harmless, floats are f64 so an "
             "f32 passes through unchanged. An entry whose return could not be settled is "
             "listed but not offered. Addresses are main 13.0.4 offsets for the base. The "
             "fighter and weapon addresses, slot names and notes are incredibleplays' "
-            "smash-vtables."))
+            "smash-vtables." % vtables.SMASHLINE_NEEDS))
         self.note.grid(row=4, column=0, sticky="w", pady=(6, 0))
         wrap_within(self, [self.detail, self.summary, self.note])
 
@@ -3757,6 +3787,9 @@ class VtablePanel(ttk.Frame):
     def is_picked(self, table: str, slot: int) -> bool:
         return any(hook.get("table") == table and hook.get("slot") == slot for hook in self.picked())
 
+    def picked_hook(self, table: str, slot: int) -> dict | None:
+        return next((hook for hook in self.picked() if hook.get("table") == table and hook.get("slot") == slot), None)
+
     def fill(self) -> None:
         table = self.table()
         kept = {self.rows[index]["slot"] for index in self.sheet.selection()
@@ -3773,8 +3806,9 @@ class VtablePanel(ttk.Frame):
             text = ("%s %s %s" % (row["name"], row["slot"], row["note"])).lower()
             if wanted and wanted not in text:
                 continue
-            picked = self.is_picked(table, row["slot"])
-            self.sheet.append({"name": row["name"], "picked": "yes" if picked else "",
+            hook = self.picked_hook(table, row["slot"])
+            picked = hook is not None
+            self.sheet.append({"name": row["name"], "picked": vtables.picked_text(hook) if picked else "",
                                "slot": row["slot"], "address": row["address"],
                                "signature": row["signature"], "note": row["note"]}, changed=picked)
             self.rows.append(row)
@@ -3785,6 +3819,9 @@ class VtablePanel(ttk.Frame):
         here = sum(1 for hook in self.picked() if hook.get("table") == table)
         self.summary.configure(text="%d hooked in this table, %d on this part"
                                % (here, len(self.picked())))
+        costumes = "normal" if table == vtables.FIGHTER else "disabled"
+        self.costumes_entry.configure(state=costumes)
+        self.costumes_button.configure(state=costumes)
 
     def focused(self) -> int | None:
         selection = self.sheet.selection()
@@ -3806,6 +3843,8 @@ class VtablePanel(ttk.Frame):
         row = self.rows[index]
         head = [row["name"], "slot %s" % row["slot"], row["address"]]
         lines = ["   ".join(part for part in head if part), row["signature"]]
+        if row["offered"]:
+            lines.append("Written as %s" % row["via"])
         if row["note"]:
             lines.append(row["note"])
         self.detail.configure(text="\n".join(lines))
@@ -3829,6 +3868,27 @@ class VtablePanel(ttk.Frame):
                 hooks[:] = [hook for hook in hooks
                             if not (hook.get("table") == table and hook.get("slot") == row["slot"])]
                 changed = True
+        if changed:
+            self.after_change()
+
+    def set_costumes(self) -> None:
+        """Limit the selected picked entries to the listed costumes; an empty list lifts the limit."""
+        table = self.table()
+        try:
+            costumes = vtables.costume_list(self.costumes_var.get())
+        except ValueError:
+            self.app.log("vtables: costumes are numbers from 0 to 255, as in 4, 5")
+            return
+        changed = False
+        for index in self.sheet.selection():
+            hook = self.picked_hook(table, self.rows[index]["slot"])
+            if hook is None or table != vtables.FIGHTER:
+                continue
+            if costumes:
+                hook["costumes"] = costumes
+            else:
+                hook.pop("costumes", None)
+            changed = True
         if changed:
             self.after_change()
 

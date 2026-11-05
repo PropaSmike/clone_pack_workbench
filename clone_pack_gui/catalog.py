@@ -11,6 +11,7 @@ from . import prc
 HERE = Path(__file__).resolve().parent
 DATA = HERE / "data"
 ROSTER_LAST_KIND = 93
+ITEM_ROOTS = ("item", "assist", "pokemon", "boss")
 
 PARAM_TABLES = {
     "fighter_param": "fighter_param_row_13.0.4.tsv",
@@ -105,7 +106,7 @@ class Catalog:
     def item_bases(self) -> list[tuple[int, str]]:
         """The item kinds a clone can be built on: rooted at item/ and in the arc, and every
         Assist Trophy, Pokemon and boss family's first member."""
-        present = set(self.item_dirs())
+        present = set(self._tree_names("item/"))
         owners = {name for name, (category, _) in self.item_families().items() if category != "item"}
         return sorted((int(kind), name) for kind, name, root
                       in self._table("item_kinds.tsv", ("kind", "name", "root"))
@@ -163,7 +164,19 @@ class Catalog:
         return self._tree_names("fighter/")
 
     def item_dirs(self) -> list[str]:
-        return self._tree_names("item/")
+        """Every vanilla item's folder name, whichever top folder holds it."""
+        names = set()
+        for root in ITEM_ROOTS:
+            names.update(self._tree_names(root + "/"))
+        return sorted(names)
+
+    def item_root(self, name: str | None) -> str:
+        """The top folder holding this item in the game, which is also where a clone of it loads from."""
+        for _, known, root in self._table("item_kinds.tsv", ("kind", "name", "root")):
+            if known == name:
+                root = root.split("+", 1)[0]
+                return root if root in ITEM_ROOTS else "item"
+        return "item"
 
     def stage_places(self) -> list[str]:
         """Every vanilla place, which is what a donor is picked from."""
@@ -283,10 +296,11 @@ class Catalog:
         """The prc files an item pack ships under its own item directory."""
         if not folder or not resource:
             return []
-        root = Path(folder) / "item" / resource / "param"
-        if not root.is_dir():
-            return []
-        return sorted(path for path in root.glob("*.prc") if path.is_file())
+        for tree in ITEM_ROOTS:
+            root = Path(folder) / tree / resource / "param"
+            if root.is_dir():
+                return sorted(path for path in root.glob("*.prc") if path.is_file())
+        return []
 
     def common_item_prc_in_pack(self, folder) -> Path | None:
         """item/common/param/param.prc, if the pack happens to carry a copy."""

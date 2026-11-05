@@ -51,6 +51,13 @@ def load_vanilla_dirs(arc_index):
             cells = line.rstrip("\n").split("\t")
             if len(cells) >= 4:
                 dirs[cells[0]] = (int(cells[1]), cells[3])
+    tree = os.path.join(arc_index, "arc_dirs.tsv")
+    if os.path.exists(tree):
+        with open(tree, encoding="utf8", errors="replace") as handle:
+            for line in handle:
+                cells = line.rstrip("\n").split("\t")
+                if len(cells) >= 4 and cells[0].split("/", 1)[0] in ITEM_ROOTS[1:]:
+                    dirs.setdefault(cells[0], (int(cells[1]), cells[3]))
     return dirs
 
 
@@ -213,7 +220,7 @@ def check_move_list(mod_dir, fighter, name, shipped):
 
 SMASHLINE_2_NO_ARTICLE_BASES = ("ice_climber", "zenigame", "fushigisou", "lizardon", "ptrainer",
                                 "flame", "light", "element")
-MOTION_LIST_FOLDER = re.compile(r"^((?:item|assist)/[^/]+/motion/[^/]+/c\d{2,3})/motion_list\.bin$")
+MOTION_LIST_FOLDER = re.compile(r"^((?:item|assist|pokemon|boss)/[^/]+/motion/[^/]+/c\d{2,3})/motion_list\.bin$")
 SWITCH_SETS = (("eflame", "elight"), ("pzenigame", "pfushigisou", "plizardon"))
 GAME_SET_BASES = {base for shape in SWITCH_SETS for base in shape}
 
@@ -556,7 +563,7 @@ def lint(mod_dir, arc_index, cross_color_resources=()):
     findings.extend(lint_camera_coverage(dir_files, bases, shipped))
     findings.extend(lint_article_lvd_names(shipped))
     findings.extend(lint_item_pack(mod_dir, added_dirs, bases, dir_files, shipped,
-                                   resolved_share_targets))
+                                   resolved_share_targets, vanilla_dirs))
     findings.extend(lint_motion_list_folders(mod_dir, shipped, vanilla_dirs, added_dirs))
     findings.extend(lint_undeclared_shipped(added_dirs, dir_files, shipped))
     findings.extend(check_fighter_manifest(mod_dir, shipped, vanilla))
@@ -856,6 +863,7 @@ def lint_undeclared_shipped(added_dirs, dir_files, shipped):
 
 
 ITEM_OWN_TREES = ("model", "param")
+ITEM_ROOTS = ("item", "assist", "pokemon", "boss")
 
 
 def vanilla_item_kinds():
@@ -872,6 +880,22 @@ def vanilla_item_kinds():
     except OSError:
         return {}
     return kinds
+
+
+def vanilla_item_roots():
+    """The top folder of the game's items by name, from the Workbench's table; a clone loads from its base's."""
+    path = os.path.join(HERE, "clone_pack_gui", "data", "item_kinds.tsv")
+    roots = {}
+    try:
+        with io.open(path, encoding="utf8") as handle:
+            next(handle, None)
+            for line in handle:
+                fields = line.rstrip("\r\n").split("\t")
+                if len(fields) >= 3:
+                    roots[fields[1]] = fields[2].split("+", 1)[0]
+    except OSError:
+        return {}
+    return roots
 
 
 def vanilla_item_families():
@@ -936,41 +960,54 @@ def read_item_tomls(mod_dir):
     return blocks
 
 
-def lint_item_pack(mod_dir, added_dirs, bases, dir_files, shipped, resolved_share_targets):
+def base_has_no_param(vanilla_dirs, root, base):
+    """The game ships no param.prc for some items (the Home-Run Bat), so their clones have none to share."""
+    row = (vanilla_dirs or {}).get(f"{root}/{base}/param")
+    return row is not None and row[0] == 0
+
+
+def lint_item_pack(mod_dir, added_dirs, bases, dir_files, shipped, resolved_share_targets, vanilla_dirs=None):
     """Checks for a custom ItemKind pack. Every rule here fails silently in game."""
     findings = []
-    namespaces = sorted({
-        directory.split("/")[1]
-        for directory in added_dirs
-        if directory.startswith("item/") and directory.count("/") >= 1
-    })
-    assists = sorted({
-        directory.split("/")[1]
-        for directory in added_dirs
-        if directory.startswith("assist/") and directory.count("/") >= 1
-    })
+    roots = {}
+    for directory in sorted(added_dirs):
+        top, _, rest = directory.partition("/")
+        if top in ITEM_ROOTS and rest:
+            roots.setdefault(rest.split("/", 1)[0], top)
+    namespaces = sorted(roots)
     if not namespaces:
         return findings
 
     tomls = read_item_tomls(mod_dir)
     plugin = os.path.isfile(os.path.join(mod_dir, "plugin.nro"))
     by_resource = {}
+    member_bases = {}
     if tomls is None:
         if not plugin:
             findings.append((
                 "ERROR",
-                f"item/{namespaces[0]} is added but there is no item.toml and no plugin.nro - "
+                f"{roots[namespaces[0]]}/{namespaces[0]} is added but there is no item.toml and no plugin.nro - "
                 "nothing registers this pack",
             ))
     else:
         for toml in tomls:
             resource = toml.get("resource_name")
             label = "item.toml" if len(tomls) == 1 else f"item.toml [[item]] '{resource}'"
-            if resource and resource not in namespaces and resource not in assists:
+            if resource and resource not in namespaces:
                 findings.append((
                     "ERROR",
                     f"item.toml resource_name '{resource}' does not match the added "
-                    f"{', '.join('item/' + n for n in namespaces)}",
+                    f"{', '.join(roots[n] + '/' + n for n in namespaces)}",
+                ))
+            base_name = (toml.get("base_item") or "").strip().lower()
+            if base_name.startswith("item_kind_"):
+                base_name = base_name[len("item_kind_"):]
+            expected = vanilla_item_roots().get(base_name)
+            if resource in roots and expected in ITEM_ROOTS and roots[resource] != expected:
+                findings.append((
+                    "ERROR",
+                    f"{label} is built on {base_name}, which the game loads from {expected}/; its clone "
+                    f"loads from {expected}/{resource}, so nothing reads {roots[resource]}/{resource}",
                 ))
             kinds = vanilla_item_kinds()
             named = item_kind_named(toml["base_item"], kinds) if toml.get("base_item") else None
@@ -1004,6 +1041,8 @@ def lint_item_pack(mod_dir, added_dirs, bases, dir_files, shipped, resolved_shar
                 elif family is not None and len(family) != len(names):
                     findings.append(("ERROR", f"{label} members names {len(names)}, but {base}'s family has "
                                               f"{len(family)}: {', '.join(family)}; the engine refuses it"))
+                elif family is not None:
+                    member_bases.update(zip(names, family))
                 findings.append(("INFO", f"{label} clones the {base or 'base'} family: {', '.join(names)}; "
                                          "members needs an engine newer than 0.6.0-beta.1"))
         if len(tomls) > 1:
@@ -1016,12 +1055,12 @@ def lint_item_pack(mod_dir, added_dirs, bases, dir_files, shipped, resolved_shar
             if name not in by_resource and not plugin:
                 findings.append((
                     "ERROR",
-                    f"item/{name} is added but no item.toml entry declares it and there is "
+                    f"{roots[name]}/{name} is added but no item.toml entry declares it and there is "
                     "no plugin.nro - nothing registers it",
                 ))
 
     for name in namespaces:
-        prefix = f"item/{name}"
+        prefix = f"{roots[name]}/{name}"
         toml = by_resource.get(name)
 
         for directory, target in sorted(bases.items()):
@@ -1053,16 +1092,18 @@ def lint_item_pack(mod_dir, added_dirs, bases, dir_files, shipped, resolved_shar
 
         param = f"{prefix}/param/param.prc"
         declared = any(param in members for members in dir_files.values())
-        if not (param in shipped or param in resolved_share_targets) or not declared:
+        if ((not (param in shipped or param in resolved_share_targets) or not declared)
+                and not base_has_no_param(vanilla_dirs, roots[name],
+                                          member_bases.get(name) or (toml or {}).get("base_item"))):
             findings.append((
-                "ERROR",
+                "ERROR" if roots[name] == "item" else "WARN",
                 f"{param} is not shipped or shared into a declared group",
             ))
 
         linked_bases = {
             target.split("/")[1]
             for directory, target in bases.items()
-            if directory.startswith(prefix + "/") and target.startswith("item/")
+            if directory.startswith(prefix + "/") and target.split("/", 1)[0] in ITEM_ROOTS
         }
         if len(linked_bases) > 1:
             findings.append((
@@ -1086,13 +1127,13 @@ def hash40(text):
 
 
 def lint_motion_list_folders(mod_dir, shipped, vanilla_dirs, added_dirs):
-    """An item's or Assist's motion_list.bin names the folder its animations load from in the u64 at
-    offset 8; a list copied from the base keeps the base's folder. An Assist clone's folders are
-    added like an item's."""
+    """An item's, Assist's, Pokemon's or boss's motion_list.bin names the folder its animations load
+    from in the u64 at offset 8; a list copied from the base keeps the base's folder. Those clones'
+    folders are added like an item's."""
     findings = []
     known = {}
     for directory in vanilla_dirs or ():
-        if directory.startswith(("item/", "assist/")) and "/motion/" in directory:
+        if directory.startswith(tuple(root + "/" for root in ITEM_ROOTS)) and "/motion/" in directory:
             known[hash40(directory)] = directory
     for path in sorted(shipped):
         match = MOTION_LIST_FOLDER.match(path)
@@ -1115,15 +1156,16 @@ def lint_motion_list_folders(mod_dir, shipped, vanilla_dirs, added_dirs):
                                  "folder named there, so its own files and new motions play nothing. "
                                  f"Write hash40(\"{folder}\") = {hash40(folder):#012x} there"))
     vanilla = set(vanilla_dirs or ())
-    for resource in sorted({path.split("/")[1] for path in shipped
-                            if path.startswith("assist/") and path.count("/") >= 2}):
-        folders = {path.rsplit("/", 1)[0] for path in shipped if path.startswith(f"assist/{resource}/")}
+    for root, resource in sorted({tuple(path.split("/")[:2]) for path in shipped
+                                  if path.split("/")[0] in ITEM_ROOTS[1:] and path.count("/") >= 2}):
+        folders = {path.rsplit("/", 1)[0] for path in shipped if path.startswith(f"{root}/{resource}/")}
         unlisted = sorted(folder for folder in folders if folder not in added_dirs and folder not in vanilla)
         if unlisted:
-            findings.append(("WARN", f"{unlisted[0]}" + (f" and {len(unlisted) - 1} more Assist folder(s)"
+            findings.append(("WARN", f"{unlisted[0]}" + (f" and {len(unlisted) - 1} more {root} folder(s)"
                                                           if len(unlisted) > 1 else "")
-                                     + " are not in config.json's new-dir-infos; an Assist clone adds its "
-                                       "folders as an item does, or it plays with the base's model and motions"))
+                                     + " are not in config.json's new-dir-infos; a clone under "
+                                       f"{root}/ adds its folders as an item does, or it plays with the "
+                                       "base's model and motions"))
     return findings
 
 

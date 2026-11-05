@@ -129,8 +129,9 @@ For an item:
   family** writes them from the base: Galleom's family is Galleom, its
   missile and its shockwave, so a clone named `boss` gets `boss`,
   `boss_missile` and `boss_shockwave`.
-- Each member loads its own files from `item/<member>/`, an Assist's from
-  `assist/<member>/`.
+- Each member loads its own files from the top folder its base lives in:
+  `assist/<member>/`, `pokemon/<member>/`, `boss/<member>/` or
+  `item/<member>/`.
 
 For a menu:
 
@@ -247,10 +248,22 @@ signature read off the game:
   `REQUEST_STATUS` named) and its copy of the enemy object vtable (163
   entries, `INITIALIZE`, `START`, `UPDATE_1` to `UPDATE_9` named).
 
-Double-click an entry, or select several and **Hook selected**; each becomes a
-`#[hook]` on the Rust tab that calls the original. The line under the table
-shows the whole entry under the pointer, or else the selected one. The
-fighter, weapon and item tables are this clone's own copies, so a hook there
+Double-click an entry, or select several and **Hook selected**; each calls the
+original on the Rust tab. The line under the table shows the whole entry under
+the pointer, or else the selected one, and what it is written as:
+
+- a fighter's own entries and its articles' weapon entries go through Smashline
+  2.0: a function and its `replace_fighter_vtable` or `replace_weapon_vtable`
+  line in `main`, calling `get_original_fighter_vtable` or
+  `get_original_weapon_vtable`. Cargo.toml needs `smashline` at tag `v2.0.0`, and
+  the player needs Smashline 2.0;
+- the other tables have no Smashline call and become `#[hook]`.
+
+**Costumes** limits the selected fighter entries to those slots (`4, 5`), through
+`replace_fighter_vtable_costume`; leave it empty and **Set on selected** to lift
+the limit. A costume any entry lists runs only the entries that list it.
+
+The fighter, weapon and item tables are this clone's own copies, so a hook there
 runs for it alone. An enemy has no `#[hook]`: each entry becomes a function
 that calls `original_entry` (or `original_object_entry`) and a
 `set_vtable_entry` (or `set_object_vtable_entry`) line in main. The base's
@@ -322,9 +335,10 @@ its Lua makes to set up the next battle.
 With several parts of a kind, each part's functions carry its name
 (`register_css_entry_wawa`); the first fighter is `fighter!`, the others a
 plain `static`, since `fighter!` also names the crate's default fighter. The
-entries picked on the Vtables tab follow as `#[hook]` functions, installed with
-`install_hooks!` after `register`; an enemy's follow as plain functions, set on
-its kind right after `enemy::clone`.
+entries picked on the Vtables tab follow after `register`: Smashline 2.0's calls
+where it has one, `#[hook]` functions installed with `install_hooks!` for the
+rest; an enemy's follow as plain functions, set on its kind right after
+`enemy::clone`.
 
 ## Converting an added-slot moveset
 

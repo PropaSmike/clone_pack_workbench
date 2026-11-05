@@ -22,6 +22,11 @@ ENEMY_BASES = {"yellow_devil": "yellow_devil", "yellowdevil": "yellow_devil",
                "flying_man": "flying_man", "flyingman": "flying_man",
                "metal_face": "metal_face", "metalface": "metal_face", "nabbit": "nabbit"}
 ROUTED = (73, 74)
+SMASHLINE_SPACES = {FIGHTER: ("fighter", "FighterVtableSlot"), WEAPON: ("weapon", "WeaponVtableSlot")}
+SMASHLINE_NAMES = ("replace_fighter_vtable", "replace_fighter_vtable_costume", "get_original_fighter_vtable",
+                   "FighterVtableSlot", "Costume", "replace_weapon_vtable", "get_original_weapon_vtable",
+                   "WeaponVtableSlot")
+SMASHLINE_NEEDS = "smashline tag v2.0.0 in Cargo.toml"
 
 L2CVALUE = "smashline::skyline_smash::lib::L2CValue"
 
@@ -76,7 +81,13 @@ def _load() -> dict:
                 label, _, entries = line.partition("\t")
                 table[label] = entries.split(" ") if entries else []
         grids[space] = table
-    _cache.update({"slots": slots, "grids": grids})
+    smashline: dict = {}
+    path = DATA / "vtable_smashline.tsv"
+    if path.is_file():
+        for line in path.read_text(encoding="utf-8").splitlines()[1:]:
+            space, slot, variant = line.split("\t")
+            smashline[(space, int(slot))] = variant
+    _cache.update({"slots": slots, "grids": grids, "smashline": smashline})
     return _cache
 
 
@@ -192,6 +203,34 @@ def signature(space: str, slot: int) -> dict:
             "constant": row["constant"], "name": row["name"], "summary": summary}
 
 
+def smashline_slot(space: str, slot: int) -> str:
+    """`FighterVtableSlot::OnFrame3` when Smashline 2.0 replaces this entry, else empty."""
+    route = SMASHLINE_SPACES.get(space)
+    variant = _load()["smashline"].get((space, slot)) if route else None
+    return "%s::%s" % (route[1], variant) if variant else ""
+
+
+def costume_list(text) -> list[int]:
+    """The costumes a line such as "4, c05" names; ValueError on anything else."""
+    if isinstance(text, (list, tuple)):
+        text = ",".join(str(part) for part in text)
+    out = set()
+    for part in str(text or "").replace(" ", ",").split(","):
+        part = part.strip().lower()
+        if part:
+            value = int(part[1:] if part.startswith("c") else part)
+            if not 0 <= value < 256:
+                raise ValueError(part)
+            out.add(value)
+    return sorted(out)
+
+
+def picked_text(hook: dict) -> str:
+    """What the Hooked column shows: yes, or the costumes the entry is limited to."""
+    costumes = hook.get("costumes") or []
+    return ", ".join("c%02d" % costume for costume in costumes) if costumes else "yes"
+
+
 def describe(sig: dict) -> str:
     """`(class, object, a2) -> u64`, the way the tab shows it."""
     if not sig["offered"]:
@@ -220,7 +259,8 @@ def entries(table: str, state: dict) -> list[dict]:
         note = COMMON_NOTES.get(slot, "") if space in (COMMON, COPY, WEAPON_COMMON) else \
             _load()["slots"].get((space, slot), {}).get("note", "")
         out.append({"table": table, "slot": slot, "name": sig["name"], "address": _address(space, state, article, slot),
-                    "signature": describe(sig), "offered": sig["offered"], "note": note})
+                    "signature": describe(sig), "offered": sig["offered"], "note": note,
+                    "via": smashline_slot(space, slot) or "#[hook]"})
     return out
 
 
@@ -240,7 +280,7 @@ def hook_source(kind: str, state: dict, constant: str, resource: str, taken: set
         if not isinstance(slot, int):
             continue
         space, article = _space(table)
-        if space in (ENEMY, ENEMY_OBJECT):
+        if space in (ENEMY, ENEMY_OBJECT) or smashline_slot(space, slot):
             continue
         sig = signature(space, slot)
         if not sig["offered"]:
@@ -285,6 +325,76 @@ def hook_source(kind: str, state: dict, constant: str, resource: str, taken: set
             "}",
         ]))
     return names, blocks
+
+
+def smashline_source(state: dict, constant: str, resource: str, taken: set) -> tuple[list[str], list[str]]:
+    """(lines for main, functions) for the picked entries Smashline 2.0 replaces: a fighter's
+    own vtable and its articles' weapon vtables. The other tables have no Smashline call."""
+    fighter_lines, weapon_lines, blocks = [], {}, []
+    for hook in state.get("hooks") or []:
+        slot = hook.get("slot")
+        if not isinstance(slot, int):
+            continue
+        space, article = _space(hook.get("table", ""))
+        path = smashline_slot(space, slot)
+        sig = signature(space, slot) if path else None
+        if not path or not sig["offered"] or (space == WEAPON and _article(state, article) is None):
+            continue
+        stem = "" if space == FIGHTER else article + "_"
+        name = identifier("%s_%s%s" % (resource, stem, sig["name"] or "slot_%d" % slot))
+        if name in taken:
+            name = "%s_%d" % (name, slot)
+        taken.add(name)
+        params = ", ".join("%s: %s" % (param, kind) for param, kind in sig["params"])
+        types = ", ".join(kind for _, kind in sig["params"])
+        passed = ", ".join(param for param, _ in sig["params"])
+        ret = " -> %s" % sig["ret"] if sig["ret"] else ""
+        address = _address(space, state, article, slot)
+        slot_text = "slot %d%s%s; signature %s" % (slot, (" " + sig["name"]) if sig["name"] else "",
+                                                   (", base " + address) if address else "", sig["summary"])
+        if space == FIGHTER:
+            where = "fighter vtable"
+            kind_of = "%s.kind().get().unwrap_or(-1)" % constant
+            getter = "get_original_fighter_vtable"
+            subject = "class is the class object, object the fighter"
+            costumes = hook.get("costumes") or []
+            if costumes:
+                listed = ", ".join(str(costume) for costume in costumes)
+                fighter_lines.append("    replace_fighter_vtable_costume(kind, Costume::from_vec(vec![%s]), %s, %s as usize); "
+                                     "// costumes %s run only the entries that list them" % (listed, path, name, listed))
+            else:
+                fighter_lines.append("    replace_fighter_vtable(kind, %s, %s as usize);" % (path, name))
+        else:
+            where = "article %s weapon vtable" % article
+            holder = "%s_%s_KIND" % (constant, identifier(article).upper())
+            kind_of = "%s.load(core::sync::atomic::Ordering::Acquire)" % holder
+            getter = "get_original_weapon_vtable"
+            subject = "class is the class object, object the weapon"
+            if article not in weapon_lines:
+                weapon_lines[article] = (holder, [])
+                blocks.append("static %s: core::sync::atomic::AtomicI32 = core::sync::atomic::AtomicI32::new(-1); "
+                              "// the article's kind, from main" % holder)
+            weapon_lines[article][1].append("        replace_weapon_vtable(weapon, %s, %s as usize);" % (path, name))
+        blocks.append("\n".join([
+            "// %s %s" % (where, slot_text),
+            "unsafe extern \"C\" fn %s(%s)%s {" % (name, params, ret),
+            "    let original: unsafe extern \"C\" fn(%s)%s = core::mem::transmute(%s(%s, %s));"
+            % (types, ret, getter, kind_of, path),
+            "    original(%s) // %s; add yours before or after" % (passed, subject),
+            "}",
+        ]))
+    lines = list(fighter_lines)
+    for article, (holder, replaced) in weapon_lines.items():
+        lines.append("    if let Some(weapon) = %s.article(\"%s\").weapon_kind() { // the article's own kind" % (constant, article))
+        lines.append("        %s.store(weapon, core::sync::atomic::Ordering::Release);" % holder)
+        lines += replaced
+        lines.append("    } else {")
+        lines.append("        skyline::println!(\"[%s] article %s has no kind; its vtable entries stay the game's\");"
+                     % (resource, article))
+        lines.append("    }")
+    if lines:
+        lines.insert(0, "    // the entries picked on the Vtables tab, through Smashline 2.0 (%s)" % SMASHLINE_NEEDS)
+    return lines, blocks
 
 
 def enemy_hook_source(state: dict, upper: str, resource: str, taken: set) -> tuple[list[str], list[str]]:

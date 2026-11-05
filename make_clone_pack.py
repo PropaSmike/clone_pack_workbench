@@ -811,11 +811,11 @@ def add_own_scenes(config: dict, clone: str, shipped) -> tuple[int, int]:
     return counts[0], counts[1]
 
 
-ITEM_OWN_TREES = ("model", "param")
+ITEM_ROOTS = ("item", "assist", "pokemon", "boss")
 
 
 def shipped_under(pack_dir: str | None) -> set:
-    """Arc paths the pack provides bytes for, as `item/<clone>/...` strings."""
+    """Arc paths the pack provides bytes for, as `<root>/<clone>/...` strings."""
     if not pack_dir:
         return set()
     root = Path(pack_dir)
@@ -826,46 +826,54 @@ def shipped_under(pack_dir: str | None) -> set:
     }
 
 
-def item_group_key(clone: str, directory: str) -> str:
-    """Own directories carry their own group; base-linked ones use the root group."""
-    relative = directory[len(f"item/{clone}"):].lstrip("/")
-    head = relative.split("/", 1)[0] if relative else ""
-    if not relative or head in ITEM_OWN_TREES:
-        return directory
-    return f"item/{clone}"
+def item_root(base: str) -> str | None:
+    """Which top folder holds this item in the game: the game builds an item's
+    paths from its kind's category, so a clone loads from the same one as its base."""
+    wanted = {f"{root}/{base}": root for root in ITEM_ROOTS}
+    for directory in arc_dirs():
+        if directory in wanted:
+            return wanted[directory]
+    return None
+
+
+def item_extras(category: str, base: str, clone: str) -> list[tuple[str, str, str]]:
+    """(the base's file, the clone's, the folder that holds it) for the files of an Assist, Pokemon
+    or boss that live outside its folder: its effect bank, sound bank and entry camera."""
+    own = f"{category}/{clone}"
+    extras = [(f"effect/{category}/{base}/ef_{base}.eff", f"effect/{category}/{clone}/ef_{clone}.eff", f"{own}/effect"),
+              (f"camera/{category}/{base}/c00/entry.nuanmb", f"camera/{category}/{clone}/c00/entry.nuanmb",
+               f"{own}/camera/c00")]
+    for suffix in ("nus3bank", "nus3audio", "tonelabel"):
+        extras.append((f"sound/bank/{category}/se_{category}_{base}.{suffix}",
+                       f"sound/bank/{category}/se_{category}_{clone}.{suffix}", own))
+    return extras
 
 
 def build_item(base: str, clone: str, shipped: set) -> dict:
-    root = f"item/{base}"
-    directories = [d for d in arc_dirs() if d == root or d.startswith(root + "/")]
-    if not directories:
-        raise SystemExit(f"no item/{base}/ in the arc index; check the name")
-
-    infos = []
-    infos_base = {}
-    for directory in directories:
-        relative = directory[len(root):].lstrip("/")
-        target = f"item/{clone}/{relative}".rstrip("/")
-        infos.append(target)
-        head = relative.split("/", 1)[0] if relative else ""
-        if relative and head not in ITEM_OWN_TREES:
-            infos_base[target] = directory
-
+    """No base links, each file in the folder that holds it. A base link on a folder whose children
+    are added too corrupts the donor's children."""
+    category = item_root(base)
+    if category is None:
+        raise SystemExit(f"no {base} under {', '.join(r + '/' for r in ITEM_ROOTS)} in the arc index; "
+                         "check the name")
+    root = f"{category}/{base}"
+    own = f"{category}/{clone}"
+    known = set(arc_paths())
+    pairs = [(path, f"{own}/" + path[len(root) + 1:], None) for path in sorted(known) if path.startswith(root + "/")]
+    pairs += [extra for extra in item_extras(category, base, clone) if extra[0] in known]
     share = {}
     groups = collections.defaultdict(list)
-    for path in arc_paths():
-        if not path.startswith(root + "/"):
-            continue
-        target = f"item/{clone}/" + path[len(root) + 1:]
+    for source, target, holder in pairs:
         if target not in shipped:
-            share.setdefault(path, [])
-            if target not in share[path]:
-                share[path].append(target)
-        groups[item_group_key(clone, target.rsplit("/", 1)[0])].append(target)
-
+            share[source] = [target]
+        groups[holder or target.rsplit("/", 1)[0]].append(target)
+    declared = {target for _, target, _ in pairs}
+    for path in sorted(shipped):
+        if path.startswith(own + "/") and path not in declared and is_asset(path):
+            groups[path.rsplit("/", 1)[0]].append(path)
     return {
-        "new-dir-infos": infos,
-        "new-dir-infos-base": infos_base,
+        "new-dir-infos": sorted({own} | set(groups)),
+        "new-dir-infos-base": {},
         "share-to-vanilla": share,
         "share-to-added": {},
         "new-dir-files": {key: sorted(value) for key, value in sorted(groups.items())},
@@ -874,6 +882,7 @@ def build_item(base: str, clone: str, shipped: set) -> dict:
 
 SECTION_LISTS = ("new-dir-infos",)
 SECTION_OWN_KEYS = ("new-dir-infos-base", "new-dir-files")
+SECTION_FOLLOWS_GENERATOR = {"new-dir-infos-base"}
 SECTION_SHARES = ("share-to-vanilla", "share-to-added")
 
 
@@ -889,8 +898,9 @@ def merge(existing: dict, generated: dict, clone: str, stale=()) -> dict:
     files that were renamed away and would never finish loading).
 
     A section the generator left empty is not touched at all, so a hand written
-    `share-to-added` survives. The result is sorted, so writing the fighter and
-    the item of one pack in either order gives the same file.
+    `share-to-added` survives, except the base links: one left on a folder the
+    clone now adds corrupts the donor. The result is sorted, so writing the
+    fighter and the item of one pack in either order gives the same file.
     """
     def mine(path: str) -> bool:
         return owns(path, clone) or any(owns(path, name) for name in stale)
@@ -902,7 +912,7 @@ def merge(existing: dict, generated: dict, clone: str, stale=()) -> dict:
         kept = [path for path in (result.get(key) or []) if not mine(path)]
         result[key] = sorted(set(kept) | set(generated[key]))
     for key in SECTION_OWN_KEYS:
-        if not generated.get(key):
+        if not generated.get(key) and key not in generated.keys() & SECTION_FOLLOWS_GENERATOR:
             continue
         section = {name: value for name, value in (result.get(key) or {}).items()
                    if not mine(name)}

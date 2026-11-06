@@ -1,6 +1,6 @@
 # Clone Pack Tools
 
-Tools for building a Clone Engine pack: fighters, items, stages, menus, Mii
+Tools for building a Dionysus pack: fighters, items, stages, menus, Mii
 hats and outfits, and enemies.
 
 * **Clone Pack Workbench**, a window that does all of it.
@@ -410,7 +410,7 @@ The window needs nothing installed. What the packs it writes need:
   (`0.6.0-beta.1` refuses a `stage.toml` with them); `dynamic_collisions` and
   `paused_motions`; item families; `[move_list]`; article statuses on
   `smashline::Agent` (older engines take them through `article(..).status()`).
-- A `clone_engine_api` that has `float` and `glide`: the float and the glide.
+- A `dionysus_api` that has `float` and `glide`: the float and the glide.
 
 An engine refuses a `fighter.toml` with a feature it lacks, so the Rust tab
 checks the capability first. A call the engine lacks prints
@@ -442,7 +442,7 @@ is the post-processing. Blast zones and collision are in the `.lvd`.
 
 A menu pack is `menu.toml`, its compiled Lua under `ui/script/menu/<folder>/`
 and its layouts under `ui/layout/`, with no `config.json`. Its modes show on
-the page of the `Clone Engine Modes` pack that comes with the engine. Every key
+the page of the `Dionysus Modes` pack that comes with the engine. Every key
 and call is in the engine's `docs/wiki/MENUS.md`; `custom_menus/template` is a
 complete pack.
 
@@ -644,7 +644,7 @@ python lint_menu_pack.py "path/to/your/mod folder"
 - Every `menu.toml` in the mods folder is read in the engine's order: a code,
   sequence id or mode id another pack took first, or a list past its limit
   (32 modes, 64 codes, 16 layouts, 64 patches, 64 preloads), is an error. It lists your
-  modes' rows on the page and warns when the Clone Engine Modes pack is
+  modes' rows on the page and warns when the Dionysus Modes pack is
   missing.
 - Scripts must be in the pack and compiled with 4-byte floats; a mode with no
   `runs_as` needs `enter` in its script.

@@ -16,7 +16,7 @@ ITEM = "item"
 ITEM_COMMON = "item_common"
 ENEMY = "enemy"
 ENEMY_OBJECT = "enemy_object"
-ENEMY_API = "clone_engine_api::enemy::"
+ENEMY_API = "dionysus_api::enemy::"
 ENEMY_BASES = {"yellow_devil": "yellow_devil", "yellowdevil": "yellow_devil",
                "dark_emperor": "dark_emperor", "subetenoyaminoou": "dark_emperor",
                "flying_man": "flying_man", "flyingman": "flying_man",

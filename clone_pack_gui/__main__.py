@@ -2,7 +2,7 @@
 """Run the workbench.
 
     python clone_pack_gui
-    python clone_pack_gui "C:/.../ultimate/mods/Clone Engine - Wawa"
+    python clone_pack_gui "C:/.../ultimate/mods/Dionysus - Wawa"
 """
 
 from __future__ import annotations

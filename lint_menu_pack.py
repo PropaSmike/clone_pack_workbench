@@ -648,8 +648,8 @@ def check_registry(mod_dir):
         findings.append(("INFO", "modes page rows: %s" % ", ".join(
             "%d %s" % (index + 1, mode["id"]) for index, mode in enumerate(modes) if mode["mine"])))
     if mine and not any(HUB_PATCH == (patch[0], patch[1]) for patch in patches):
-        findings.append(("WARN", "no Clone Engine Modes pack is installed beside this one, so the modes "
-                                 "have no page to show on; put the release's Clone Engine Modes folder "
+        findings.append(("WARN", "no Dionysus Modes pack is installed beside this one, so the modes "
+                                 "have no page to show on; put the release's Dionysus Modes folder "
                                  "under ultimate/mods"))
     return findings
 

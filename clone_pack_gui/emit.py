@@ -199,7 +199,7 @@ def item_label_calls(state: dict, suffix: str = "") -> str:
     for rule in rules:
         field = rule.get("field", "")
         value = rule.get("value", "0")
-        call = ("clone_engine_api::item_common_set_%s("
+        call = ("dionysus_api::item_common_set_%s("
                 "kind, smash::hash40(\"%s\"), smash::hash40(\"%s\"))"
                 % (rule["style"], field, value))
         lines += reported(call, tag, field)
@@ -449,7 +449,7 @@ def command_lines(state: dict) -> list[str]:
                      % ("command(%s)" % command_call(command), command["name"]))
     if not calls:
         return []
-    return (["    let manifest = if clone_engine_api::runtime_capabilities() & clone_engine_api::CAP_COMMAND_INPUTS != 0 {",
+    return (["    let manifest = if dionysus_api::runtime_capabilities() & dionysus_api::CAP_COMMAND_INPUTS != 0 {",
              "        manifest"]
             + ["            " + call for call in calls]
             + ["    } else {",
@@ -462,8 +462,8 @@ def command_uses(state: dict) -> set:
     if not commands:
         return set()
     if any(command.get("button", "either") != "either" for command in commands):
-        return {"use clone_engine_api::fight::{Button, Command};"}
-    return {"use clone_engine_api::fight::Command;"}
+        return {"use dionysus_api::fight::{Button, Command};"}
+    return {"use dionysus_api::fight::Command;"}
 
 
 STATUS_TABLE_OWNERS = {"chrom": "roy", "daisy": "peach", "ken": "ryu", "koopag": "koopa", "lucina": "marth",
@@ -486,7 +486,7 @@ def final_smash_lines(resource: str, constant: str) -> list[str]:
     manager = "smashline::skyline_smash::app::lua_bind::FighterManager"
     return [
         "    // the Final Smash's scene and movie, from your Final Smash statuses:",
-        "    // let manager = clone_engine_api::fighter_manager();",
+        "    // let manager = dionysus_api::fighter_manager();",
         "    // %s::start_finalbg(manager, %s.kind().get().unwrap(), 1.0); // finalsmash/%s/shared/; "
         "%s::exit_finalbg(manager) ends it" % (manager, constant, resource, manager),
         "    // %s::prepare_movie(manager, smashline::skyline_smash::phx::Hash40::new("
@@ -514,7 +514,7 @@ def float_call(settings: dict) -> str:
 
 
 def float_lines(state: dict, resource: str, constant: str = "WAWA") -> list[str]:
-    """Peach's float from clone_engine_api::float: its two statuses past the
+    """Peach's float from dionysus_api::float: its two statuses past the
     base's own, the way in and the aerial that keeps it going."""
     settings = state.get("float") or {}
     if not settings.get("on"):
@@ -652,7 +652,7 @@ def article_gimmick_uses(state: dict) -> set:
 def guarded_calls(capability: str, calls: list[str]) -> list[str]:
     if not calls:
         return []
-    return (["    let manifest = if clone_engine_api::runtime_capabilities() & clone_engine_api::%s != 0 {"
+    return (["    let manifest = if dionysus_api::runtime_capabilities() & dionysus_api::%s != 0 {"
              % capability, "        manifest"]
             + ["            " + call for call in calls]
             + ["    } else {",
@@ -816,7 +816,7 @@ GLIDE_FUNCTIONS = (("glide_start_init", "Init", "GLIDE_START"), ("glide_start_ex
 
 
 def glide_code(state: dict, resource: str, suffix: str) -> tuple[list[str], list[str], set]:
-    """Brawl's glide from clone_engine_api::glide, unless the float is on."""
+    """Brawl's glide from dionysus_api::glide, unless the float is on."""
     settings = state.get("glide") or {}
     if not settings.get("on") or (state.get("float") or {}).get("on"):
         return [], [], set()
@@ -840,7 +840,7 @@ def glide_code(state: dict, resource: str, suffix: str) -> tuple[list[str], list
     for name, line, status in GLIDE_FUNCTIONS:
         main.append("            .status(%s, *FIGHTER_STATUS_KIND_%s, %s%s)" % (line, status, name, suffix))
     main += ["            .install();", "    }"]
-    uses = {"use clone_engine_api::glide::{self, Glide};", "use smashline::skyline_smash::lua2cpp::L2CFighterCommon;",
+    uses = {"use dionysus_api::glide::{self, Glide};", "use smashline::skyline_smash::lua2cpp::L2CFighterCommon;",
             "use smashline::skyline_smash::lib::L2CValue;", "use smashline::skyline_smash::lib::lua_const::*;",
             "smashline:Exec", "smashline:Init"}
     return main, ["\n\n".join(tail) + "\n"], uses
@@ -864,7 +864,7 @@ def fight_code(state: dict, resource: str, suffix: str) -> tuple[list[str], list
     main = ['    Agent::new("%s").on_line(Main, %s).install(); // %s' % (
         resource, name, "facing the opponent and the commands" if face and commands
         else "facing the opponent" if face else "reading the commands")]
-    uses = {"use clone_engine_api::fight;", "use smashline::skyline_smash::lua2cpp::L2CFighterCommon;"}
+    uses = {"use dionysus_api::fight;", "use smashline::skyline_smash::lua2cpp::L2CFighterCommon;"}
     return main, ["\n" + blank(name, False, body) + "\n"], uses
 
 
@@ -883,7 +883,7 @@ def guarded_tables(tables, capability: str, note: str) -> list[str]:
     if not tables:
         return []
     fence = raw_fence(tables)
-    return (["    let manifest = if clone_engine_api::runtime_capabilities() & clone_engine_api::%s != 0 {"
+    return (["    let manifest = if dionysus_api::runtime_capabilities() & dionysus_api::%s != 0 {"
              % capability,
              "        manifest.raw(r%s\"" % fence]
             + tables.splitlines()
@@ -908,7 +908,7 @@ def entry_group_lines(state: dict) -> list[str]:
         calls.append("switch_with(&[%s]) // %s"
                      % (", ".join('"%s"' % name for name in members),
                         "the clones down special cycles through" if game_set
-                        else "the clones clone_engine_api::switch::next cycles through"))
+                        else "the clones dionysus_api::switch::next cycles through"))
         any_base = not game_set
     partner = partner_value(state)
     if partner is False:
@@ -924,7 +924,7 @@ def entry_group_lines(state: dict) -> list[str]:
     if calls:
         capability = "CAP_ANY_BASE_GROUPS" if any_base else "CAP_ENTRY_GROUPS"
         chain = ["        manifest." + calls[0]] + ["            ." + call for call in calls[1:]]
-        lines = (["    let manifest = if clone_engine_api::runtime_capabilities() & clone_engine_api::%s != 0 {"
+        lines = (["    let manifest = if dionysus_api::runtime_capabilities() & dionysus_api::%s != 0 {"
                   % capability]
                  + chain
                  + ["    } else {",
@@ -959,7 +959,7 @@ def hook_lines(kind: str, state: dict, constant: str, resource: str,
     names, hooks = vtables.hook_source(kind, state, constant, resource, taken)
     blocks = blocks + hooks
     if names:
-        install.append("    clone_engine_api::install_hooks!(%s); // the entries picked on the Vtables tab"
+        install.append("    dionysus_api::install_hooks!(%s); // the entries picked on the Vtables tab"
                        % ", ".join(names))
     if not blocks:
         return [], []
@@ -1018,7 +1018,7 @@ def fighter_part(state: dict, suffix: str = "", first: bool = True,
     if state.get("final_smash_folders"):
         main += final_smash_lines(resource, constant)
     if len(floating) > 1:
-        uses |= {"use clone_engine_api::float::{self, Float};", "use smashline::skyline_smash::lib::lua_const::*;",
+        uses |= {"use dionysus_api::float::{self, Float};", "use smashline::skyline_smash::lib::lua_const::*;",
                  "smashline:End", "smashline:Init", "smashline:Pre"}
     uses |= article_gimmick_uses(state)
     gimmick_tail: list[str] = []
@@ -1078,7 +1078,7 @@ def fighter_part(state: dict, suffix: str = "", first: bool = True,
     if first:
         handle = "fighter!(%s, \"%s\"); // the handle, and the identity" % (constant, resource)
     else:
-        handle = ("pub static %s: clone_engine_api::v2::Fighter = clone_engine_api::v2::Fighter::new(\"%s\"); "
+        handle = ("pub static %s: dionysus_api::v2::Fighter = dionysus_api::v2::Fighter::new(\"%s\"); "
                   "// the handle, and the identity" % (constant, resource))
     return {"name": resource, "uses": uses,
             "decls": [handle,
@@ -1171,7 +1171,7 @@ def item_part(state: dict, suffix: str = "", taken: set | None = None,
     main = item_manifest_lines(state, constant)
     if labels:
         main.append("    register_item_labels%s(kind); // label and hash fields, by name" % suffix)
-    main.append("    // %s.status(clone_engine_api::ItemStatusLine::Main, \"STATUS\", %s_main); // status line, a status name of the base item, function"
+    main.append("    // %s.status(dionysus_api::ItemStatusLine::Main, \"STATUS\", %s_main); // status line, a status name of the base item, function"
                 % (constant, constant.lower()))
     uses = {"v2:item", "v2:ItemManifest"}
     tail = [labels] if labels else []
@@ -1189,7 +1189,7 @@ def use_lines(uses: set) -> list[str]:
     """The use block: std first, then the crates by name; the v2 and the
     smashline names each in one line."""
     plain = set(uses)
-    for prefix, path in (("v2:", "clone_engine_api::v2"), ("smashline:", "smashline")):
+    for prefix, path in (("v2:", "dionysus_api::v2"), ("smashline:", "smashline")):
         names = sorted((use[len(prefix):] for use in uses if use.startswith(prefix)), key=str.lower)
         plain -= {prefix + name for name in names}
         if names:
@@ -1235,7 +1235,7 @@ def stage_part(stages: list[dict]) -> dict | None:
                 "    }",
                 "    let frames = inside.fetch_add(1, Ordering::Relaxed);"]
         if paused:
-            uses.add("use clone_engine_api::stage;")
+            uses.add("use dionysus_api::stage;")
             body += ["    if frames == 0 {",
                      "        let _ = stage::set_motion_frame(\"%s\", 0.0); // a paused_motions set, from its "
                      "first frame" % paused[0],
@@ -1248,7 +1248,7 @@ def stage_part(stages: list[dict]) -> dict | None:
                  "    }",
                  "}"]
     else:
-        uses.add("use clone_engine_api::stage;")
+        uses.add("use dionysus_api::stage;")
         body = ["// paused_motions hold their first frame until the plugin starts them, on the stage being played",
                 "unsafe extern \"C\" fn stage_frame(_fighter: &mut L2CFighterCommon) {",
                 "    if false {",
@@ -1271,7 +1271,7 @@ def menu_part(menu: dict | None) -> dict | None:
     call = "%s.setup" % namespace
     modes = [gimmicks.display(row.get("id", "")) for row in (menu.get("tables") or {}).get("mode") or []
              if row.get("id")]
-    uses = {"use clone_engine_api::menu;"}
+    uses = {"use dionysus_api::menu;"}
     main = ["    // Lua: prg_func.engine_call(\"%s\", ...) in a mode's decide or a button's func_decide" % call,
             "    if let Err(error) = menu::register_call(\"%s\", setup) {" % call,
             "        skyline::println!(\"[%s] %s refused: {error:?}\");" % (namespace, call),
@@ -1301,9 +1301,9 @@ def menu_part(menu: dict | None) -> dict | None:
             "    // let _ = menu::pause_exit(Some(menu::PauseExit { row: \"mel_pause_my_exit\", confirm: None })); "
             "// a pause row of your own, a msg_melee label",
             "    // let _ = menu::keep_music_into_battle(true); // the menu's song carries into the battle",
-            "    // let _ = clone_engine_api::hud_layout_every(\"ui/layout/hud/my_mode/layout.arc\"); "
+            "    // let _ = dionysus_api::hud_layout_every(\"ui/layout/hud/my_mode/layout.arc\"); "
             "// a layout on every player's damage card",
-            "    // let _ = clone_engine_api::boss_gauge_battle(); // the game's boss HP bar; "
+            "    // let _ = dionysus_api::boss_gauge_battle(); // the game's boss HP bar; "
             "boss_gauge(item, \"Name\") puts an item on it",
             "    // during the battle: menu::change_fighter(slot, \"ui_chara_luigi\", 0) on a KO swaps that "
             "player's fighter at the rebirth; menu::play_bgm(\"<ui_bgm_db label>\") changes the song",

@@ -577,7 +577,7 @@ class Workbench(ttk.Frame):
         if not parent:
             return
         name = simpledialog.askstring(TITLE, "Folder name for the pack",
-                                      initialvalue="Clone Engine - ")
+                                      initialvalue="Dionysus - ")
         if not name:
             return
         folder = Path(parent) / name
@@ -934,7 +934,7 @@ class IdentityPanel(ttk.Frame):
                      hint="fighter.toml: how many status kinds Kirby's copy needs; the engine picks the numbers")
         fields.flag("owns_param_resources", "Ships its own vl.prc and params")
         fields.entry("switch_with", "Switches with",
-                     hint="fighter.toml switch: one or two other clones sharing this player slot, comma separated, on any base but the Ice Climbers. Pyra/Mythra and Pokemon Trainer sets switch with down special; other bases switch when a plugin calls clone_engine_api::switch::next. Blank plays alone")
+                     hint="fighter.toml switch: one or two other clones sharing this player slot, comma separated, on any base but the Ice Climbers. Pyra/Mythra and Pokemon Trainer sets switch with down special; other bases switch when a plugin calls dionysus_api::switch::next. Blank plays alone")
         fields.entry("partner", "Partner",
                      hint="fighter.toml partner: blank = the base's default (an Ice Climbers clone gets a Nana-style partner), none = no partner, copy = a copy of this fighter follows it like Nana, or another clone's name (picked on its own, that clone then leads with this one following unless its Partner is none). Tune the follow in a [partner_params] table: off popo only nana_delay (frames behind, 15 at most) and nana_opt_dst (distance kept) change it")
         fields.flag("kirby_copy_full_model", "Kirby wears the whole body, not a cap")
@@ -1080,7 +1080,7 @@ class IdentityPanel(ttk.Frame):
                      values=gimmicks.GLIDE_PRESETS).grid(row=0, column=1, sticky="w", padx=(4, 10))
         ttk.Label(box, text="Hold frames").grid(row=0, column=2, sticky="w")
         ttk.Entry(box, textvariable=self.glide_frames, width=5).grid(row=0, column=3, sticky="w", padx=(4, 10))
-        hint = ttk.Label(box, text="the plugin gives the clone Brawl's glide (clone_engine_api::glide) with Meta "
+        hint = ttk.Label(box, text="the plugin gives the clone Brawl's glide (dionysus_api::glide) with Meta "
                                    "Knight's, Pit's or Charizard's values: jump held through the top of the midair "
                                    "jump glides. Hold frames: how long jump must be held (8). The motion list needs "
                                    "glide_start, glide, glide_attack, glide_end and glide_landing. It starts from "
@@ -1372,7 +1372,7 @@ class IdentityPanel(ttk.Frame):
                                            "threshold above. Life blank waits the frames above; super waits the super "
                                            "frames; also mirrored reads the input backwards too. Computer chance "
                                            "(0 to 1) gives a computer player the command when it presses the "
-                                           "button. Code reads it with clone_engine_api::fight::command(fighter, "
+                                           "button. Code reads it with dionysus_api::fight::command(fighter, "
                                            "\"name\"); the Rust tab adds a blank reader for each. Faces the "
                                            "opponent: on the ground in a 1-on-1, the fighter turns toward the "
                                            "opponent in wait, crouch, landing and shield and as jabs, tilts, "
@@ -1406,7 +1406,7 @@ class IdentityPanel(ttk.Frame):
         ttk.Combobox(box, textvariable=self.float_vars["item"], width=24,
                      values=[""] + named_choice(self.app.catalog.item_kinds())).grid(
             row=3, column=1, columnspan=3, sticky="w", padx=(4, 10), pady=(4, 0))
-        hint = ttk.Label(box, text="the plugin gives the clone Peach's float (clone_engine_api::float): jump held "
+        hint = ttk.Label(box, text="the plugin gives the clone Peach's float (dionysus_api::float): jump held "
                                    "in the air, or down and jump on the ground, hovers; letting go drops, an aerial "
                                    "keeps it going, one float per airtime. Blank keeps Peach's values: 150 frames, "
                                    "1.5 above the ground when the ground is within 6 of the first jump frame, a jump "
@@ -1789,7 +1789,7 @@ class IdentityPanel(ttk.Frame):
                 Field("scene", "Scene", 26, "choice", scenes), Field("skip", "Skips", 18, "choice", skips),
                 Field("after_battle", "After battle", 8, "choice", after), Field("order", "Order", 5)],
              self.describe_mode, lambda row: row.get("id"), 2,
-             "a row on the modes page (X on the main menu; the Clone Engine Modes pack draws it). Id: lower "
+             "a row on the modes page (X on the main menu; the Dionysus Modes pack draws it). Id: lower "
              "case letters, digits and _. Runs as is the game's mode: melee_normal is Smash, other_training "
              "Training (MENUS.md lists them all); a script with enter runs as a screen of the page "
              "instead. Scene IngameCallSequenceScene goes straight into "

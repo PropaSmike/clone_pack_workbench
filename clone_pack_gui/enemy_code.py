@@ -51,7 +51,7 @@ def enemy_lines(state: dict, taken: set | None = None) -> tuple[list[str], list[
         "static %s_KIND: %s::AtomicU32 = %s::AtomicU32::new(u32::MAX);" % (upper, ATOMIC, ATOMIC),
         "static %s_SERIAL: %s::AtomicU32 = %s::AtomicU32::new(u32::MAX);" % (upper, ATOMIC, ATOMIC),
         "static %s_REQUEST: %s::AtomicU32 = %s::AtomicU32::new(u32::MAX);" % (upper, ATOMIC, ATOMIC),
-        "static %s_OBJECT: %s::AtomicU32 = %s::AtomicU32::new(clone_engine_api::enemy::NO_OBJECT);"
+        "static %s_OBJECT: %s::AtomicU32 = %s::AtomicU32::new(dionysus_api::enemy::NO_OBJECT);"
         % (upper, ATOMIC, ATOMIC),
         "static %s_ARRIVED: %s::AtomicU64 = %s::AtomicU64::new(0);" % (upper, ATOMIC, ATOMIC),
         "static %s_DONE: %s::AtomicBool = %s::AtomicBool::new(false);" % (upper, ATOMIC, ATOMIC),
@@ -66,12 +66,12 @@ def enemy_lines(state: dict, taken: set | None = None) -> tuple[list[str], list[
             "static %s_WALKED: %s::AtomicU32 = %s::AtomicU32::new(0);" % (upper, ATOMIC, ATOMIC),
         ]
     decls.append("")
-    main = ['    if let Ok(kind) = clone_engine_api::enemy::clone(clone_engine_api::enemy::%s, "%s") { '
+    main = ['    if let Ok(kind) = dionysus_api::enemy::clone(dionysus_api::enemy::%s, "%s") { '
             "// the base, the name enemy.toml gives it" % (base, name),
             "        %s_KIND.store(kind, %s::Ordering::Release);" % (upper, ATOMIC)]
     if driven:
-        main.append("        let _ = clone_engine_api::enemy::drive(kind, Some(drive_%s), "
-                    "clone_engine_api::enemy::statuses(%s_NATIVE)); // its own logic in drive_%s"
+        main.append("        let _ = dionysus_api::enemy::drive(kind, Some(drive_%s), "
+                    "dionysus_api::enemy::statuses(%s_NATIVE)); // its own logic in drive_%s"
                     % (lower, upper, lower))
     else:
         main.append("        // the game's own logic: Flying Man fights on any stage; the others are made for "
@@ -80,10 +80,10 @@ def enemy_lines(state: dict, taken: set | None = None) -> tuple[list[str], list[
     if registrations:
         main += registrations
     else:
-        main.append("        // clone_engine_api::enemy::set_vtable_entry(kind, clone_engine_api::enemy::slot::CHANGE_STATUS, "
+        main.append("        // dionysus_api::enemy::set_vtable_entry(kind, dionysus_api::enemy::slot::CHANGE_STATUS, "
                     "my_change as *const ()); // one class slot of this clone (the Vtables tab writes these); "
                     "original_entry gives the base's")
-        main.append("        // clone_engine_api::enemy::set_object_vtable_entry(kind, clone_engine_api::enemy::object_slot::UPDATE_9, "
+        main.append("        // dionysus_api::enemy::set_object_vtable_entry(kind, dionysus_api::enemy::object_slot::UPDATE_9, "
                     "my_update as *const ()); // one object slot; original_object_entry gives the game's")
     main += ['        smashline::Agent::new("fighter").on_line(smashline::Main, %s_frame).install(); '
              "// every fighter, once per frame" % lower,
@@ -114,7 +114,7 @@ def enemy_lines(state: dict, taken: set | None = None) -> tuple[list[str], list[
         "unsafe extern \"C\" fn %s_frame(fighter: &mut %s::lua2cpp::L2CFighterCommon) {" % (lower, SMASH),
         "    use %s::app::lua_bind::WorkModule;" % SMASH,
         "    use %s::Ordering;" % ATOMIC,
-        "    use clone_engine_api::{enemy, menu};",
+        "    use dionysus_api::{enemy, menu};",
         "    if WorkModule::get_int(fighter.module_accessor, *%s::lib::lua_const::FIGHTER_INSTANCE_WORK_ID_INT_ENTRY_ID) != 0 {"
         % SMASH,
         "        return;",
@@ -172,6 +172,6 @@ def enemy_part(states: list[dict], taken: set | None = None) -> dict | None:
         main += more_main
         tail += more_tail
     kinds = ", ".join("%s_KIND.load(%s::Ordering::Acquire)" % (tag(state["name"]), ATOMIC) for state in states)
-    main.append("    let _ = clone_engine_api::enemy::arm(clone_engine_api::enemy::kinds(&[%s])); "
+    main.append("    let _ = dionysus_api::enemy::arm(dionysus_api::enemy::kinds(&[%s])); "
                 "// loaded in every battle from the next one on" % kinds)
     return {"uses": set(), "decls": decls, "main": main, "tail": tail, "name": states[0]["name"]}

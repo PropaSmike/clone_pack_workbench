@@ -299,7 +299,7 @@ def check_switch_groups(mod_dir, fighters):
         elif not any(sorted(group) == sorted(shape) for shape in SWITCH_SETS):
             findings.append(("INFO", f"fighter.toml: {name} switches on {', '.join(group)}, which "
                                      "have no switch move of their own; it switches when a "
-                                     "plugin calls clone_engine_api::switch::next"))
+                                     "plugin calls dionysus_api::switch::next"))
     return findings
 
 

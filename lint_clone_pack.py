@@ -130,8 +130,10 @@ def check_fighter_manifest(mod_dir, shipped, vanilla):
             owner = "kirby" if article.get("kirby") else name
             folder = f"fighter/{owner}/model/{article.get('name')}/"
             if not any(p.startswith(folder) for p in shipped):
+                consequence = ("the engine skips it on Kirby unless its source fighter is in the match"
+                               if article.get("kirby") else "its model is the source's")
                 findings.append(("WARN", f"fighter.toml: article {article.get('name')!r} has no "
-                                         f"files under {folder}; its model is the source's"))
+                                         f"files under {folder}; {consequence}"))
         kirby = fighter.get("kirby")
         if kirby and kirby.get("statuses", 0) > 0 and not any(
                 p.startswith(f"fighter/{name}/model/kirbycopy/") or
@@ -566,6 +568,7 @@ def lint(mod_dir, arc_index, cross_color_resources=()):
                                    resolved_share_targets, vanilla_dirs))
     findings.extend(lint_motion_list_folders(mod_dir, shipped, vanilla_dirs, added_dirs))
     findings.extend(lint_undeclared_shipped(added_dirs, dir_files, shipped))
+    findings.extend(lint_kirby_copy_articles(dir_files, shipped, vanilla))
     findings.extend(check_fighter_manifest(mod_dir, shipped, vanilla))
     findings.extend(check_work_ids(mod_dir))
     return findings
@@ -834,6 +837,35 @@ def lint_effects(added_dirs, dir_files, shipped, shared_targets):
                     f"{clone}; the game loads effect files with whichever costume is "
                     "picked, so declare it in every cNN group",
                 ))
+    return findings
+
+
+def lint_kirby_copy_articles(dir_files, shipped, vanilla):
+    """The game takes a copy article's model from the copied fighter's costume, so
+    every costume of the clone needs it listed in one of the clone's groups."""
+    folder = re.compile(r"^fighter/kirby/model/([^/]+)/c\d{2,3}/")
+    found = (folder.match(path) for path in shipped)
+    names = {match.group(1) for match in found if match}
+    names = {name for name in names if not name.startswith("copy_") and not name.endswith("body")}
+    if vanilla is not None:
+        found = (folder.match(path) for path in vanilla)
+        names -= {match.group(1) for match in found if match}
+    groups = {}
+    for group, members in dir_files.items():
+        match = re.fullmatch(r"fighter/([^/]+)/(?:kirbycopy/)?c(\d{2,3})", group)
+        if match and match.group(1) != "kirby":
+            groups.setdefault(int(match.group(2)), set()).update(members)
+    findings = []
+    for name in sorted(names):
+        model = f"fighter/kirby/model/{name}/c%02d/model.numdlb"
+        missing = sorted(color for color, members in groups.items() if model % color not in members)
+        if missing:
+            shown = ", ".join("c%02d" % color for color in missing[:4])
+            more = f" and {len(missing) - 4} more" if len(missing) > 4 else ""
+            findings.append(("WARN", f"Kirby copy article {name!r} is not listed for {shown}{more}; "
+                                     "the engine skips it when Kirby copies those costumes. Generate "
+                                     "config.json again, or list its files under "
+                                     "fighter/<clone>/kirbycopy/cNN"))
     return findings
 
 

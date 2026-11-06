@@ -149,6 +149,7 @@ SOUND_NAME_RE = re.compile(r"^(sound/bank/[^/]+/)(se|vc)_([a-z0-9]+)((?:_[a-z0-9
 EFFECT_COLOR_RE = re.compile(r"_c(\d{2,3})(\.eff)$")
 COPY_RE = re.compile(r"^fighter/kirby/(model|motion)/(copy_[^/]+)/")
 COPY_MODEL_RE = re.compile(r"^fighter/kirby/model/copy_(.+?)_([^/]+)/")
+KIRBY_FOLDER_RE = re.compile(r"^fighter/kirby/(?:model|motion)/([^/]+)/c\d{2,3}/")
 HAT_SUFFIXES = ("fitkirby", "cap", "helmet", "crown", "mask", "ear", "goggle", "hair",
                 "parts", "bag")
 
@@ -262,15 +263,39 @@ def is_asset(path: str) -> bool:
     return path.rsplit(".", 1)[-1].lower() not in NON_ASSET_SUFFIXES
 
 
+_VANILLA_KIRBY_FOLDERS: set[str] | None = None
+
+
+def vanilla_kirby_folders() -> set[str]:
+    """The folders Kirby's model and motion trees already have in the arc."""
+    global _VANILLA_KIRBY_FOLDERS
+    if _VANILLA_KIRBY_FOLDERS is None:
+        found = (KIRBY_FOLDER_RE.match(path) for path in arc_path_list())
+        _VANILLA_KIRBY_FOLDERS = {match.group(1) for match in found if match}
+    return _VANILLA_KIRBY_FOLDERS
+
+
+def kirby_article_folders(shipped) -> set[str]:
+    """The folders a pack adds under Kirby's model and motion trees for its copy
+    articles: anything the arc doesn't have, past the copy hats and body
+    animations, which carry a fighter's name."""
+    found = (KIRBY_FOLDER_RE.match(path) for path in shipped)
+    names = {match.group(1) for match in found if match}
+    names = {name for name in names if not name.startswith("copy_") and not name.endswith("body")}
+    return names - vanilla_kirby_folders() if names else names
+
+
 def own_paths(shipped, clone: str) -> set[str]:
     """The shipped files that are this clone's: its trees, its camera, effect and
-    sound banks, and any Kirby copy model, body animation or copy voice bank
-    carrying its name."""
+    sound banks, any Kirby copy model, body animation or copy voice bank carrying
+    its name, and its Kirby copy articles."""
     prefixes = (f"fighter/{clone}/", f"camera/fighter/{clone}/", f"effect/fighter/{clone}/",
                 f"sound/bank/fighter/se_{clone}_", f"sound/bank/fighter_voice/vc_{clone}_",
                 f"fighter/kirby/model/copy_{clone}_", f"fighter/kirby/motion/copy_{clone}_",
                 f"fighter/kirby/motion/{clone}body/",
                 f"sound/bank/fighter_voice/vc_kirby_copy_{clone}.")
+    for name in sorted(kirby_article_folders(shipped)):
+        prefixes += (f"fighter/kirby/model/{name}/", f"fighter/kirby/motion/{name}/")
     return {path for path in shipped if path.startswith(prefixes) and is_asset(path)}
 
 
@@ -455,7 +480,8 @@ class Census:
             return ["kirbycopy/cNN/bodymotion"]
         if path.startswith(f"fighter/kirby/model/copy_{self.clone}_") \
                 or path.startswith(f"fighter/kirby/motion/copy_{self.clone}_") \
-                or path.startswith(f"sound/bank/fighter_voice/vc_kirby_copy_{self.clone}."):
+                or path.startswith(f"sound/bank/fighter_voice/vc_kirby_copy_{self.clone}.") \
+                or KIRBY_FOLDER_RE.match(path):
             return ["kirbycopy/cNN"]
         return [None]
 

@@ -77,7 +77,11 @@ and vertex); click a row to change it.
 
 For a fighter:
 
-- **Articles**: a **Platform (.lvd)** file in the article's model folder
+- **Articles**: a Kirby copy article's files go in
+  `fighter/kirby/model/<name>/c00` and `fighter/kirby/motion/<name>/c00`. The
+  generator lists them in `fighter/<clone>/kirbycopy/cNN` and fills every other
+  costume from what you ship; without files the engine skips the article unless
+  its source fighter is in the match. A **Platform (.lvd)** file in the article's model folder
   makes it a platform (`lvd`). **Article hurtboxes** and **Article platform
   vertices** list each article's `[[article.hurtbox]]` and
   `[[article.lvd_vertex]]` tables.

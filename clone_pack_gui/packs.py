@@ -1149,6 +1149,9 @@ def costume_paths(folder: Path, resource: str):
     for tree in ("model", "motion"):
         for entry in (kirby / tree).glob("copy_%s_*" % resource) if (kirby / tree).is_dir() else []:
             dir_roots.append(entry.relative_to(folder))
+        for entry in (kirby / tree).iterdir() if (kirby / tree).is_dir() else []:
+            if entry.is_dir() and not entry.name.startswith("copy_") and not entry.name.endswith("body"):
+                dir_roots.append(entry.relative_to(folder))
     if (kirby / "motion" / (resource + "body")).is_dir():
         dir_roots.append(Path(FIGHTER, "kirby", "motion", resource + "body"))
     effect = folder / "effect" / FIGHTER / resource

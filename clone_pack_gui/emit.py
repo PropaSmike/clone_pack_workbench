@@ -322,7 +322,7 @@ def fighter_manifest_lines(state: dict, constant: str) -> list[str]:
             continue
         source = "%s/%s" % (owner, weapon_short_name(owner, weapon))
         if article.get("kirby_copy"):
-            lines.append("    .kirby_article(%s%s%s, %s%s%s) // article for Kirby's copy, from that vanilla weapon" % (q, name, q, q, source, q))
+            lines.append("    .kirby_article(%s%s%s, %s%s%s) // article for Kirby's copy, from that vanilla weapon; files in fighter/kirby/model/%s and motion/%s" % (q, name, q, q, source, q, name, name))
         else:
             lines.append("    .article(%s%s%s, %s%s%s) // fighter/%s/model/%s, copied from that vanilla weapon" % (q, name, q, q, source, q, resource, name))
     for article in state.get("base_articles") or []:

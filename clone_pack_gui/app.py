@@ -18,7 +18,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from . import (backups, emit, enemy_code, gimmicks, guide, hands, menu_presets, optimize, packs, prc,
-               stickpad, vtables)
+               stickpad, theme, vtables)
 from .tables import Field, TableEditor
 from .catalog import (Catalog, OWNER_SURFACE, VL_SURFACE, is_float_field,
                       is_label_field, is_name_field)
@@ -34,7 +34,6 @@ PARAM_TABLES = ("fighter_param", "param_motion", "common", "param_thrown", "vl.p
 ITEM_PRC_SURFACE = "param.prc"
 ITEM_PARAM_TABLES = ("item_common", "item_owner_param", ITEM_PRC_SURFACE)
 PREFILL_TYPES = ("f32", "float", "i32", "u32", "int", "bool", "i8", "u8", "i16", "u16")
-CHANGED = "#1a6e2e"
 SURFACES = {packs.FIGHTER: PARAM_TABLES, packs.ITEM: ITEM_PARAM_TABLES, packs.STAGE: (), packs.MENU: (),
             packs.MII: (), packs.ENEMY: ()}
 ENEMY_FOLDERS = ("yellowdevil", "subetenoyaminoou", "flyingman", "metalface", "nabbit")
@@ -117,6 +116,9 @@ class Workbench(ttk.Frame):
     def __init__(self, master: tk.Misc, folder: str | None = None):
         super().__init__(master, padding=8)
         self.master.title(TITLE)
+        theme.apply(self.master, theme.load_mode())
+        theme.dress(self.master)
+        theme.follow_system(self.master)
         chain_mouse_wheel(self.master)
         self.catalog = Catalog()
         self.folder: Path | None = None
@@ -157,9 +159,15 @@ class Workbench(ttk.Frame):
         ttk.Button(bar, text="New pack", command=self.new_pack).grid(row=0, column=3)
         ttk.Button(bar, text="Reload", command=self.reload).grid(row=0, column=4, padx=4)
         ttk.Button(bar, text="Backups", command=self.show_backups).grid(row=0, column=5)
+        ttk.Label(bar, text="Theme").grid(row=0, column=6, padx=(12, 4))
+        self.theme_var = tk.StringVar(value=theme.LABELS[theme.mode()])
+        theme_box = ttk.Combobox(bar, textvariable=self.theme_var, state="readonly", width=8,
+                                 values=[theme.LABELS[mode] for mode in theme.MODES])
+        theme_box.grid(row=0, column=7)
+        theme_box.bind("<<ComboboxSelected>>", self.theme_chosen)
 
         kinds = ttk.Frame(bar)
-        kinds.grid(row=1, column=0, columnspan=6, sticky="w", pady=(6, 0))
+        kinds.grid(row=1, column=0, columnspan=8, sticky="w", pady=(6, 0))
         ttk.Label(kinds, text="Working on").pack(side="left", padx=(0, 6))
         self.kind_buttons = {}
         for value in KINDS:
@@ -173,7 +181,7 @@ class Workbench(ttk.Frame):
         status.pack(side="left", padx=12)
 
         parts = ttk.Frame(bar)
-        parts.grid(row=2, column=0, columnspan=6, sticky="w", pady=(6, 0))
+        parts.grid(row=2, column=0, columnspan=8, sticky="w", pady=(6, 0))
         ttk.Label(parts, text="Part").pack(side="left", padx=(0, 6))
         self.part_var = tk.StringVar()
         self.part_box = ttk.Combobox(parts, textvariable=self.part_var, width=30,
@@ -185,9 +193,15 @@ class Workbench(ttk.Frame):
                    command=self.remove_part).pack(side="left")
         about = ttk.Label(parts, text="a pack may hold several fighters, items or stages; "
                                       "each is a part with its own settings",
-                          foreground="#555", justify="left")
+                          style="Hint.TLabel", justify="left")
         about.pack(side="left", padx=12)
         wrap_within(bar, [status, about])
+
+    def theme_chosen(self, _event=None) -> None:
+        chosen = next((mode for mode, label in theme.LABELS.items() if label == self.theme_var.get()),
+                      "system")
+        theme.apply(self.master, chosen)
+        theme.save_mode(chosen)
 
     def _build_tabs(self) -> None:
         self.tabs = ttk.Notebook(self.split)
@@ -703,6 +717,7 @@ class RenameDialog(tk.Toplevel):
     def __init__(self, parent: tk.Misc, kind: str, on_disk, guess: str, new: str, done):
         super().__init__(parent)
         self.title("Rename the %s's files" % kind)
+        theme.dress(self)
         self.resizable(False, False)
         self.done = done
         self.old = tk.StringVar(value=guess)
@@ -717,7 +732,7 @@ class RenameDialog(tk.Toplevel):
         entry.grid(row=1, column=1, pady=2)
         ttk.Label(body, text="every folder, file, label and manifest line that carries "
                             "the old name takes the new one; a plugin.nro is reported, "
-                            "not changed", foreground="#555", wraplength=360,
+                            "not changed", style="Hint.TLabel", wraplength=360,
                   justify="left").grid(row=2, column=0, columnspan=2, sticky="w", pady=(6, 8))
         buttons = ttk.Frame(body)
         buttons.grid(row=3, column=0, columnspan=2, sticky="e")
@@ -862,7 +877,7 @@ class Fields:
         self.row = 0
 
     def hint(self, text: str) -> None:
-        label = ttk.Label(self.parent, text=text, foreground="#555", justify="left")
+        label = ttk.Label(self.parent, text=text, style="Hint.TLabel", justify="left")
         label.grid(row=self.row, column=2, sticky="w", padx=8)
         self.hints.append(label)
 
@@ -1093,7 +1108,7 @@ class IdentityPanel(ttk.Frame):
             row=2, column=1, padx=4, pady=(4, 0))
         lvd_hint = ttk.Label(articles, text="a .lvd of your own in the article's model folder makes it a "
                                             "platform; list the vertices that follow its joints below",
-                             foreground="#555", justify="left")
+                             style="Hint.TLabel", justify="left")
         lvd_hint.grid(row=2, column=2, columnspan=2, sticky="w", pady=(4, 0))
         fields.hints.append(lvd_hint)
         self.article_list = tk.Listbox(articles, height=4, exportselection=False)
@@ -1200,7 +1215,7 @@ class IdentityPanel(ttk.Frame):
                                    "the float's input, so ticking one clears the other. Players with another glide "
                                    "mod set gliding = false in the engine's settings.toml, and the clone then "
                                    "installs none of it",
-                         foreground="#555", justify="left")
+                         style="Hint.TLabel", justify="left")
         hint.grid(row=1, column=0, columnspan=6, sticky="w", pady=(4, 0))
         box.columnconfigure(5, weight=1)
         fields.hints.append(hint)
@@ -1223,7 +1238,7 @@ class IdentityPanel(ttk.Frame):
         ttk.Label(box, text="Donor").grid(row=0, column=0, sticky="w")
         ttk.Combobox(box, textvariable=self.tether_from, state="readonly", width=12,
                      values=("",) + gimmicks.TETHER_DONORS).grid(row=0, column=1, sticky="w", padx=(4, 10))
-        ttk.Label(box, textvariable=self.tether_note, foreground="#555").grid(row=0, column=2, sticky="w")
+        ttk.Label(box, textvariable=self.tether_note, style="Hint.TLabel").grid(row=0, column=2, sticky="w")
         self.tether_boxes = TableEditor(
             box, "Ledge boxes", "tether_box",
             [Field("p1", "Corner (x, y)", 12), Field("p2", "Opposite corner (x, y)", 12)],
@@ -1235,7 +1250,7 @@ class IdentityPanel(ttk.Frame):
                                    "them. The Rust tab adds the tether statuses blank, the donor's own calls in "
                                    "comments: port them, its aircatch scripts and five air_catch motions before "
                                    "playing with it. Needs ParamConfig",
-                         foreground="#555", justify="left")
+                         style="Hint.TLabel", justify="left")
         hint.grid(row=2, column=0, columnspan=4, sticky="w", pady=(4, 0))
         box.columnconfigure(3, weight=1)
         fields.hints.append(hint)
@@ -1263,7 +1278,7 @@ class IdentityPanel(ttk.Frame):
                                    "layout.arc the pack ships, such as ui/layout/hud/<name>/layout.arc, drawn on the "
                                    "damage card. Both at once is fine. The Rust tab adds a blank function with the "
                                    "calls each takes",
-                         foreground="#555", justify="left")
+                         style="Hint.TLabel", justify="left")
         hint.grid(row=1, column=0, columnspan=5, sticky="w", pady=(4, 0))
         box.columnconfigure(4, weight=1)
         fields.hints.append(hint)
@@ -1437,7 +1452,7 @@ class IdentityPanel(ttk.Frame):
         tuning_hint = ttk.Label(box, text="the game's common.prc names; blank keeps its value (10, 20, 3, 0.2). "
                                           "Stick ranges: seven [min, max] angles from straight up (up, "
                                           "up-forward, forward, down-forward, then the back three), the way "
-                                          "Kazuya's vl.prc has them", foreground="#555", justify="left")
+                                          "Kazuya's vl.prc has them", style="Hint.TLabel", justify="left")
         tuning_hint.grid(row=3, column=0, columnspan=9, sticky="w")
         self.command_vars = {"name": tk.StringVar(), "input": tk.StringVar(),
                              "button": tk.StringVar(value="either"), "life": tk.StringVar(),
@@ -1475,7 +1490,7 @@ class IdentityPanel(ttk.Frame):
             row=1, column=0, sticky="ew", pady=(4, 0))
         ttk.Button(pad, text="Clear", width=6, command=self.stick_pad.clear).grid(
             row=1, column=1, sticky="ew", pady=(4, 0))
-        ttk.Label(pad, textvariable=self.command_note, foreground="#a33", wraplength=150,
+        ttk.Label(pad, textvariable=self.command_note, style="Warn.TLabel", wraplength=150,
                   justify="left").grid(row=2, column=0, columnspan=2, sticky="w")
         for key in ("special_command_neutral_threshold", "special_command_stick_range"):
             self.command_settings[key].trace_add("write", lambda *_: self.stick_pad.draw())
@@ -1490,7 +1505,7 @@ class IdentityPanel(ttk.Frame):
                                            "opponent: on the ground in a 1-on-1, the fighter turns toward the "
                                            "opponent in wait, crouch, landing and shield and as jabs, tilts, "
                                            "specials and grabs start (fight::face_opponent)",
-                                 foreground="#555", justify="left")
+                                 style="Hint.TLabel", justify="left")
         command_hint.grid(row=6, column=0, columnspan=9, sticky="w", pady=(4, 0))
         box.columnconfigure(7, weight=1)
         box.rowconfigure(5, weight=1)
@@ -1526,7 +1541,7 @@ class IdentityPanel(ttk.Frame):
                                    "out of water floats past 14, fuwafuwa_start and fuwafuwa (a clone without them "
                                    "floats in its fall). Throws mid-float: the held item down special throws "
                                    "(Peach's turnip is peachdaikon). A Peach or Daisy clone floats already",
-                         foreground="#555", justify="left")
+                         style="Hint.TLabel", justify="left")
         hint.grid(row=4, column=0, columnspan=6, sticky="w", pady=(4, 0))
         box.columnconfigure(5, weight=1)
         fields.hints.append(hint)
@@ -1765,7 +1780,7 @@ class IdentityPanel(ttk.Frame):
                 row=0, column=index, padx=4, sticky="w")
         note = ttk.Label(sources, text="the weight alone makes it appear on the stage; "
                                        "tick the containers it can also come out of",
-                         foreground="#555", justify="left")
+                         style="Hint.TLabel", justify="left")
         note.grid(row=1, column=0, columnspan=5, sticky="w", pady=(4, 0))
         fields.hints.append(note)
         fields.flag("declare_shipped", "Declare the files this pack ships (--pack-dir)")
@@ -2158,7 +2173,7 @@ class IdentityPanel(ttk.Frame):
             widget.grid(row=row, column=column * 2 + 1, sticky="w", padx=(4, 10), pady=2)
         ttk.Button(box, text="Add mode", command=self.add_preset_mode).grid(row=2, column=0, sticky="w",
                                                                              pady=(6, 0))
-        ttk.Label(box, foreground="#555", justify="left",
+        ttk.Label(box, style="Hint.TLabel", justify="left",
                   text="duel: your fighter against a CPU, straight into the battle. pick: the players pick "
                        "fighters, then fight on Stage. boss: the game's boss battle against Boss. movie: a "
                        "stream:/movie/... WebM full screen. Add mode writes <id>.lua into Lua sources and the "
@@ -2995,7 +3010,8 @@ class Sheet(ttk.Frame):
         scroll.grid(row=0, column=1, sticky="ns")
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
-        self.tree.tag_configure("changed", foreground=CHANGED)
+        self.tree.tag_configure("changed", foreground=theme.color("changed"))
+        theme.watch(lambda: self.tree.tag_configure("changed", foreground=theme.color("changed")))
         self.count = 0
 
     def show_columns(self, keys) -> None:
@@ -3149,7 +3165,7 @@ class ParamsPanel(ttk.Frame):
         self.rule_list.grid(row=4, column=0, columnspan=6, sticky="nsew", pady=6)
         self.rule_list.on_select(self.rule_chosen)
         self.rowconfigure(4, weight=2)
-        self.note = ttk.Label(self, text="", foreground="#555", justify="left")
+        self.note = ttk.Label(self, text="", style="Hint.TLabel", justify="left")
         self.note.grid(row=5, column=0, columnspan=6, sticky="nw")
         wrap_within(self, [self.note])
         self.refresh_fields()
@@ -3679,7 +3695,7 @@ class ItemHandBox(ttk.LabelFrame):
         self.sheet.grid(row=2, column=0, sticky="ew", pady=(8, 4))
         self.verdict = ttk.Label(self, text="", justify="left")
         self.verdict.grid(row=3, column=0, sticky="w", pady=(2, 4))
-        self.note = ttk.Label(self, text=ITEM_HAND_NOTE, foreground="#555", justify="left")
+        self.note = ttk.Label(self, text=ITEM_HAND_NOTE, style="Hint.TLabel", justify="left")
         self.note.grid(row=4, column=0, sticky="w")
         wrap_within(self, [self.base_text, self.verdict, self.note])
 
@@ -3713,7 +3729,7 @@ class ItemHandBox(ttk.LabelFrame):
         self.sheet.delete(*self.sheet.get_children())
         if not base:
             self.base_text.configure(text="Pick the base fighter above first.")
-            self.verdict.configure(text="", foreground="")
+            self.verdict.configure(text="", style="TLabel")
             return
         row = self.app.catalog.item_hands().get(base)
         self.base_text.configure(text=hands.describe_base(base, row))
@@ -3722,14 +3738,14 @@ class ItemHandBox(ttk.LabelFrame):
             self.sheet.insert("", "end", values=(what, theirs, mine))
         problem = hands.problem(base, hand)
         if problem:
-            self.verdict.configure(text=problem, foreground="#b00020")
+            self.verdict.configure(text=problem, style="Error.TLabel")
         elif hand not in hands.HANDS:
-            self.verdict.configure(text="No item_hand: the fighter holds items like its base.", foreground="")
+            self.verdict.configure(text="No item_hand: the fighter holds items like its base.", style="TLabel")
         elif hands.base_hand(row) == hand:
-            self.verdict.configure(text="The base already uses this hand, so nothing changes.", foreground="")
+            self.verdict.configure(text="The base already uses this hand, so nothing changes.", style="TLabel")
         else:
             self.verdict.configure(text='fighter.toml: item_hand = "%s"; Manifest: .item_hand("%s")'
-                                   % (hand, hand), foreground="")
+                                   % (hand, hand), style="TLabel")
 
 
 GALLERY_INTRO = (
@@ -3746,7 +3762,7 @@ class GallerySection(ttk.Frame):
         self.app = app
         self.on_change = on_change
         self.columnconfigure(0, weight=1)
-        intro = ttk.Label(self, text=GALLERY_INTRO, foreground="#555", justify="left")
+        intro = ttk.Label(self, text=GALLERY_INTRO, style="Hint.TLabel", justify="left")
         intro.grid(row=0, column=0, sticky="w")
         self.galleries = TableEditor(
             self, "Galleries", "gallery",
@@ -3965,7 +3981,7 @@ class OptimizePanel(ttk.Frame):
         self.summary.grid(row=1, column=0, sticky="w", pady=(8, 4))
         self.sheet = Sheet(self, OPTIMIZE_COLUMNS, height=12)
         self.sheet.grid(row=2, column=0, sticky="nsew")
-        self.note = ttk.Label(self, foreground="#555", justify="left", text=(
+        self.note = ttk.Label(self, style="Hint.TLabel", justify="left", text=(
             "A costume's file with the same bytes as a lower costume's twin (model, "
             "motion, camera, sound bank, Kirby hat) ships once: the copy leaves the pack "
             "(kept in backups) and config.json's share-to-added points its name at the "
@@ -4095,7 +4111,7 @@ class VtablePanel(ttk.Frame):
         self.costumes_button.pack(side="left", padx=4)
         self.summary = ttk.Label(buttons, text="", justify="left")
         self.summary.pack(side="left", padx=12)
-        self.note = ttk.Label(self, foreground="#555", justify="left", text=(
+        self.note = ttk.Label(self, style="Hint.TLabel", justify="left", text=(
             "Double-click an entry, or select several and Hook selected; each calls the "
             "original on the Rust tab, ready for your code before or after it. Fighter and "
             "article weapon entries go through Smashline 2.0's replace_fighter_vtable and "

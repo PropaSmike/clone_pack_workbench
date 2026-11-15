@@ -11,12 +11,11 @@ import tkinter as tk
 from tkinter import font as tkfont
 from tkinter import ttk
 
+from . import theme
+
 README_NAMES = ("README.md", "clone_pack_tools_README.md")
-CODE_BACKGROUND = "#eef0f3"
-RULE = "#c8ccd2"
 INLINE = re.compile(r"(`[^`]+`|\*\*[^*]+?\*\*|\[[^\]]+\]\([^)\s]+\))")
 LINK = re.compile(r"^\[([^\]]+)\]\(([^)\s]+)\)$")
-LINK_COLOUR = "#1a5fb4"
 BULLET = re.compile(r"^[*-] ")
 HEADING = re.compile(r"^(#{1,3}) +(.*?)\s*#*$")
 TABLE_RULE = re.compile(r"^\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?$")
@@ -138,6 +137,7 @@ class GuideWindow(tk.Toplevel):
     def __init__(self, master: tk.Misc, root: Path):
         super().__init__(master)
         self.title("Clone Pack Workbench: help")
+        theme.dress(self)
         scale = max(1.0, self.winfo_fpixels("1i") / 96.0)
         width = min(int(980 * scale), self.winfo_screenwidth() - 80)
         height = min(int(720 * scale), self.winfo_screenheight() - 120)
@@ -176,6 +176,7 @@ class GuideWindow(tk.Toplevel):
         self.text.configure(yscrollcommand=scroll.set, xscrollcommand=self._xscroll)
         self.text.bind("<Configure>", self._fit_rules)
         self._tags()
+        theme.watch(self._colours)
 
         path = find_readme(root)
         if path is None:
@@ -215,26 +216,36 @@ class GuideWindow(tk.Toplevel):
         text.tag_configure("title", font=fonts["title"], spacing3=10)
         text.tag_configure("section", font=fonts["section"], spacing1=18, spacing3=6)
         text.tag_configure("sub", font=fonts["sub"], spacing1=14, spacing3=5)
-        text.tag_configure("link", foreground=LINK_COLOUR, underline=True)
+        text.tag_configure("link", underline=True)
         text.tag_configure("paragraph", spacing3=9)
         indent = fonts["body"].measure("•  ")
         text.tag_configure("bullet", lmargin1=10, lmargin2=10 + indent, spacing3=5)
-        text.tag_configure("code", font=fonts["fixed"], background=CODE_BACKGROUND,
+        text.tag_configure("code", font=fonts["fixed"],
                            lmargin1=14, lmargin2=14, rmargin=14, wrap="none")
         text.tag_configure("codetop", spacing1=6)
         text.tag_configure("codeend", spacing3=6)
-        try:
-            text.tag_configure("code", lmargincolor=CODE_BACKGROUND,
-                               rmargincolor=CODE_BACKGROUND)
-        except tk.TclError:
-            pass
-        text.tag_configure("inline", font=fonts["fixed"], background=CODE_BACKGROUND)
+        text.tag_configure("inline", font=fonts["fixed"])
         text.tag_configure("mono", font=fonts["fixed"])
         text.tag_configure("bold", font=fonts["bold"])
         text.tag_configure("header", font=fonts["bold"])
         text.tag_configure("hairline", font=fonts["hairline"], spacing1=0, spacing3=0)
         text.tag_configure("gap", font=fonts["hairline"], spacing3=8)
         text.tag_configure("listend", spacing3=12)
+        self._colours()
+
+    def _colours(self) -> None:
+        """The colours of code, links and rules, again after every switch of theme."""
+        text = self.text
+        text.tag_configure("link", foreground=theme.color("link"))
+        text.tag_configure("code", background=theme.color("code"))
+        text.tag_configure("inline", background=theme.color("code"))
+        try:
+            text.tag_configure("code", lmargincolor=theme.color("code"),
+                               rmargincolor=theme.color("code"))
+        except tk.TclError:
+            pass
+        for line in self.rules:
+            line.configure(background=theme.color("rule"))
 
     def render(self, blocks: list[tuple]) -> None:
         self.contents.delete(0, "end")
@@ -324,7 +335,7 @@ class GuideWindow(tk.Toplevel):
         self.text.insert("end", "\n", "gap")
 
     def _rule(self, tag: str) -> None:
-        line = tk.Frame(self.text, height=1, background=RULE)
+        line = tk.Frame(self.text, height=1, background=theme.color("rule"))
         self.text.window_create("end", window=line, pady=2)
         self.text.tag_add(tag, "end-2c")
         self.text.insert("end", "\n", (tag, "hairline"))

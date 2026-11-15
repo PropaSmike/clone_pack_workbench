@@ -63,7 +63,7 @@ class TableEditor(ttk.LabelFrame):
         self.listbox = tk.Listbox(self, height=height, exportselection=False)
         self.listbox.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(6, 0))
         self.listbox.bind("<<ListboxSelect>>", self.chosen)
-        self.hint = ttk.Label(self, text=hint, foreground="#555", justify="left")
+        self.hint = ttk.Label(self, text=hint, style="Hint.TLabel", justify="left")
         if hint:
             self.hint.grid(row=3, column=0, columnspan=2, sticky="w", pady=(4, 0))
         self.columnconfigure(1, weight=1)

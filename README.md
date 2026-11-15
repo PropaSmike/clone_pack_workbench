@@ -27,6 +27,9 @@ ran. The **Help** tab (or F1) opens this guide.
   part** starts another; **Remove part** forgets one without touching its
   files.
 - **Add this part to the pack** creates its folders and manifest.
+- **Theme**: System follows Windows' app mode, also while the window is open;
+  Light or Dark fixes it. Kept for your user in
+  `%APPDATA%\Clone Pack Workbench\settings.json`.
 
 Rules and settings no manifest can hold go in `clone_pack_gui.json` inside the
 pack. The game never reads it.

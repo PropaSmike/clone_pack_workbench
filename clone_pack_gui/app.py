@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
+import _tkinter
 import contextlib
+import ctypes
 import io
 import json
 import os
@@ -22,7 +24,10 @@ from .catalog import (Catalog, OWNER_SURFACE, VL_SURFACE, is_float_field,
                       is_label_field, is_name_field)
 
 TITLE = "Clone Pack Workbench"
-KINDS = (packs.FIGHTER, packs.ITEM, packs.STAGE, packs.MENU, packs.MII, packs.ENEMY)
+RDW_ALLCHILDREN = 0x80
+RDW_UPDATENOW = 0x100
+UNITS_PER_PAGE = 9
+KINDS =(packs.FIGHTER, packs.ITEM, packs.STAGE, packs.MENU, packs.MII, packs.ENEMY)
 PARAM_TABLES = ("fighter_param", "param_motion", "common", "param_thrown", "vl.prc")
 ITEM_PRC_SURFACE = "param.prc"
 ITEM_PARAM_TABLES = ("item_common", "item_owner_param", ITEM_PRC_SURFACE)
@@ -711,7 +716,12 @@ class RenameDialog(tk.Toplevel):
 
 class Scrolled(ttk.Frame):
     """A frame whose contents scroll when the window is shorter than they are:
-    build into .body, and the bar appears only while it is needed."""
+    build into .body, and the bar appears only while it is needed.
+
+    Tk moves the body by copying its pixels, the ones not painted yet too, so a scroll
+    that outruns the painting leaves copies of the form behind. Wheel notches and bar
+    drags are gathered and applied once per pass of the event loop, and each move is
+    painted before the next one can copy it."""
 
     def __init__(self, parent: tk.Misc):
         super().__init__(parent)
@@ -721,15 +731,26 @@ class Scrolled(ttk.Frame):
         self.canvas = tk.Canvas(self, highlightthickness=0, borderwidth=0,
                                 background=background)
         self.canvas.grid(row=0, column=0, sticky="nsew")
-        self.bar = ttk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.bar = ttk.Scrollbar(self, orient="vertical", command=self.bar_moved)
         self.bar.grid(row=0, column=1, sticky="ns")
         self.canvas.configure(yscrollcommand=self.bar.set)
         self.body = ttk.Frame(self.canvas)
         self.window = self.canvas.create_window((0, 0), window=self.body, anchor="nw")
-        self.body.bind("<Configure>", lambda _: self.fit())
+        self.body_size = (0, 0)
+        self.units = 0
+        self.target: tuple | None = None
+        self.queued = False
+        self.body.bind("<Configure>", self.body_resized)
         self.canvas.bind("<Configure>", self.resized)
         self.canvas.bind("<Enter>", lambda _: self.arm())
         self.canvas.bind("<Leave>", lambda _: self.disarm())
+
+    def body_resized(self, event) -> None:
+        """The body's own size; moving it while scrolling is not a change."""
+        size = (event.width, event.height)
+        if size != self.body_size:
+            self.body_size = size
+            self.fit()
 
     def resized(self, event) -> None:
         self.canvas.itemconfigure(self.window, width=event.width)
@@ -768,10 +789,47 @@ class Scrolled(ttk.Frame):
             return
         if not self.overflows():
             return
-        if getattr(event, "num", None) == 4 or getattr(event, "delta", 0) > 0:
-            self.canvas.yview_scroll(-1, "units")
+        self.units += -1 if getattr(event, "num", None) == 4 or getattr(event, "delta", 0) > 0 else 1
+        self.queue()
+
+    def bar_moved(self, *args) -> None:
+        if args and args[0] == "scroll":
+            self.units += int(args[1]) * (UNITS_PER_PAGE if args[2] == "pages" else 1)
         else:
-            self.canvas.yview_scroll(1, "units")
+            self.target = args
+        self.queue()
+
+    def queue(self) -> None:
+        if not self.queued:
+            self.queued = True
+            self.after_idle(self.flush)
+
+    def flush(self) -> None:
+        """Apply what was gathered as one move, then paint it before anything else moves it."""
+        target, units = self.target, self.units
+        self.target, self.units = None, 0
+        try:
+            if target:
+                self.canvas.yview(*target)
+            if units:
+                self.canvas.yview_scroll(units, "units")
+            if target or units:
+                self.paint()
+        finally:
+            self.queued = False
+        if self.target or self.units:
+            self.queue()
+
+    def paint(self) -> None:
+        self.canvas.update_idletasks()
+        if sys.platform == "win32":
+            redraw = ctypes.windll.user32.RedrawWindow
+            redraw.argtypes = (ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_uint)
+            redraw(self.canvas.winfo_id(), None, None, RDW_UPDATENOW | RDW_ALLCHILDREN)
+        for _ in range(500):
+            if not self.tk.dooneevent(_tkinter.WINDOW_EVENTS | _tkinter.DONT_WAIT):
+                break
+        self.canvas.update_idletasks()
 
 
 class Fields:

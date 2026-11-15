@@ -4308,10 +4308,11 @@ class RustPanel(ttk.Frame):
 def run(folder: str | None = None) -> int:
     """Open the window."""
     root = tk.Tk()
-    width = min(1060, root.winfo_screenwidth() - 40)
-    height = min(820, root.winfo_screenheight() - 100)
+    scale = max(1.0, root.winfo_fpixels("1i") / 96.0)
+    width = min(int(1060 * scale), root.winfo_screenwidth() - 40)
+    height = min(int(820 * scale), root.winfo_screenheight() - 100)
     root.geometry("%dx%d" % (width, height))
-    root.minsize(720, 480)
+    root.minsize(int(720 * scale), int(480 * scale))
     Workbench(root, folder)
     root.mainloop()
     return 0

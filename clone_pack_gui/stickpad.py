@@ -116,6 +116,7 @@ class StickPad(tk.Canvas):
     """The stick seen from the front, the fighter facing right: a click adds the direction under it."""
 
     def __init__(self, master, variable: tk.StringVar, settings, note=None, size: int = 150):
+        size = int(size * max(1.0, master.winfo_fpixels("1i") / 96.0))
         super().__init__(master, width=size, height=size, background=BACKGROUND,
                          highlightthickness=0, cursor="crosshair")
         self.variable = variable

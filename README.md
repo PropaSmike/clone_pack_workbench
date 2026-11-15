@@ -85,7 +85,10 @@ For a fighter:
   generator lists them in `fighter/<clone>/kirbycopy/cNN` and fills every other
   costume from what you ship; without files the engine skips the article unless
   its source fighter is in the match. A **Platform (.lvd)** file in the article's model folder
-  makes it a platform (`lvd`). **Article hurtboxes** and **Article platform
+  makes it a platform (`lvd`). Untick **run the source's scripts** for an article
+  written for Smashline's `use_original_code = false`: only your scripts run, and it
+  needs its own model and `motion_list.bin` (`original_code`). **show the source's
+  weapon kind** follows it unless you set it apart (`original_kind`). **Article hurtboxes** and **Article platform
   vertices** list each article's `[[article.hurtbox]]` and
   `[[article.lvd_vertex]]` tables.
 - **Switches with**: the one or two other clones sharing the player slot
@@ -619,6 +622,9 @@ error with its line) and checked against the folders:
   above 15 a warning;
 - a Lucas tether gets a note about its `air_catch_pose`;
 - `item_hand` on Ivysaur is an error: it has no hand bones;
+- an article with `original_code = false` and no model or `motion_list.bin` of its
+  own is a warning, and so is `original_kind = false` on a source whose scripts
+  check their own weapon kind (Toon Link's arrow, Samus's charge shot, ...);
 - a base of fighter kind 94 or above with articles is a warning: Smashline
   2.0 refuses them;
 - a `[move_list]` page without its `nam_peculiar` labels in `msg_name.xmsbt`,

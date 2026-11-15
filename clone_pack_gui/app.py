@@ -1112,8 +1112,22 @@ class IdentityPanel(ttk.Frame):
                              style="Hint.TLabel", justify="left")
         lvd_hint.grid(row=2, column=2, columnspan=2, sticky="w", pady=(4, 0))
         fields.hints.append(lvd_hint)
+        self.article_code = tk.BooleanVar(value=True)
+        self.article_kind = tk.BooleanVar(value=True)
+        source = ttk.Frame(articles)
+        source.grid(row=3, column=0, columnspan=2, sticky="w", pady=(4, 0))
+        ttk.Checkbutton(source, text="run the source's scripts", variable=self.article_code,
+                        command=self._article_code_toggled).pack(side="left")
+        ttk.Checkbutton(source, text="show the source's weapon kind",
+                        variable=self.article_kind).pack(side="left", padx=(8, 0))
+        code_hint = ttk.Label(articles, text="untick both for an article written for Smashline's "
+                                             "use_original_code = false, so only your scripts run "
+                                             "(original_code, original_kind; Smashline 2 on 13.0.5)",
+                              style="Hint.TLabel", justify="left")
+        code_hint.grid(row=3, column=2, columnspan=2, sticky="w", pady=(4, 0))
+        fields.hints.append(code_hint)
         self.article_list = tk.Listbox(articles, height=4, exportselection=False)
-        self.article_list.grid(row=3, column=0, columnspan=4, sticky="ew", pady=(6, 0))
+        self.article_list.grid(row=4, column=0, columnspan=4, sticky="ew", pady=(6, 0))
         self.article_list.bind("<<ListboxSelect>>", self.article_chosen)
         articles.columnconfigure(3, weight=1)
         self._build_article_gimmicks(frame, fields)
@@ -2645,6 +2659,15 @@ class IdentityPanel(ttk.Frame):
             return
         entry = {"owner": self.article_owner.get(), "weapon": const, "name": name,
                  "kirby_copy": bool(self.article_copy.get())}
+        code, kind = bool(self.article_code.get()), bool(self.article_kind.get())
+        if entry["kirby_copy"] and not (code and kind):
+            messagebox.showinfo(TITLE, "An article for a move Kirby copies always runs its "
+                                       "source's scripts and shows its weapon kind.")
+            return
+        if not code:
+            entry["original_code"] = False
+        if kind != code:
+            entry["original_kind"] = kind
         lvd = self.article_lvd.get().strip()
         if lvd:
             entry["lvd"] = lvd
@@ -2688,6 +2711,13 @@ class IdentityPanel(ttk.Frame):
                 self._weapons_changed()
                 self.article_weapon.set(article["weapon"])
                 self.article_copy.set(bool(article.get("kirby_copy")))
+            code = article.get("original_code", True)
+            self.article_code.set(code)
+            self.article_kind.set(article.get("original_kind", code))
+
+    def _article_code_toggled(self) -> None:
+        """original_kind follows original_code unless it is set apart."""
+        self.article_kind.set(self.article_code.get())
 
     def article_target(self) -> int | None:
         """Which article Remove means: the selected row, the last one clicked, or the
@@ -2712,10 +2742,14 @@ class IdentityPanel(ttk.Frame):
                 self.article_list.insert("end", "%s: ships files, needs a source weapon"
                                          % article.get("name"))
                 continue
-            self.article_list.insert("end", "%s from %s (%s)%s%s" % (
+            code = article.get("original_code", True)
+            kind = article.get("original_kind", code)
+            self.article_list.insert("end", "%s from %s (%s)%s%s%s%s" % (
                 article.get("name"), article.get("owner"), article.get("weapon"),
                 " on the Kirby copy" if article.get("kirby_copy") else "",
-                ", platform %s" % article["lvd"] if article.get("lvd") else ""))
+                ", platform %s" % article["lvd"] if article.get("lvd") else "",
+                ", only its own scripts" if not code else "",
+                ", its own weapon kind" if not kind else ""))
         names = [article.get("name") for article in self.articles
                  if article.get("name") and article.get("owner") and article.get("weapon")]
         for editor in (self.hurtbox_editor, self.platform_editor):

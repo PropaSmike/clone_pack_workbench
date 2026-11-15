@@ -39,7 +39,12 @@ NO_HAND_BONES = ("pfushigisou",)
 NO_SWITCH_BASES = ("popo", "nana")
 MAX_SWITCH_MEMBERS = 2
 ARTICLE_KEYS = {"name": "str", "from": "str", "base_article": "str", "kirby": "bool",
-                "lvd": "str"}
+                "lvd": "str", "original_code": "bool", "original_kind": "bool"}
+KIND_CHECKING_SOURCES = ("toonlink/bowarrow", "younglink/bowarrow", "pit/bowarrow", "pitb/bowarrow",
+                         "samus/cshot", "samusd/cshot", "pikachu/dengeki", "pichu/dengeki",
+                         "simon/whip", "richter/whip", "murabito/flowerpot", "murabito/balloon",
+                         "murabito/tomnook", "shizue/pot", "shizue/balloon", "shizue/tomnook",
+                         "ryu/hadoken", "tantan/spiralleft", "tantan/spiralright")
 LVD_VERTEX_KEYS = {"vertex": "int", "joint": "str", "offset": "vec3", "joint_left": "str"}
 MAX_LVD_VERTICES = 32
 MAX_LVD_VERTEX_INDEX = 0xFFFF
@@ -505,6 +510,10 @@ def check(fighter):
             problems.append("article %s has both from and base_article" % article.get("name"))
         if source and (source.count("/") != 1 or not all(source.split("/"))):
             problems.append("article %s: from must be \"fighter/weapon\"" % article.get("name"))
+        if ("original_code" in article or "original_kind" in article) and (
+                not source or article.get("kirby")):
+            problems.append("article %s: original_code and original_kind need from = \"fighter/weapon\" "
+                            "and no kirby = true" % article.get("name"))
         problems += hurtbox_problems(article)
         problems += lvd_problems(article)
     kirby = fighter.get("kirby")
@@ -550,6 +559,14 @@ def check(fighter):
             problems.append("command %s is declared twice" % command["name"])
         seen.add(command["name"])
     return problems
+
+
+def runs_original_code(article):
+    return article.get("original_code", True)
+
+
+def shows_original_kind(article):
+    return article.get("original_kind", runs_original_code(article))
 
 
 def hurtbox_problems(article):

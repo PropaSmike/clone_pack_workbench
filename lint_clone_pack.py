@@ -129,11 +129,24 @@ def check_fighter_manifest(mod_dir, shipped, vanilla):
         for article in fighter["articles"]:
             owner = "kirby" if article.get("kirby") else name
             folder = f"fighter/{owner}/model/{article.get('name')}/"
+            blank = not fighter_manifest.runs_original_code(article)
             if not any(p.startswith(folder) for p in shipped):
                 consequence = ("the engine skips it on Kirby unless its source fighter is in the match"
-                               if article.get("kirby") else "its model is the source's")
+                               if article.get("kirby") else
+                               "with original_code = false it has no model" if blank else
+                               "its model is the source's")
                 findings.append(("WARN", f"fighter.toml: article {article.get('name')!r} has no "
                                          f"files under {folder}; {consequence}"))
+            motion = f"fighter/{owner}/motion/{article.get('name')}/c00/motion_list.bin"
+            if blank and motion not in shipped:
+                findings.append(("WARN", f"fighter.toml: article {article.get('name')!r} has "
+                                         f"original_code = false and no {motion}; it plays no motions"))
+            if (article.get("from") in fighter_manifest.KIND_CHECKING_SOURCES
+                    and fighter_manifest.runs_original_code(article)
+                    and not fighter_manifest.shows_original_kind(article)):
+                findings.append(("WARN", f"fighter.toml: article {article.get('name')!r} runs "
+                                         f"{article['from']}'s scripts with original_kind = false; those "
+                                         "scripts check their own weapon kind and can misbehave"))
         kirby = fighter.get("kirby")
         if kirby and kirby.get("statuses", 0) > 0 and not any(
                 p.startswith(f"fighter/{name}/model/kirbycopy/") or

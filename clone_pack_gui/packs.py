@@ -291,6 +291,12 @@ def fighter_article_lines(articles, base_articles=(), children=None) -> list[str
                 "%-13s = %s" % ("from", format_value("%s/%s" % (owner, weapon_short_name(owner, weapon))))]
         if article.get("kirby_copy"):
             out.append("%-13s = %s" % ("kirby", "true"))
+        code = article.get("original_code", True)
+        kind = article.get("original_kind", code)
+        if not code:
+            out.append("%-13s = %s" % ("original_code", "false"))
+        if kind != code:
+            out.append("%-13s = %s" % ("original_kind", "true" if kind else "false"))
         if article.get("lvd"):
             out.append("%-13s = %s" % ("lvd", format_value(article["lvd"])))
         child = (children or {}).get(name, {})
@@ -537,6 +543,9 @@ def fighter_manifest_from_lines(lines: list[str]) -> dict:
                          "kirby_copy": bool(found.get("kirby"))}
                 if found.get("lvd"):
                     entry["lvd"] = str(found["lvd"])
+                for key in ("original_code", "original_kind"):
+                    if isinstance(found.get(key), bool):
+                        entry[key] = found[key]
                 articles.append(entry)
             elif found.get("name") and found.get("base_article"):
                 base_articles.append({"name": found["name"],

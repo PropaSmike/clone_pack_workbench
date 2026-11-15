@@ -327,6 +327,14 @@ def fighter_manifest_lines(state: dict, constant: str) -> list[str]:
             lines.append("    .kirby_article(%s%s%s, %s%s%s) // article for Kirby's copy, from that vanilla weapon; files in fighter/kirby/model/%s and motion/%s" % (q, name, q, q, source, q, name, name))
         else:
             lines.append("    .article(%s%s%s, %s%s%s) // fighter/%s/model/%s, copied from that vanilla weapon" % (q, name, q, q, source, q, resource, name))
+            code = article.get("original_code", True)
+            kind = article.get("original_kind", code)
+            if not code:
+                lines.append("    .article_original_code(%s%s%s, false) // only your scripts run, like Smashline's use_original_code = false" % (q, name, q))
+            if kind != code:
+                lines.append("    .article_original_kind(%s%s%s, %s) // %s" % (
+                    q, name, q, "true" if kind else "false",
+                    "the game still sees the source's weapon kind" if kind else "the game sees the article's own weapon kind"))
     for article in state.get("base_articles") or []:
         if article.get("name") and article.get("base_article"):
             lines.append("    .base_article(%s%s%s, %s%s%s) // renames the base's own article into fighter/%s/model/%s"

@@ -28,6 +28,7 @@ RDW_ALLCHILDREN = 0x80
 RDW_UPDATENOW = 0x100
 UNITS_PER_PAGE = 9
 WHEEL_CLASSES = ("Listbox", "Text", "Treeview")
+DETAIL_WIDTH = 300
 KINDS =(packs.FIGHTER, packs.ITEM, packs.STAGE, packs.MENU, packs.MII, packs.ENEMY)
 PARAM_TABLES = ("fighter_param", "param_motion", "common", "param_thrown", "vl.prc")
 ITEM_PRC_SURFACE = "param.prc"
@@ -4052,7 +4053,7 @@ class VtablePanel(ttk.Frame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
         bar = ttk.Frame(self)
-        bar.grid(row=0, column=0, sticky="ew")
+        bar.grid(row=0, column=0, columnspan=2, sticky="ew")
         bar.columnconfigure(1, weight=1)
         ttk.Label(bar, text="Table").grid(row=0, column=0, padx=(0, 6))
         self.table_var = tk.StringVar()
@@ -4075,10 +4076,14 @@ class VtablePanel(ttk.Frame):
         self.sheet.tree.bind("<Leave>", lambda _: self.show(self.focused()), add="+")
         self.shown_table: str | None = None
         self.showing: int | None = -1
-        self.detail = ttk.Label(self, justify="left", text="")
-        self.detail.grid(row=2, column=0, sticky="w", pady=(0, 6))
+        side_width = int(DETAIL_WIDTH * max(1.0, self.winfo_fpixels("1i") / 96.0))
+        side = ttk.LabelFrame(self, text="Entry", padding=6, width=side_width)
+        side.grid(row=1, column=1, sticky="ns", padx=(8, 0), pady=(8, 4))
+        side.grid_propagate(False)
+        self.detail = ttk.Label(side, justify="left", text="", wraplength=side_width - 24)
+        self.detail.grid(row=0, column=0, sticky="nw")
         buttons = ttk.Frame(self)
-        buttons.grid(row=3, column=0, sticky="ew")
+        buttons.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(6, 0))
         ttk.Button(buttons, text="Hook selected", command=lambda: self.set_picked(True)).pack(side="left")
         ttk.Button(buttons, text="Unhook selected", command=lambda: self.set_picked(False)).pack(side="left", padx=4)
         ttk.Button(buttons, text="Unhook this table", command=self.clear_table).pack(side="left")
@@ -4106,8 +4111,8 @@ class VtablePanel(ttk.Frame):
             "listed but not offered. Addresses are main 13.0.4 offsets for the base. The "
             "fighter and weapon addresses, slot names and notes are incredibleplays' "
             "smash-vtables." % vtables.SMASHLINE_NEEDS))
-        self.note.grid(row=4, column=0, sticky="w", pady=(6, 0))
-        wrap_within(self, [self.detail, self.summary, self.note])
+        self.note.grid(row=4, column=0, columnspan=2, sticky="w", pady=(6, 0))
+        wrap_within(self, [self.summary, self.note])
 
     def kind(self) -> str:
         return self.app.kind.get()
@@ -4200,8 +4205,8 @@ class VtablePanel(ttk.Frame):
             self.detail.configure(text="Select or point at an entry to read all of it.")
             return
         row = self.rows[index]
-        head = [row["name"], "slot %s" % row["slot"], row["address"]]
-        lines = ["   ".join(part for part in head if part), row["signature"]]
+        lines = [part for part in (row["name"], "slot %s" % row["slot"], row["address"], row["signature"])
+                 if part]
         if row["offered"]:
             lines.append("Written as %s" % row["via"])
         if row["note"]:

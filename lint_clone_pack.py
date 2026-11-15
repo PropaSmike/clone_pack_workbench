@@ -164,6 +164,9 @@ def check_fighter_manifest(mod_dir, shipped, vanilla):
             findings.append(("ERROR", "fighter.toml: staffroll = true but "
                                       f"standard/staffroll/texture/standard_staffroll_{name}.nutexb "
                                       "is not shipped"))
+        if fighter.get("item_hand") and fighter.get("base") in fighter_manifest.NO_HAND_BONES:
+            findings.append(("ERROR", "fighter.toml: item_hand on %s: it has no HaveL or HaveR "
+                                      "bone, so the engine refuses the key" % fighter.get("base")))
         if fighter.get("jingle"):
             findings.append(("WARN", "fighter.toml: jingle is accepted by the engine but not "
                                      "served yet; the base's victory theme plays"))

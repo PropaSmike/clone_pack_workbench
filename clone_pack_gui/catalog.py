@@ -93,6 +93,12 @@ class Catalog:
         return sorted((int(kind), name)
                       for kind, name in self._table("fighter_kinds.tsv", ("kind", "name")))
 
+    def item_hands(self) -> dict[str, dict]:
+        """Each roster fighter's item hold bones by name: hold, hold2, other, side, side2, battering."""
+        columns = ("name", "hold", "hold2", "other", "side", "side2", "battering")
+        return {row[0]: dict(zip(columns[1:], row[1:]))
+                for row in self._table("item_hands.tsv", columns)}
+
     def fighter_bases(self) -> list[tuple[int, str]]:
         """The 94 roster fighters, the only sane bases for a clone."""
         return [(kind, name) for kind, name in self.fighter_kinds()

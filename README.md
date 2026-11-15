@@ -228,6 +228,27 @@ Pick a table, click a field, type a value, Add. Which syntax each table takes:
 Lists inside `vl.prc` (`hit_data`, ...) are not rules: ship your own
 `vl.prc` under every costume.
 
+### Item hand
+
+The hand the current fighter holds, throws and swings items in
+(`item_hand`): the base's, left (`HaveL`) or right (`HaveR`). It says which
+hand the base uses and lists each bone the engine changes: held items, the
+second grip, the other hand some bases name (Link, Toon Link, Hero, Byleth,
+Steve) and the hitboxes of swung items (`commonhave`). A base that holds items
+in its mouth takes the hand picked; Ivysaur, with no hand bones, is refused.
+**Write fighter.toml** writes it; the Rust tab's Manifest gets `.item_hand()`.
+
+### Gallery
+
+The menu.toml `[[gallery]]` and `[[gallery_item]]` rows of the pack: pages of
+3D models on the modes page (`docs/wiki/MENUS.md`, Galleries). A gallery has
+an id, a name, a description, an order and music (song ids from the CSK music
+databases in this pack and the packs beside it). An item is a fighter, a clone
+of this pack or a vanilla one, in a costume, with a name, a text, a group and
+sources; `\n` starts a new line. Items show in the order listed: **Move up**
+and **Move down** reorder them. The rows share menu.toml with the Identity
+tab's menu rows; a grid skin is a `[[layout]]` with `scene = "gallery"` there.
+
 ### Lint
 
 Runs the checker and lists what it found.
@@ -596,6 +617,7 @@ error with its line) and checked against the folders:
   other than `nana_delay` and `nana_opt_dst` gets a note, and a `nana_delay`
   above 15 a warning;
 - a Lucas tether gets a note about its `air_catch_pose`;
+- `item_hand` on Ivysaur is an error: it has no hand bones;
 - a base of fighter kind 94 or above with articles is a warning: Smashline
   2.0 refuses them;
 - a `[move_list]` page without its `nam_peculiar` labels in `msg_name.xmsbt`,
@@ -660,6 +682,9 @@ python lint_menu_pack.py "path/to/your/mod folder"
 - Popup rows another pack also adds, popup booleans that are not `true` or
   `false`, movie paths past 62 bytes and `.lua` files in the pack are
   reported.
+- `[[gallery]]` and `[[gallery_item]]` follow the engine's limits (names 64
+  bytes, text 1024, group 64, sources 256, costume 255, music a song id); an
+  item whose gallery no installed pack declares is a warning.
 
 ## lint_mii_pack.py
 

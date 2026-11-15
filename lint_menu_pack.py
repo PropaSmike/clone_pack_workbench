@@ -29,6 +29,7 @@ GALLERY_SCENE = "gallery"
 GALLERY_RUNS_AS = 0x04050000
 MAX_GALLERY_TEXT = 1024
 MAX_GALLERY_COSTUME = 255
+MAX_GALLERY_SOURCES = 256
 MAIN_MENU_LAYOUT = "ui/layout/menu/main_menu/main_menu/layout.arc"
 BNTX_ALIGNMENT = 4096
 HUB_PATCH = ("menu/main/main_menu_layer_top", "menu/clone_engine/ce_top")
@@ -89,8 +90,9 @@ KEYS = {
     "mode": {"id": "text", "name": "text", "description": "text", "script": "text", "button": "text",
              "runs_as": "mode", "scene": "text", "order": "number", "skip": "texts",
              "after_battle": "text"},
-    "gallery": {"id": "text", "name": "text", "description": "text", "order": "number"},
-    "gallery_item": {"gallery": "text", "fighter": "text", "costume": "number", "name": "text", "text": "text"},
+    "gallery": {"id": "text", "name": "text", "description": "text", "order": "number", "music": "text"},
+    "gallery_item": {"gallery": "text", "fighter": "text", "costume": "number", "name": "text", "text": "text",
+                     "group": "text", "sources": "text"},
 }
 TABLES = tuple(KEYS)
 SKIPS = ("rules", "stage_select")
@@ -307,8 +309,22 @@ def finish(block):
         body = values.get("text", "").strip().replace("\\n", "\n")
         if len(body.encode("utf8")) > MAX_GALLERY_TEXT:
             raise MenuError(line, "text is %d bytes, more than %d" % (len(body.encode("utf8")), MAX_GALLERY_TEXT))
-        return {"gallery": gallery, "fighter": fighter, "costume": costume, "name": name, "text": body}
+        group = values.get("group", "").strip()
+        if len(group.encode("utf8")) > MAX_MODE_NAME:
+            raise MenuError(line, "group is %d bytes, more than %d" % (len(group.encode("utf8")), MAX_MODE_NAME))
+        sources = values.get("sources", "").strip().replace("\\n", "\n")
+        if len(sources.encode("utf8")) > MAX_GALLERY_SOURCES:
+            raise MenuError(line, "sources is %d bytes, more than %d"
+                            % (len(sources.encode("utf8")), MAX_GALLERY_SOURCES))
+        return {"gallery": gallery, "fighter": fighter, "costume": costume, "name": name, "text": body,
+                "group": group, "sources": sources}
     if table == "gallery":
+        if "music" in values:
+            music = values["music"].strip().lower()
+            if not music or len(music) > MAX_MODE_NAME or not all(
+                    ch.isascii() and (ch.isalnum() or ch == "_") for ch in music):
+                raise MenuError(line, 'music "%s" must be a song id (ui_bgm_..., letters, digits and _, '
+                                      "up to %d)" % (values["music"], MAX_MODE_NAME))
         values = dict(values, runs_as=GALLERY_RUNS_AS)
     identifier = need("id").strip()
     if not valid_mode_id(identifier):
@@ -579,6 +595,7 @@ def check_registry(mod_dir):
     own = os.path.normcase(os.path.abspath(mod_dir))
     sequences, modes, layouts, patches, preloads = {}, [], set(), [], 0
     sequence_ids = {}
+    galleries, items = set(), []
     for name, path in sibling_menus(mod_dir):
         tables = read_tables(os.path.join(path, "menu.toml"))
         if tables is None:
@@ -586,6 +603,10 @@ def check_registry(mod_dir):
         mine = os.path.normcase(os.path.abspath(path)) == own
         for table in tables:
             kind = table["table"]
+            if kind == "gallery":
+                galleries.add(table["id"])
+            elif kind == "gallery_item" and mine:
+                items.append(table)
             if kind == "sequence":
                 key = (table["runs_as"], table["scene"])
                 owner = sequence_ids.get(table["id"]) if table["id"] else None
@@ -670,6 +691,10 @@ def check_registry(mod_dir):
                                  % (mode["id"], MAX_SEQUENCES)))
             continue
         sequences.setdefault(code, ((mode["runs_as"], mode["scene"]), mode["pack"]))
+    for item in items:
+        if item["gallery"] not in galleries:
+            findings.append(("WARN", 'gallery item "%s": no installed pack declares gallery "%s", so it '
+                                     "shows nowhere" % (item["name"], item["gallery"])))
     mine = [mode for mode in modes if mode["mine"]]
     if mine:
         findings.append(("INFO", "modes page rows: %s" % ", ".join(

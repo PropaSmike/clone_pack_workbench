@@ -23,7 +23,7 @@ ENEMY = "enemy"
 UNKNOWN = "unknown"
 KINDS = (FIGHTER, ITEM, STAGE, MENU, MII, ENEMY)
 MENU_MANIFEST = "menu.toml"
-MENU_TABLES = ("mode", "sequence", "layout", "preload", "patch")
+MENU_TABLES = ("mode", "sequence", "layout", "preload", "patch", "gallery", "gallery_item")
 MII_MANIFEST = "mii.toml"
 ENEMY_MANIFEST = "enemy.toml"
 ENEMY_KEYS = ("name", "base")
@@ -65,8 +65,9 @@ STAGE_TABLES = ("ladder", "barrel", "spring", "door")
 STAGE_LIST_KEYS = ("dynamic_collisions", "paused_motions")
 FIGHTER_KEYS = ("name", "base", "display_name", "costumes", "color_start", "series",
                 "disp_order", "narration", "staffroll", "css", "ui_chara", "fighter_kind_name",
-                "owns_param_resources", "partner", "switch")
+                "owns_param_resources", "partner", "switch", "item_hand")
 FIGHTER_MANIFEST = "fighter.toml"
+FIGHTER_KEYS_CLEARED_WHEN_BLANK = ("item_hand",)
 COMMANDS_KEYS = ("vanilla", "special_command_life_max", "super_special_command_life_max",
                  "special_command_ab_button_life", "special_command_neutral_threshold",
                  "special_command_stick_range")
@@ -157,6 +158,8 @@ def fighter_manifest_values(state: dict) -> dict:
         values["disp_order"] = state["disp_order"]
     if state.get("staffroll"):
         values["staffroll"] = True
+    if str(state.get("item_hand") or "").strip() in ("left", "right"):
+        values["item_hand"] = str(state["item_hand"]).strip()
     if state.get("own_css"):
         values["css"] = False
     if state.get("owns_param_resources"):
@@ -425,7 +428,8 @@ def write_fighter_manifest(path: Path, state: dict) -> list[str]:
             continue
         else:
             others.append((header, body))
-    head, written = merge_lines(head + fighter_lines, values, FIGHTER_KEYS)
+    cleared = [key for key in FIGHTER_KEYS_CLEARED_WHEN_BLANK if key in state and key not in values]
+    head, written = merge_lines(drop_assignments(head + fighter_lines, cleared), values, FIGHTER_KEYS)
     while head and not head[-1].strip():
         head.pop()
     out = list(head)
@@ -584,7 +588,7 @@ def fighter_manifest_from_lines(lines: list[str]) -> dict:
         state["color_start"] = values["color_start"]
     for key in ("display_name", "series", "narration", "ui_chara", "fighter_kind_name",
                 "disp_order", "staffroll", "owns_param_resources", "kirby_statuses",
-                "kirby_copy_full_model", "save_no", "exhibit_year", "jingle"):
+                "kirby_copy_full_model", "save_no", "exhibit_year", "jingle", "item_hand"):
         if key in values:
             state[key] = values[key]
     if "css" in values:
@@ -783,6 +787,30 @@ def menu_namespace(folder: Path, rows: dict | None = None) -> str:
     return ""
 
 
+MUSIC_ID_RE = re.compile(r'"ui_bgm_id"\s*:\s*"(ui_bgm_[a-z0-9_]+)"')
+
+
+def music_ids(folder: Path) -> list[str]:
+    """Every song id a CSK music database (database/*.json) declares in this pack or one beside it."""
+    folder = Path(folder)
+    roots = [folder]
+    try:
+        roots += sorted(entry for entry in folder.parent.iterdir() if entry.is_dir() and entry != folder)
+    except OSError:
+        pass
+    found: set[str] = set()
+    for root in roots:
+        database = root / "database"
+        if not database.is_dir():
+            continue
+        for path in database.glob("*.json"):
+            try:
+                found.update(MUSIC_ID_RE.findall(path.read_text(encoding="utf-8", errors="replace").lower()))
+            except OSError:
+                continue
+    return sorted(found)
+
+
 def read_menu_manifest(folder: Path) -> dict:
     """The pack's one menu part: the namespace its scripts use and every table of menu.toml."""
     path = Path(folder) / MENU_MANIFEST
@@ -874,6 +902,14 @@ def read_manifest(path: Path) -> dict:
     """The first declaration, for a caller that handles one part."""
     found = read_manifests(path)
     return found[0] if found else {}
+
+
+def drop_assignments(lines: list[str], keys) -> list[str]:
+    """These keys' lines removed, every other line kept."""
+    if not keys:
+        return lines
+    return [line for line in lines
+            if not ((match := ASSIGN_RE.match(line)) and match.group(1) in keys)]
 
 
 def merge_lines(lines: list[str], values: dict, order=()) -> tuple[list[str], set]:

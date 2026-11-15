@@ -53,6 +53,8 @@ ORDERS = {
     "layout": ("scene", "file", "over_side_panel", "under_movies"),
     "preload": ("after", "files"),
     "patch": ("module", "script", "root"),
+    "gallery": ("id", "name", "description", "order", "music"),
+    "gallery_item": ("gallery", "fighter", "costume", "name", "text", "group", "sources"),
     "mii_hat": ("id", "base", "model_type", "hair_model_types", "owned", "disp_order", "swing", "is_patch"),
     "mii_outfit": ("id", "fighter", "base", "gender", "name", "owned", "disp_order", "swing", "is_patch"),
 }
@@ -75,7 +77,7 @@ HEADERS = {
     "tether_box": "[[tether.box]]",
 }
 STAGE_TABLES = ("ladder", "barrel", "spring", "door")
-MENU_TABLES = ("mode", "sequence", "layout", "preload", "patch")
+MENU_TABLES = ("mode", "sequence", "layout", "preload", "patch", "gallery", "gallery_item")
 MII_TABLES = ("mii_hat", "mii_outfit")
 for _table in STAGE_TABLES + MENU_TABLES + MII_TABLES:
     HEADERS[_table] = "[[%s]]" % _table
@@ -176,12 +178,19 @@ def is_plain(table: str, key: str) -> bool:
     return key in PLAIN_KEYS and table not in STAGE_TABLES + MENU_TABLES + MII_TABLES
 
 
+def toml_string(text: str) -> str:
+    """Text as one TOML string: kept when it is one already, else quoted with its own quotes escaped."""
+    if len(text) >= 2 and text[0] == text[-1] == '"' and not re.search(r'(?<!\\)"', text[1:-1]):
+        return text
+    return '"%s"' % re.sub(r'(?<!\\)"', r'\\"', text)
+
+
 def to_toml(table: str, key: str, text: str) -> str:
     """What the panel shows for one key, as fighter.toml writes it."""
     text = text.strip()
     kind = schema(table).get(key, "str")
     if kind in TEXT_KINDS:
-        return text if text.startswith('"') else '"%s"' % text
+        return toml_string(text)
     if kind in LIST_KINDS and not text.startswith("["):
         return "[%s]" % text
     if kind in TEXT_LIST_KINDS and not text.startswith("["):

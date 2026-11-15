@@ -312,6 +312,8 @@ def fighter_manifest_lines(state: dict, constant: str) -> list[str]:
             lines.append("    .%s(%s%s%s) // overrides the name derived from name" % (key, q, state[key], q))
     if state.get("staffroll"):
         lines.append("    .staffroll() // the pack's credits picture")
+    if str(state.get("item_hand") or "").strip() in ("left", "right"):
+        lines.append("    .item_hand(%s%s%s) // the hand that holds items" % (q, str(state["item_hand"]).strip(), q))
     if state.get("jingle"):
         lines.append("    .jingle(%s%s%s) // victory theme; accepted, not served yet" % (q, state["jingle"], q))
     if state.get("owns_param_resources"):

@@ -9,7 +9,7 @@ FIGHTER_KEYS = {
     "series": "str", "disp_order": "int", "save_no": "int", "exhibit_year": "int",
     "narration": "str", "staffroll": "bool", "css": "bool", "jingle": "str",
     "owns_param_resources": "bool", "effect_namespace": "int", "article_namespace": "int",
-    "partner": "partner", "switch": "list",
+    "partner": "partner", "switch": "list", "item_hand": "hand",
 }
 PARTNER_PARAMS = {
     "jostle_data_nana.speed_x_gg": "float", "jostle_data_nana.speed_x_ga": "float",
@@ -34,6 +34,8 @@ PARTNER_PARAMS = {
     "final_scroll_rate_change_frame": "int",
 }
 PARTNER_BASES = ("popo",)
+ITEM_HANDS = ("left", "right")
+NO_HAND_BONES = ("pfushigisou",)
 NO_SWITCH_BASES = ("popo", "nana")
 MAX_SWITCH_MEMBERS = 2
 ARTICLE_KEYS = {"name": "str", "from": "str", "base_article": "str", "kirby": "bool",
@@ -148,6 +150,11 @@ def parse_scalar(text, kind, line, key):
         if text in ("true", "false"):
             return text == "true"
         raise ManifestError(line, '%s must be true, false or a fighter\'s name in quotes' % key)
+    if kind == "hand":
+        hand = parse_scalar(text, "str", line, key)
+        if hand in ITEM_HANDS:
+            return hand
+        raise ManifestError(line, '%s must be "left" or "right"' % key)
     if kind == "int":
         try:
             return int(text, 0)

@@ -27,6 +27,7 @@ TITLE = "Clone Pack Workbench"
 RDW_ALLCHILDREN = 0x80
 RDW_UPDATENOW = 0x100
 UNITS_PER_PAGE = 9
+WHEEL_CLASSES = ("Listbox", "Text", "Treeview")
 KINDS =(packs.FIGHTER, packs.ITEM, packs.STAGE, packs.MENU, packs.MII, packs.ENEMY)
 PARAM_TABLES = ("fighter_param", "param_motion", "common", "param_thrown", "vl.prc")
 ITEM_PRC_SURFACE = "param.prc"
@@ -82,12 +83,40 @@ NAMED_KEYS = ("resource_name", "place", "ui_chara", "fighter_kind_name", "displa
               "agent_name", "ui_id", "id_name")
 
 
+def chain_mouse_wheel(root: tk.Misc) -> None:
+    """A list, table or text box scrolls under the wheel while it has more to show that way,
+    then the page around it does; a dropdown never changes its value under the wheel. Tk's
+    own bindings stop the page at every box and turn dropdowns."""
+    if root.tk.call("info", "exists", "::clone_pack_wheel") == 1:
+        return
+    root.tk.call("set", "::clone_pack_wheel", 1)
+
+    def inner(event, script: str):
+        path = str(event.widget)
+        try:
+            first, last = (float(value) for value in root.tk.splitlist(root.tk.call(path, "yview")))
+        except (tk.TclError, ValueError):
+            return None
+        if (event.delta > 0 and first > 0.0) or (event.delta < 0 and last < 1.0):
+            root.tk.eval(script.replace("%W", path).replace("%D", str(event.delta)))
+            return "break"
+        return None
+
+    for widget_class in WHEEL_CLASSES:
+        script = root.bind_class(widget_class, "<MouseWheel>")
+        if script:
+            root.bind_class(widget_class, "<MouseWheel>",
+                            lambda event, script=script: inner(event, script))
+    root.bind_class("TCombobox", "<MouseWheel>", lambda event: None)
+
+
 class Workbench(ttk.Frame):
     """The whole window. Panels read and write self.state and call self.log."""
 
     def __init__(self, master: tk.Misc, folder: str | None = None):
         super().__init__(master, padding=8)
         self.master.title(TITLE)
+        chain_mouse_wheel(self.master)
         self.catalog = Catalog()
         self.folder: Path | None = None
         self.sections: dict = {kind: [{}] for kind in packs.KINDS}
@@ -776,8 +805,6 @@ class Scrolled(ttk.Frame):
             self.canvas.unbind_all(sequence)
 
     def wheel(self, event) -> None:
-        if isinstance(event.widget, (tk.Text, tk.Listbox, ttk.Treeview, ttk.Combobox)):
-            return
         if not self.overflows():
             return
         self.units += -1 if getattr(event, "num", None) == 4 or getattr(event, "delta", 0) > 0 else 1

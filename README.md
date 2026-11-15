@@ -103,6 +103,13 @@ For a fighter:
 - **Glide**: Brawl's glide with Meta Knight's, Pit's or Charizard's values,
   written into the plugin and saved in `clone_pack_gui.json`. It starts from
   the float's input, so ticking one clears the other.
+- **Item hand**: the hand the fighter holds, throws and swings items in
+  (`item_hand`): the base's, left (`HaveL`) or right (`HaveR`). It says which
+  hand the base uses and lists each bone the engine changes: held items, the
+  second grip, the other hand some bases name (Link, Toon Link, Hero, Byleth,
+  Steve) and the hitboxes of swung items (`commonhave`). A base that holds
+  items in its mouth takes the hand picked; Ivysaur, with no hand bones, is
+  refused.
 - **Tether**: a donor's air tether and ledge grab (`[tether]`) and ledge
   boxes of your own (`[[tether.box]]`). It names the donor articles to mint.
 - **HUD**: a borrowed HUD or the pack's own layout (`[hud]`).
@@ -143,6 +150,14 @@ For a menu:
 - **Modes**, **Sequences** (`[[sequence]]`), **Layouts**, **Preloads** and
   **Script patches**: a table each. **Write menu.toml** rewrites them,
   keeping only the comments above the first.
+- **Galleries** and **Gallery items** (`[[gallery]]`, `[[gallery_item]]`):
+  pages of 3D models on the modes page (`docs/wiki/MENUS.md`, Galleries). A
+  gallery has an id, a name, a description, an order and music (song ids from
+  the CSK music databases in this pack and the packs beside it). An item is a
+  fighter, a clone of this pack or a vanilla one, in a costume, with a name,
+  a text, a group and sources; `\n` starts a new line. Items show in the
+  order listed: **Move up** and **Move down** reorder them. A grid skin is a
+  layout with `scene = "gallery"`.
 - **Runs as** is one of the game's modes by name: `melee_normal` (Smash),
   `other_training` (Training) and the rest in the engine's
   `docs/wiki/MENUS.md`. A sequence needs only an **Id**; the engine picks
@@ -227,27 +242,6 @@ Pick a table, click a field, type a value, Add. Which syntax each table takes:
 
 Lists inside `vl.prc` (`hit_data`, ...) are not rules: ship your own
 `vl.prc` under every costume.
-
-### Item hand
-
-The hand the current fighter holds, throws and swings items in
-(`item_hand`): the base's, left (`HaveL`) or right (`HaveR`). It says which
-hand the base uses and lists each bone the engine changes: held items, the
-second grip, the other hand some bases name (Link, Toon Link, Hero, Byleth,
-Steve) and the hitboxes of swung items (`commonhave`). A base that holds items
-in its mouth takes the hand picked; Ivysaur, with no hand bones, is refused.
-**Write fighter.toml** writes it; the Rust tab's Manifest gets `.item_hand()`.
-
-### Gallery
-
-The menu.toml `[[gallery]]` and `[[gallery_item]]` rows of the pack: pages of
-3D models on the modes page (`docs/wiki/MENUS.md`, Galleries). A gallery has
-an id, a name, a description, an order and music (song ids from the CSK music
-databases in this pack and the packs beside it). An item is a fighter, a clone
-of this pack or a vanilla one, in a costume, with a name, a text, a group and
-sources; `\n` starts a new line. Items show in the order listed: **Move up**
-and **Move down** reorder them. The rows share menu.toml with the Identity
-tab's menu rows; a grid skin is a `[[layout]]` with `scene = "gallery"` there.
 
 ### Lint
 

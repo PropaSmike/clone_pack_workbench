@@ -165,16 +165,13 @@ class Workbench(ttk.Frame):
         self.identity = IdentityPanel(self.tabs, self)
         self.files = FilesPanel(self.tabs, self)
         self.params = ParamsPanel(self.tabs, self)
-        self.item_hand = ItemHandPanel(self.tabs, self)
-        self.gallery = GalleryPanel(self.tabs, self)
         self.lint = LintPanel(self.tabs, self)
         self.optimize = OptimizePanel(self.tabs, self)
         self.vtables = VtablePanel(self.tabs, self)
         self.rust = RustPanel(self.tabs, self)
         self.help_tab = ttk.Frame(self.tabs)
         for panel, label in ((self.identity, "Identity"), (self.files, "Files"),
-                             (self.params, "Parameters"), (self.item_hand, "Item hand"),
-                             (self.gallery, "Gallery"), (self.lint, "Lint"),
+                             (self.params, "Parameters"), (self.lint, "Lint"),
                              (self.optimize, "Optimize"), (self.vtables, "Vtables"),
                              (self.rust, "Rust"), (self.help_tab, "Help")):
             self.tabs.add(panel, text=label)
@@ -193,10 +190,6 @@ class Workbench(ttk.Frame):
                 self.identity.sync()
             if chosen == str(self.vtables):
                 self.vtables.load()
-            elif chosen == str(self.item_hand):
-                self.item_hand.load()
-            elif chosen == str(self.gallery):
-                self.gallery.load()
 
     def show_guide(self) -> None:
         if self.guide is not None and self.guide.winfo_exists():
@@ -485,8 +478,6 @@ class Workbench(ttk.Frame):
         self.params.show(self.kind.get())
         self.params.load()
         self.vtables.load()
-        self.item_hand.load()
-        self.gallery.load()
         self.rust.refresh()
 
     def add_kind(self) -> None:
@@ -982,6 +973,8 @@ class IdentityPanel(ttk.Frame):
         kind = self.app.kind.get()
         before = (self.app.state.get("base_kind"), packs.identity(self.app.state, kind))
         self.collect(quiet=True)
+        if kind == packs.FIGHTER:
+            self.item_hand.show()
         after = (self.app.state.get("base_kind"), packs.identity(self.app.state, kind))
         self.app.refresh_parts()
         if before != after:
@@ -1083,6 +1076,8 @@ class IdentityPanel(ttk.Frame):
         self._build_commands(frame, fields)
         self._build_float(frame, fields)
         self._build_glide(frame, fields)
+        self.item_hand = ItemHandBox(frame, self.app)
+        self._place(frame, fields, self.item_hand)
         self._build_tether(frame, fields)
         self._build_hud(frame, fields)
         fields.entry("move_list_pages", "Move list pages", width=6,
@@ -1901,7 +1896,7 @@ class IdentityPanel(ttk.Frame):
              None, lambda row: row.get("file"), 2,
              "main_menu: the main menu builds this layout too; Lua finds it in LayoutRootList, named "
              "after its main .bflyt. Up to 16 installed in all. gallery: a grid skin for the galleries "
-             "(Gallery tab; MENUS.md, Skins)"),
+             "(Galleries below; MENUS.md, Skins)"),
             ("preload", "Preloads", [Field("after", "After", 48), Field("files", "Files", 48)],
              None, None, 2, "whenever the game requests After, it requests Files too (paths under ui/)"),
             ("patch", "Script patches", [
@@ -1917,6 +1912,10 @@ class IdentityPanel(ttk.Frame):
                                  on_change=self.changed, per_row=per_row, hint=hint)
             self._place(frame, fields, editor)
             self.menu_editors[table] = editor
+        self.gallery = GallerySection(frame, self.app, self.changed)
+        self._place(frame, fields, self.gallery)
+        self.menu_editors["gallery"] = self.gallery.galleries
+        self.menu_editors["gallery_item"] = self.gallery.items
         self._build_menu_presets(frame, fields)
         fields.buttons((
             ("Write menu.toml", self.write_menu_toml),
@@ -2463,10 +2462,12 @@ class IdentityPanel(ttk.Frame):
         for table, editor in self.menu_editors.items():
             editor.set_rows((menu.get("tables") or {}).get(table) or [])
         self.refresh_menu_choices()
+        self.gallery.refresh()
         mii = self.app.part(packs.MII)
         for table, editor in self.mii_editors.items():
             editor.set_rows((mii.get("tables") or {}).get(table) or [])
         self.refresh_mii_choices()
+        self.item_hand.load()
 
     def collect(self, quiet: bool = False) -> dict:
         """Read every field of the visible form into the shared state. A field
@@ -3617,25 +3618,22 @@ ITEM_HAND_NOTE = (
     "The engine moves this fighter's held and thrown items, and the hitboxes of swung items, to the "
     "hand picked; the base keeps its own, in the same match too. The base's animations still close "
     "its own hand around the grip, so animate the other hand for a clean grip. Every base but Ivysaur "
-    "has HaveL and HaveR; a skeleton of your own needs the bone. Saved as fighter.toml item_hand and "
-    "the Manifest's .item_hand() on the Rust tab.")
+    "has HaveL and HaveR; a skeleton of your own needs the bone. fighter.toml item_hand, the "
+    "Manifest's .item_hand() on the Rust tab.")
 
 
-class ItemHandPanel(ttk.Frame):
-    """item_hand: the hand the current fighter holds, throws and swings items in."""
+class ItemHandBox(ttk.LabelFrame):
+    """item_hand in the fighter form: the hand the fighter holds, throws and swings items in."""
 
     def __init__(self, parent: tk.Misc, app: Workbench):
-        super().__init__(parent, padding=10)
+        super().__init__(parent, text="Item hand", padding=6)
         self.app = app
         self.loading = False
         self.columnconfigure(0, weight=1)
-        self.title = ttk.Label(self, text="", justify="left")
-        self.title.grid(row=0, column=0, sticky="w")
         self.base_text = ttk.Label(self, text="", justify="left")
-        self.base_text.grid(row=1, column=0, sticky="w", pady=(4, 8))
+        self.base_text.grid(row=0, column=0, sticky="w")
         choice = ttk.Frame(self)
-        choice.grid(row=2, column=0, sticky="w")
-        ttk.Label(choice, text="Item hand").pack(side="left", padx=(0, 10))
+        choice.grid(row=1, column=0, sticky="w", pady=(4, 0))
         self.hand = tk.StringVar(value="")
         self.choices: list[ttk.Radiobutton] = []
         for value, label in (("", "The base's"), ("left", "Left hand (HaveL)"),
@@ -3650,18 +3648,12 @@ class ItemHandPanel(ttk.Frame):
                                        ("mine", "This fighter", 140)):
             self.sheet.heading(column, text=heading, anchor="w")
             self.sheet.column(column, width=width, stretch=column == "what", anchor="w")
-        self.sheet.grid(row=3, column=0, sticky="ew", pady=(10, 4))
+        self.sheet.grid(row=2, column=0, sticky="ew", pady=(8, 4))
         self.verdict = ttk.Label(self, text="", justify="left")
-        self.verdict.grid(row=4, column=0, sticky="w", pady=(2, 6))
+        self.verdict.grid(row=3, column=0, sticky="w", pady=(2, 4))
         self.note = ttk.Label(self, text=ITEM_HAND_NOTE, foreground="#555", justify="left")
-        self.note.grid(row=5, column=0, sticky="w")
-        bar = ttk.Frame(self)
-        bar.grid(row=6, column=0, sticky="w", pady=(10, 0))
-        ttk.Button(bar, text="Write fighter.toml",
-                   command=lambda: self.app.identity.write_fighter_toml()).pack(side="left")
-        ttk.Button(bar, text="Show Rust",
-                   command=lambda: self.app.tabs.select(self.app.rust)).pack(side="left", padx=4)
-        wrap_within(self, [self.title, self.base_text, self.verdict, self.note])
+        self.note.grid(row=4, column=0, sticky="w")
+        wrap_within(self, [self.base_text, self.verdict, self.note])
 
     def fighter(self) -> dict:
         return self.app.part(packs.FIGHTER)
@@ -3687,18 +3679,14 @@ class ItemHandPanel(ttk.Frame):
         self.app.rust.refresh()
 
     def show(self) -> None:
-        part = self.fighter()
-        name, base = str(part.get("resource_name") or ""), self.base_name(part)
-        ready = bool(name and base)
+        base = self.base_name(self.fighter())
         for button in self.choices:
-            button.configure(state="normal" if ready else "disabled")
+            button.configure(state="normal" if base else "disabled")
         self.sheet.delete(*self.sheet.get_children())
-        if not ready:
-            self.title.configure(text="Give the fighter a resource name and a base on the Identity tab first.")
-            self.base_text.configure(text="")
+        if not base:
+            self.base_text.configure(text="Pick the base fighter above first.")
             self.verdict.configure(text="", foreground="")
             return
-        self.title.configure(text="Fighter %s, on %s" % (name, base))
         row = self.app.catalog.item_hands().get(base)
         self.base_text.configure(text=hands.describe_base(base, row))
         hand = self.hand.get()
@@ -3717,28 +3705,23 @@ class ItemHandPanel(ttk.Frame):
 
 
 GALLERY_INTRO = (
-    "A gallery is a page of 3D models on the modes page, each a fighter's costume with a name and a "
-    "text (MENUS.md, Galleries). Its rows go in this pack's menu.toml with the Identity tab's menu "
-    "rows. A grid skin is a [[layout]] with scene gallery on the Identity tab's menu part.")
+    "Galleries: pages of 3D models on the modes page, each model a fighter's costume with a name and "
+    "a text (MENUS.md, Galleries). A grid skin is a layout above with scene gallery.")
 
 
-class GalleryPanel(ttk.Frame):
-    """menu.toml [[gallery]] and [[gallery_item]] rows."""
+class GallerySection(ttk.Frame):
+    """menu.toml [[gallery]] and [[gallery_item]] in the menu form. Its two tables are the form's
+    own menu rows, so they load, collect and write with the others."""
 
-    def __init__(self, parent: tk.Misc, app: Workbench):
+    def __init__(self, parent: tk.Misc, app: Workbench, on_change):
         super().__init__(parent)
         self.app = app
-        self.loading = False
+        self.on_change = on_change
         self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
-        self.scroll = Scrolled(self)
-        self.scroll.grid(row=0, column=0, sticky="nsew")
-        body = self.scroll.body
-        body.columnconfigure(0, weight=1)
-        intro = ttk.Label(body, text=GALLERY_INTRO, foreground="#555", justify="left")
-        intro.grid(row=0, column=0, sticky="w", padx=10, pady=(10, 6))
+        intro = ttk.Label(self, text=GALLERY_INTRO, foreground="#555", justify="left")
+        intro.grid(row=0, column=0, sticky="w")
         self.galleries = TableEditor(
-            body, "Galleries", "gallery",
+            self, "Galleries", "gallery",
             [Field("id", "Id", 18), Field("name", "Name", 28), Field("description", "Description", 40),
              Field("order", "Order", 6), Field("music", "Music", 30, "choice")],
             describe=self.describe_gallery, identity=lambda row: row.get("id"),
@@ -3746,9 +3729,9 @@ class GalleryPanel(ttk.Frame):
             hint="a row on the modes page. Id: lower case letters, digits and _. Order places it among "
                  "the modes. Music: a song id played while the page is open, from a CSK music "
                  "database (database/*.json) in this pack or one beside it")
-        self.galleries.grid(row=1, column=0, sticky="ew", padx=10, pady=4)
+        self.galleries.grid(row=1, column=0, sticky="ew", pady=(6, 4))
         self.items = TableEditor(
-            body, "Items", "gallery_item",
+            self, "Gallery items", "gallery_item",
             [Field("gallery", "Gallery", 24, "choice"), Field("name", "Name", 40),
              Field("fighter", "Fighter", 24, "choice"), Field("text", "Text", 64),
              Field("costume", "Costume", 6), Field("sources", "Sources", 64),
@@ -3759,20 +3742,14 @@ class GalleryPanel(ttk.Frame):
                  "255. Name up to 64 bytes, text up to 1024, \\n starts a new line. Items with the same "
                  "group in a row form a group in a grid skin. Sources: up to 256 bytes, \\n between "
                  "lines; a line may end in |tag to pick its icon. Items show in the order listed")
-        self.items.grid(row=2, column=0, sticky="ew", padx=10, pady=4)
-        moves = ttk.Frame(body)
-        moves.grid(row=3, column=0, sticky="w", padx=10)
+        self.items.grid(row=2, column=0, sticky="ew", pady=4)
+        moves = ttk.Frame(self)
+        moves.grid(row=3, column=0, sticky="w")
         ttk.Button(moves, text="Move up", command=lambda: self.move(-1)).pack(side="left")
         ttk.Button(moves, text="Move down", command=lambda: self.move(1)).pack(side="left", padx=4)
-        self.summary = ttk.Label(body, text="", justify="left")
-        self.summary.grid(row=4, column=0, sticky="w", padx=10, pady=(8, 4))
-        bar = ttk.Frame(body)
-        bar.grid(row=5, column=0, sticky="w", padx=10, pady=(6, 10))
-        ttk.Button(bar, text="Write menu.toml",
-                   command=lambda: self.app.identity.write_menu_toml()).pack(side="left")
-        ttk.Button(bar, text="Lint",
-                   command=lambda: self.app.tabs.select(self.app.lint)).pack(side="left", padx=4)
-        wrap_within(body, [intro, self.summary])
+        self.summary = ttk.Label(self, text="", justify="left")
+        self.summary.grid(row=4, column=0, sticky="w", pady=(6, 0))
+        wrap_within(self, [intro, self.summary])
         wrap_within(self.galleries, [self.galleries.hint])
         wrap_within(self.items, [self.items.hint])
 
@@ -3788,7 +3765,7 @@ class GalleryPanel(ttk.Frame):
         fighter = gimmicks.display(row.get("fighter", "")).lower()
         if fighter.startswith("ui_chara_"):
             fighter = fighter[len("ui_chara_"):]
-        return gimmicks.display(row.get("gallery", "")), fighter, GalleryPanel.costume(row)
+        return gimmicks.display(row.get("gallery", "")), fighter, GallerySection.costume(row)
 
     @staticmethod
     def costume(row: dict) -> int:
@@ -3802,28 +3779,14 @@ class GalleryPanel(ttk.Frame):
         text = '%s: "%s", %s c%02d' % (gimmicks.display(row.get("gallery", "")),
                                        gimmicks.display(row.get("name", "")),
                                        gimmicks.display(row.get("fighter", "")),
-                                       GalleryPanel.costume(row))
+                                       GallerySection.costume(row))
         if row.get("group"):
             text += ", group %s" % gimmicks.display(row["group"])
         return text
 
-    def load(self) -> None:
-        self.loading = True
-        tables = self.app.part(packs.MENU).get("tables") or {}
-        self.galleries.set_rows(tables.get("gallery") or [])
-        self.items.set_rows(tables.get("gallery_item") or [])
-        self.loading = False
-        self.refresh()
-
     def changed(self) -> None:
-        if self.loading:
-            return
-        part = self.app.part(packs.MENU)
-        tables = dict(part.get("tables") or {})
-        tables["gallery"] = [dict(row) for row in self.galleries.rows]
-        tables["gallery_item"] = [dict(row) for row in self.items.rows]
-        part["tables"] = {table: rows for table, rows in tables.items() if rows}
         self.refresh()
+        self.on_change()
 
     def move(self, step: int) -> None:
         selection = self.items.listbox.curselection()

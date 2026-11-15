@@ -57,10 +57,14 @@ ITEM_KEYS = ("base_kind", "resource_name", "base_item", "members", "agent_name",
 STAGE_KEYS = ("place", "display_name", "id_name", "forms", "ships_battle_tree",
               "series", "disp_order", "donor", "resource_place", "bgm",
               "bgm_setting_no", "bgm_selector", "dynamic_collisions", "paused_motions",
-              "content_donor", "content_donor_tree", "carry_donor_scenery")
+              "content_donor", "content_donor_tree", "carry_donor_scenery", "secret_of",
+              "secret_command")
 STAGE_ENGINE_KEYS = ("place", "display_name", "id_name", "forms", "ships_battle_tree",
                      "series", "disp_order", "donor", "resource_place", "bgm",
-                     "bgm_setting_no", "bgm_selector", "dynamic_collisions", "paused_motions")
+                     "bgm_setting_no", "bgm_selector", "dynamic_collisions", "paused_motions",
+                     "secret_of", "secret_command")
+STAGE_SECRET_KEYS = ("secret_of", "secret_command")
+SECRET_HOLDS = {"L": "l", "R": "r", "L and R": "l_r"}
 STAGE_TABLES = ("ladder", "barrel", "spring", "door")
 STAGE_LIST_KEYS = ("dynamic_collisions", "paused_motions")
 FIGHTER_KEYS = ("name", "base", "display_name", "costumes", "color_start", "series",
@@ -943,6 +947,10 @@ def merge_lines(lines: list[str], values: dict, order=()) -> tuple[list[str], se
 def merge_stage_block(lines: list[str], values: dict, order, nested: bool) -> tuple[list[str], set]:
     """merge_lines, then the gimmick tables rewritten from values when they differ from the file's;
     unchanged tables keep their lines and comments."""
+    cleared = [key for key in STAGE_SECRET_KEYS if key in values and not str(values[key]).strip()]
+    if cleared:
+        lines = drop_assignments(lines, cleared)
+        values = {key: value for key, value in values.items() if key not in cleared}
     lines, written = merge_lines(lines, values, order)
     wanted = {table: rows for table, rows in (values.get("gimmicks") or {}).items() if rows}
     if "gimmicks" not in values or stage_table_rows(lines) == wanted:

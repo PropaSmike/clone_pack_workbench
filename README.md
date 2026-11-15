@@ -132,6 +132,10 @@ For a stage, every `stage.toml` key, and:
 
 - **Moving platform sets** (`dynamic_collisions`) and **Paused motions**
   (`paused_motions`).
+- **Secret place**: picking another stage while holding L, R or both plays
+  this one instead, like Boxing Ring's Punch-Out!! version (`secret_of`,
+  `secret_command`). Blank removes both lines; a Grid position of -1 leaves
+  the stage no icon of its own.
 - **Ladders**, **Barrel cannons**, **Springs** and **Doors**, written after
   the stage's keys. A table you did not change keeps its lines and comments.
 
@@ -653,6 +657,10 @@ checked in turn, and one `config.json` holds them all. `stage_bank_ids.py` and
 - A missing model set or motion, a set drawn twice or also bound in
   `config_stage.toml`, and doors or paused motions with no `plugin.nro` are
   warnings.
+- `secret_command` other than `l`, `r` or `l_r` is an error. `secret_of`
+  naming the stage itself, a place not in data.arc, or Boxing Ring or
+  Minecraft World (which have a secret of their own) is a warning; a form the
+  stage lacks gets a note.
 
 ## lint_menu_pack.py
 

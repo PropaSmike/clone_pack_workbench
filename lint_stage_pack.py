@@ -204,6 +204,19 @@ GIMMICK_KEYS = {
 GIMMICK_REQUIRED = {"ladder": ("x", "y", "height"), "barrel": ("x", "y"), "spring": ("x", "y"),
                     "door": ("x", "y")}
 STAGE_LIST_KEYS = ("dynamic_collisions", "paused_motions")
+SECRET_COMMANDS = ("l", "r", "l_r")
+SECRET_UI_STAGE_EXCEPTIONS = {
+    "battlefield": "ui_stage_battle_field", "battlefield_l": "ui_stage_battle_field_l",
+    "battlefield_s": "ui_stage_battle_field_s", "_75m": "ui_stage_75m",
+    "bonusgame": "ui_stage_bonus_game", "settingstage": "ui_stage_setting_stage",
+    "shamfight": "ui_stage_sham_fight", "campaignmap": "ui_stage_campaign_map",
+    "bossstage_ganonboss": "ui_stage_boss_ganon", "bossstage_rathalos": "ui_stage_boss_rathalos",
+    "bossstage_marx": "ui_stage_boss_marx", "bossstage_dracula": "ui_stage_boss_dracula",
+    "bossstage_galleom": "ui_stage_boss_galleom", "bossstage_final1": "ui_stage_boss_final",
+    "bossstage_final2": "ui_stage_boss_final2", "bossstage_final3": "ui_stage_boss_final3",
+    "sp_edit": "ui_stage_edit", "homeruncontest": "ui_stage_homerun",
+}
+SECRET_TAKEN = {"punchoutsb": "punchoutw on L", "pickel_world": "its own extra command"}
 
 
 def gimmick_header(line):
@@ -1153,6 +1166,43 @@ def lint(mod_dir, arc_index, write_config=False):
     return findings
 
 
+def check_secret(settings, place, vanilla_dirs, forms, error, warn, note):
+    """secret_of / secret_command: the engine's rules, then what the player will meet."""
+    secret_of = settings.get("secret_of")
+    command = settings.get("secret_command")
+    if command is not None and command not in SECRET_COMMANDS:
+        error("secret_command %r is not one of %s; the engine refuses the whole stage.toml"
+              % (command, ", ".join(SECRET_COMMANDS)))
+        return
+    if secret_of is None:
+        if command is not None:
+            warn("secret_command is set but secret_of is not, so no icon leads to this stage")
+        return
+    if not isinstance(secret_of, str) or not secret_of.strip():
+        error("secret_of must name a stage; the engine refuses the whole stage.toml")
+        return
+    base = secret_of.strip().lower()
+    base_id = base if base.startswith("ui_stage_") else SECRET_UI_STAGE_EXCEPTIONS.get(
+        base, "ui_stage_" + base)
+    if base_id == "ui_stage_" + place:
+        warn("secret_of names this stage itself; the engine ignores it")
+        return
+    taken = next((secret for owner, secret in SECRET_TAKEN.items()
+                  if SECRET_UI_STAGE_EXCEPTIONS.get(owner, "ui_stage_" + owner) == base_id), None)
+    if taken:
+        warn("%s already has a secret of its own (%s); this stage replaces it" % (base, taken))
+    if not base.startswith("ui_stage_") and vanilla_dirs and ("stage/%s" % base) not in vanilla_dirs:
+        warn("secret_of %r is not a stage in data.arc; unless another pack makes it, no icon "
+             "leads to this stage" % base)
+    missing = [form for form in ("normal", "omega", "battlefield") if form not in forms]
+    if missing:
+        note("the form picked on %s carries over, and this stage has no %s form"
+             % (base, " or ".join(missing)))
+    note("hold %s on %s's icon to play this stage; it is read on the frame A picks the stage, so "
+         "on a stage select that turns pages with L and R press it with A"
+         % ({"l": "L", "r": "R", "l_r": "L and R"}[command or "l"], base))
+
+
 def lint_stage(mod_dir, arc_index, settings, declared_places, write_config=False, block=None):
     findings = []
 
@@ -1495,6 +1545,8 @@ def lint_stage(mod_dir, arc_index, settings, declared_places, write_config=False
             "bgm_setting_no is set but bgm is not, so the column applies to "
             "whatever playlist the donor uses"
         )
+
+    check_secret(settings, place, vanilla_dirs, forms, error, warn, note)
 
     donor = settings.get("donor", "battlefield")
     content_donor = settings.get("content_donor", donor)

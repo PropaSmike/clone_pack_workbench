@@ -1000,7 +1000,8 @@ class IdentityPanel(ttk.Frame):
         self.show(packs.FIGHTER)
         for fields in self.fields.values():
             fields.watch(self.changed)
-        for variable in list(self.spawn_vars.values()) + list(self.form_vars.values()):
+        for variable in (list(self.spawn_vars.values()) + list(self.form_vars.values())
+                         + [self.secret_of, self.secret_hold]):
             variable.trace_add("write", lambda *_: self.changed())
 
     def changed(self) -> None:
@@ -1836,6 +1837,7 @@ class IdentityPanel(ttk.Frame):
             self.form_vars[form] = variable
             ttk.Checkbutton(forms, text=form, variable=variable).grid(
                 row=0, column=index, padx=4)
+        self._build_stage_secret(frame, fields, places)
         self._build_stage_gimmicks(frame, fields)
         fields.buttons((
             ("Write stage.toml", self.write_stage_toml),
@@ -1843,6 +1845,30 @@ class IdentityPanel(ttk.Frame):
             ("Stamp sound bank id", self.stamp_bank),
             ("Rename files", self.rename_files),
         ))
+
+    def _build_stage_secret(self, frame: ttk.Frame, fields: Fields, places) -> None:
+        """secret_of / secret_command: this stage behind another stage's icon."""
+        box = ttk.LabelFrame(frame, text="Secret place", padding=6)
+        box.grid(row=fields.row, column=0, columnspan=3, sticky="ew", pady=(8, 2))
+        fields.row += 1
+        self.secret_of = tk.StringVar()
+        self.secret_hold = tk.StringVar(value="L")
+        line = ttk.Frame(box)
+        line.grid(row=0, column=0, sticky="w")
+        ttk.Label(line, text="Behind the icon of").pack(side="left")
+        ttk.Combobox(line, textvariable=self.secret_of, values=[""] + list(places), width=24).pack(
+            side="left", padx=(6, 16))
+        ttk.Label(line, text="Hold").pack(side="left")
+        ttk.Combobox(line, textvariable=self.secret_hold, values=list(packs.SECRET_HOLDS),
+                     state="readonly", width=9).pack(side="left", padx=6)
+        note = ttk.Label(box, style="Hint.TLabel", justify="left", text=(
+            "pick that stage while holding the button and this one plays instead, like Boxing Ring's "
+            "Punch-Out!! version (secret_of, secret_command). The button is read on the frame A picks "
+            "the stage: on a stage select that turns pages with L and R, press it with A. Boxing Ring "
+            "and Minecraft World have a secret of their own, which this replaces. Blank: no secret; "
+            "Grid position -1 leaves the stage no icon of its own"))
+        note.grid(row=1, column=0, sticky="w", pady=(4, 0))
+        fields.hints.append(note)
 
     def _build_stage_gimmicks(self, frame: ttk.Frame, fields: Fields) -> None:
         """[[ladder]], [[barrel]], [[spring]] and [[door]] on the stage's normal form."""
@@ -2497,6 +2523,10 @@ class IdentityPanel(ttk.Frame):
         forms = stage.get("forms") or ["normal"]
         for form, variable in self.form_vars.items():
             variable.set(form in forms)
+        self.secret_of.set(str(stage.get("secret_of") or ""))
+        command = str(stage.get("secret_command") or "l")
+        self.secret_hold.set(next((label for label, code in packs.SECRET_HOLDS.items() if code == command),
+                                  "L"))
         for key in packs.STAGE_LIST_KEYS:
             self.fields[packs.STAGE].vars[key].set(", ".join(spawn_list(stage.get(key))))
         for table, editor in self.stage_editors.items():
@@ -2574,6 +2604,9 @@ class IdentityPanel(ttk.Frame):
                              "range" % (values.get("bgm"), columns, column))
             state["forms"] = [form for form, variable in self.form_vars.items()
                               if variable.get()]
+            secret = self.secret_of.get().strip().lower()
+            state["secret_of"] = secret
+            state["secret_command"] = packs.SECRET_HOLDS.get(self.secret_hold.get(), "l") if secret else ""
             for key in packs.STAGE_LIST_KEYS:
                 values[key] = [name.strip().strip('"') for name in spawn_list(values.get(key))
                                if name.strip().strip('"')] or ""

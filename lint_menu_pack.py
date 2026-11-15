@@ -25,6 +25,10 @@ MAX_MOVIE_PATH = 62
 U32_MAX = 0xffffffff
 SMASH = 0x02010000
 MAIN_MENU = "main_menu"
+GALLERY_SCENE = "gallery"
+GALLERY_RUNS_AS = 0x04050000
+MAX_GALLERY_TEXT = 1024
+MAX_GALLERY_COSTUME = 255
 MAIN_MENU_LAYOUT = "ui/layout/menu/main_menu/main_menu/layout.arc"
 BNTX_ALIGNMENT = 4096
 HUB_PATCH = ("menu/main/main_menu_layer_top", "menu/clone_engine/ce_top")
@@ -85,6 +89,8 @@ KEYS = {
     "mode": {"id": "text", "name": "text", "description": "text", "script": "text", "button": "text",
              "runs_as": "mode", "scene": "text", "order": "number", "skip": "texts",
              "after_battle": "text"},
+    "gallery": {"id": "text", "name": "text", "description": "text", "order": "number"},
+    "gallery_item": {"gallery": "text", "fighter": "text", "costume": "number", "name": "text", "text": "text"},
 }
 TABLES = tuple(KEYS)
 SKIPS = ("rules", "stage_select")
@@ -264,11 +270,12 @@ def finish(block):
         return {"after": after.strip().lower(), "files": [path.strip().lower() for path in values["files"]]}
     if table == "layout":
         scene, path = need("scene").strip().lower(), need("file")
-        if scene != MAIN_MENU:
-            raise MenuError(line, 'layout scene "%s" is not main_menu' % scene)
+        if scene not in (MAIN_MENU, GALLERY_SCENE):
+            raise MenuError(line, 'layout scene "%s" is not main_menu or gallery' % scene)
         if not path.strip().lower().endswith("/layout.arc"):
             raise MenuError(line, 'layout file "%s" does not end in /layout.arc' % path)
-        return {"file": path.strip().lower(), "over_side_panel": values.get("over_side_panel", False),
+        return {"file": path.strip().lower(), "gallery": scene == GALLERY_SCENE,
+                "over_side_panel": values.get("over_side_panel", False),
                 "under_movies": values.get("under_movies", False)}
     if table == "patch":
         module_text, script_text = need("module"), need("script")
@@ -283,6 +290,26 @@ def finish(block):
         if root not in ROOTS:
             raise MenuError(line, 'root "%s" is not script or script_patch' % values.get("root"))
         return {"module": module, "script": script, "root": root}
+    if table == "gallery_item":
+        gallery = need("gallery").strip()
+        if not valid_mode_id(gallery):
+            raise MenuError(line, 'gallery "%s" must be lower case letters, digits and _, up to %d'
+                            % (gallery, MAX_MODE_ID))
+        fighter = need("fighter").strip().lower()
+        if not fighter or not all(ch.isascii() and (ch.isalnum() or ch == "_") for ch in fighter):
+            raise MenuError(line, 'fighter "%s" must be a fighter name' % fighter)
+        name = need("name").strip()
+        if not name or len(name.encode("utf8")) > MAX_MODE_NAME:
+            raise MenuError(line, "item name must be 1 to %d bytes" % MAX_MODE_NAME)
+        costume = values.get("costume", 0)
+        if costume > MAX_GALLERY_COSTUME:
+            raise MenuError(line, "costume must be 0 to %d" % MAX_GALLERY_COSTUME)
+        body = values.get("text", "").strip().replace("\\n", "\n")
+        if len(body.encode("utf8")) > MAX_GALLERY_TEXT:
+            raise MenuError(line, "text is %d bytes, more than %d" % (len(body.encode("utf8")), MAX_GALLERY_TEXT))
+        return {"gallery": gallery, "fighter": fighter, "costume": costume, "name": name, "text": body}
+    if table == "gallery":
+        values = dict(values, runs_as=GALLERY_RUNS_AS)
     identifier = need("id").strip()
     if not valid_mode_id(identifier):
         raise MenuError(line, 'mode id "%s" must be lower case letters, digits and _, up to %d'
@@ -587,7 +614,7 @@ def check_registry(mod_dir):
                 sequences.setdefault(code, (key, name))
                 if table["id"]:
                     sequence_ids[table["id"]] = (key, name, code)
-            elif kind == "mode":
+            elif kind in ("mode", "gallery"):
                 taken = next((known for known in modes if known["id"] == table["id"]), None)
                 if taken:
                     if mine and taken["pack"] != name:
@@ -604,7 +631,7 @@ def check_registry(mod_dir):
                     continue
                 modes.append(dict(table, pack=name, mine=mine))
             elif kind == "layout":
-                if table["file"] == MAIN_MENU_LAYOUT or table["file"] in layouts:
+                if table["gallery"] or table["file"] == MAIN_MENU_LAYOUT or table["file"] in layouts:
                     continue
                 if len(layouts) >= MAX_LAYOUTS and mine:
                     findings.append(("ERROR", "layout %s: %d pack layouts are installed already, the most "
@@ -716,7 +743,7 @@ def lint(mod_dir, arc_index=DEFAULT_ARC_INDEX):
     for table in tables:
         kind, line = table["table"], table["line"]
         label = "line %d [[%s]]" % (line, kind)
-        if kind == "mode":
+        if kind in ("mode", "gallery"):
             label = 'mode "%s"' % table["id"]
             seen_ids.add(table["id"])
             if table["script"]:

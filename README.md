@@ -197,7 +197,12 @@ starts at c00, so a pack at c120 to c127 asks for folders that do not exist
 and the match never finishes loading.
 
 - Every folder and file that carries the costume moves: model, motion,
-  camera, Kirby copy, `_cNN` sound banks, one-slot effects, trails.
+  camera, Kirby copy, `_cNN` sound banks, one-slot effects, trails, and the
+  select screen pictures `chara_N_<name>_NN.bntx` (also under the ui_chara
+  name).
+- On a pack still under the base's own name, it offers to rename it to the
+  Resource name first.
+- What the form holds stays: type the name, series and the rest, then press it.
 - The lowest one-slot effect is copied to `ef_<name>.eff`, the name the
   engine loads.
 - `ui/param/database/ui_chara_db.prcxml` goes to Backups (it patches the
@@ -354,7 +359,8 @@ when it opens the folder. In this order:
 
 - **Rename files** first: pick the base's name on disk, type the clone's.
   The base becomes the clone's base on the Identity tab.
-- **Renumber costumes** second.
+- **Renumber costumes** second. With the clone's name typed in Resource name,
+  pressing it alone does both.
 - **Write fighter.toml**, then **Write config.json**. Entries of the old
   `config.json` named after the base are dropped, not merged.
 - Last, rebuild the plugin from the Rust tab: the old `plugin.nro` hooks the

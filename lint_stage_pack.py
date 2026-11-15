@@ -51,7 +51,93 @@ MINTED_ART_PREFIX = "ui/replace/stage/stage_"
 
 VANILLA_FILE_HOST_DIRS = ("sound/bank/stage", "sound/sequence/stage")
 
-KNOWN_TREES = ("stage/", "effect/", "ui/", "sound/")
+KNOWN_TREES = ("stage/", "effect/", "ui/", "sound/", "database/")
+MUSIC_TREES = ("stream;/", "stream/")
+
+CONFIG_SPELLINGS = {
+    "unshare-blacklist": ("unshare_blacklist", "keep-shared", "keep_shared"),
+    "preprocess-reshare": ("preprocess_reshare",),
+    "share-to-vanilla": ("share_to_vanilla",),
+    "share-to-added": ("share_to_added", "new-shared-files", "new_shared_files"),
+    "new-dir-files": ("new_dir_files",),
+    "new-dir-infos": ("new_dir_infos",),
+    "new-dir-infos-base": ("new_dir_infos_base",),
+}
+SHARE_KEYS = ("share-to-vanilla", "share-to-added")
+CANONICAL_KEY = {
+    spelling: canonical
+    for canonical, others in CONFIG_SPELLINGS.items()
+    for spelling in others
+}
+
+
+def config_clashes(config):
+    """Fields a config.json names under two spellings. ARCropolis reads every
+    spelling as one field and refuses the whole file."""
+    clashes = []
+    for canonical, others in CONFIG_SPELLINGS.items():
+        used = [name for name in (canonical,) + others if name in config]
+        if len(used) > 1:
+            clashes.append(used)
+    return clashes
+
+
+def normalize_config(config):
+    """The config with one spelling per field and every share as a list."""
+    out = {}
+    for key, value in config.items():
+        canonical = CANONICAL_KEY.get(key, key)
+        if canonical in SHARE_KEYS and isinstance(value, dict):
+            value = {
+                source: [targets] if isinstance(targets, str) else list(targets)
+                for source, targets in value.items()
+            }
+        elif isinstance(value, dict):
+            value = dict(value)
+        elif isinstance(value, list):
+            value = list(value)
+        if canonical not in out:
+            out[canonical] = value
+            continue
+        merged = out[canonical]
+        if isinstance(merged, list) and isinstance(value, list):
+            merged.extend(entry for entry in value if entry not in merged)
+        elif isinstance(merged, dict) and isinstance(value, dict):
+            for name, entry in value.items():
+                if isinstance(merged.get(name), list) and isinstance(entry, list):
+                    merged[name].extend(item for item in entry if item not in merged[name])
+                else:
+                    merged.setdefault(name, entry)
+    return out
+
+
+def read_config(path):
+    """(config, problems) for a config.json, the config normalised. Problems are
+    the reasons ARCropolis would refuse the file."""
+    with open(path, "rb") as handle:
+        raw = handle.read()
+    problems = []
+    if raw.startswith(b"\xef\xbb\xbf"):
+        problems.append(
+            "config.json starts with a byte order mark, so ARCropolis cannot read "
+            "it and skips the whole file. Save it as UTF-8 without BOM."
+        )
+    try:
+        config = json.loads(raw.decode("utf-8-sig"))
+    except (UnicodeDecodeError, ValueError) as error:
+        problems.append("config.json is not valid JSON (%s), so ARCropolis skips it"
+                        % error)
+        return None, problems
+    if not isinstance(config, dict):
+        problems.append("config.json is not a JSON object, so ARCropolis skips it")
+        return None, problems
+    for used in config_clashes(config):
+        problems.append(
+            "config.json names one field as %s. ARCropolis reads these as the same "
+            "field and refuses the whole file. Run with --write-config to merge "
+            "them." % " and ".join("`%s`" % name for name in used)
+        )
+    return normalize_config(config), problems
 
 
 def is_vanilla_file_host(directory):
@@ -527,6 +613,11 @@ def all_parents(directory):
     return ["/".join(parts[: i + 1]) for i in range(len(parts))]
 
 
+def based_ancestors(directory, based):
+    """The folders above `directory` that are also based on a donor's."""
+    return [parent for parent in all_parents(directory_of(directory)) if parent in based]
+
+
 def arc_trees(forms, ships_battle_tree):
     trees = ["normal"]
     if ships_battle_tree and any(form != "normal" for form in forms):
@@ -793,6 +884,11 @@ def is_donor_scenery(directory):
     return len(parts) >= 5 and parts[0] == "stage" and parts[3] in SCENERY_TREES
 
 
+def is_scenery_root(directory):
+    parts = directory.split("/")
+    return len(parts) == 4 and parts[0] == "stage" and parts[3] in SCENERY_TREES
+
+
 SOUND_EXTENSIONS = ("nus3bank", "nus3audio", "tonelabel")
 
 
@@ -941,6 +1037,11 @@ def build_config(mod_dir, place, donor, forms_present, ships_battle_tree,
 
     for theirs, ours in sound_shares(place, donor, shipped, vanilla_files).items():
         aliases.setdefault(theirs, []).append(ours)
+
+    based = {
+        ours: theirs for ours, theirs in based.items()
+        if not based_ancestors(ours, based)
+    }
 
     config = {
         "new-dir-infos": sorted(set(new_dir_infos)),
@@ -1122,6 +1223,15 @@ def lint_stage(mod_dir, arc_index, settings, declared_places, write_config=False
             "and re-run with --write-config." % place
         )
 
+    resource_place = str(settings.get("resource_place") or "").lower()
+    if resource_place and resource_place != place and tree:
+        error(
+            "resource_place = %r makes this stage load stage/%s/ instead of the %d "
+            "folder(s) this pack ships under stage/%s/, so the game never reads "
+            "them. Remove resource_place to load your own files."
+            % (settings["resource_place"], resource_place, len(tree), place)
+        )
+
     forms = [form for form in settings.get("forms", ["normal"]) if form in FORMS]
     if not forms:
         error("stage.toml `forms` selects nothing; Normal is the minimum")
@@ -1172,8 +1282,7 @@ def lint_stage(mod_dir, arc_index, settings, declared_places, write_config=False
     shared_sound = set()
     config_on_disk = os.path.join(mod_dir, "config.json")
     if os.path.exists(config_on_disk):
-        with open(config_on_disk, encoding="utf8") as handle:
-            shared_now = json.load(handle).get("share-to-vanilla") or {}
+        shared_now = (read_config(config_on_disk)[0] or {}).get("share-to-vanilla") or {}
         for targets in shared_now.values():
             for target in targets:
                 stem = target.rsplit("/", 1)[-1]
@@ -1313,16 +1422,44 @@ def lint_stage(mod_dir, arc_index, settings, declared_places, write_config=False
                 "from it usually should not ship one either" % sound_donor
             )
 
-    stray = sorted(
-        {path.split("/", 1)[0] + "/" for path in paths
-         if "/" in path and not path.startswith(KNOWN_TREES)}
-    )
-    if stray:
+    outside = {path.split("/", 1)[0] + "/" for path in paths
+               if "/" in path and not path.startswith(KNOWN_TREES)}
+    music = sorted(tree for tree in outside if tree.startswith(MUSIC_TREES))
+    stray = sorted(outside - set(music))
+    if music:
         warn(
             "ships file(s) under %s. Music is not tied to a stage, so this replaces "
             "the track for every stage. Ship it as a separate mod if that is what "
-            "you want." % ", ".join(stray)
+            "you want." % ", ".join(music)
         )
+    if stray:
+        warn(
+            "ships file(s) under %s, which is no game or CSK folder, so nothing "
+            "reads it" % ", ".join(stray)
+        )
+    for path in paths:
+        if not (path.startswith("database/") and path.endswith(".json")):
+            continue
+        try:
+            with open(os.path.join(mod_dir, path), encoding="utf-8-sig") as handle:
+                database = json.load(handle)
+        except (OSError, ValueError):
+            continue
+        if not isinstance(database, dict):
+            continue
+        ui_stage_id = "ui_stage_%s" % place
+        if any(isinstance(row, dict) and row.get("ui_stage_id") == ui_stage_id
+               for row in database.get("stage_database_entries") or []):
+            warn(
+                "%s adds a stage_database_entries row for %s. The engine writes "
+                "this stage's row itself; remove it from the JSON" % (path, ui_stage_id)
+            )
+        redirection = database.get("stage_resource_redirection_entries")
+        if isinstance(redirection, dict) and any(redirection.values()):
+            warn(
+                "%s has stage_resource_redirection_entries. The engine points the "
+                "stage at its files itself; remove them from the JSON" % path
+            )
 
     patched_art = sorted(
         path for path in paths
@@ -1389,6 +1526,7 @@ def lint_stage(mod_dir, arc_index, settings, declared_places, write_config=False
     inherited = sorted(
         directory for directory in generated.get("new-dir-infos-base", {})
         if is_donor_scenery(directory)
+        or (carry_donor_scenery and is_scenery_root(directory))
     )
     if inherited and "donor" not in settings:
         warn(
@@ -1400,9 +1538,16 @@ def lint_stage(mod_dir, arc_index, settings, declared_places, write_config=False
         )
     config_path = os.path.join(mod_dir, "config.json")
 
+    on_disk_problems = []
     if os.path.exists(config_path):
-        with open(config_path, encoding="utf8") as handle:
-            previous = json.load(handle)
+        previous, on_disk_problems = read_config(config_path)
+        if previous is None:
+            for problem in on_disk_problems:
+                error(problem)
+            if write_config:
+                error("not writing config.json: the entries of the old file could "
+                      "not be read to keep them. Fix or delete it first.")
+            return findings
         for directory, files in previous.get("new-dir-files", {}).items():
             if directory.endswith(PROBE_SUFFIX):
                 generated.setdefault("new-dir-files", {})[directory] = files
@@ -1417,10 +1562,14 @@ def lint_stage(mod_dir, arc_index, settings, declared_places, write_config=False
             json.dump(generated, handle, indent=2)
             handle.write("\n")
         findings.append(("INFO", "wrote %s" % config_path))
+        if on_disk_problems:
+            note("ARCropolis refused the old config.json; the new one has one "
+                 "spelling per field and no byte order mark")
         config = generated
     elif os.path.exists(config_path):
-        with open(config_path, encoding="utf8") as handle:
-            config = json.load(handle)
+        for problem in on_disk_problems:
+            error(problem)
+        config = previous
     else:
         error("no config.json; run with --write-config to generate it")
         config = {}
@@ -1725,6 +1874,18 @@ def check_config(config, place, tree, forms, ships_battle_tree):
             "ERROR",
             "%s must not be in new-dir-infos-base: it would take the donor's "
             "subfolders and lose every folder this pack adds under it" % directory,
+        ))
+    nested = sorted(
+        directory for directory in bases
+        if directory.startswith("stage/%s/" % place) and based_ancestors(directory, bases)
+    )
+    if nested:
+        findings.append((
+            "ERROR",
+            "%d folder(s) are in new-dir-infos-base along with a folder above them "
+            "(first: %s). ARCropolis can then erase the donor stage's list of "
+            "subfolders, differently on each boot, which damages or crashes the "
+            "vanilla stage. Re-run with --write-config." % (len(nested), nested[0]),
         ))
     for root in sorted(tree_roots):
         if root not in dir_infos and root not in bases:

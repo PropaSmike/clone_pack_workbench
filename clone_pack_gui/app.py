@@ -501,6 +501,7 @@ class Workbench(ttk.Frame):
         if confirm is not None and not confirm(plan):
             self.log("rename of %s to %s cancelled" % (old, new))
             return False
+        typed = self.typed_part(kind, (old, new))
         self.log("renaming %s to %s: %d path(s), %d text file(s)"
                  % (old, new, len(plan["moves"]), len(plan["edits"])))
         for line in packs.apply_rename(self.folder, plan):
@@ -512,6 +513,7 @@ class Workbench(ttk.Frame):
             if packs.identity(part, kind) == new:
                 self.kind.set(kind)
                 self.index[kind] = index
+                part.update(typed)
                 if converted and not part.get("base_resource_name"):
                     part["base_resource_name"] = old
                     number = self.catalog.kind_of_fighter(old)
@@ -519,6 +521,7 @@ class Workbench(ttk.Frame):
                         part["base_kind"] = number
                     self.log("%s was %s's own tree, so %s is its base now" % (new, old, old))
                 self.show_kind()
+                self.save_state()
                 break
         if converted:
             self.log("next: Renumber costumes (an added-slot moveset sits at c%s and the "
@@ -527,7 +530,17 @@ class Workbench(ttk.Frame):
                      "from the Rust tab" % ("NN", old))
         return True
 
-    def renumber_part(self, resource: str, confirm=None) -> bool:
+    def typed_part(self, kind: str, names) -> dict:
+        """What the form holds for the part being worked on, without its name,
+        when that part is one of names or has no name yet: reading the pack
+        again after a rename or a renumber must not take it back."""
+        part = self.part(kind)
+        if packs.identity(part, kind) not in tuple(names) + ("",):
+            return {}
+        key = packs.identity_key(kind)
+        return {name: value for name, value in part.items() if name != key}
+
+    def renumber_part(self, resource: str, confirm=None, ui_names=()) -> bool:
         """Move a fighter's costumes to c00, c01, ... then read the pack again.
         confirm(plan) may say no once the plan is known."""
         if not self.require_folder():
@@ -535,13 +548,15 @@ class Workbench(ttk.Frame):
         if not (self.folder / packs.FIGHTER / resource).is_dir():
             self.log("nothing to renumber: fighter/%s is not in this pack" % resource)
             return False
-        plan = packs.renumber_plan(self.folder, resource)
+        plan = packs.renumber_plan(self.folder, resource, ui_names)
         if not plan["moves"] and not plan["effect"] and not plan["leftovers"]:
             self.log("%s already runs from c00 with nothing left over" % resource)
+            messagebox.showinfo(TITLE, "%s's costumes already run from c00." % resource)
             return False
         if confirm is not None and not confirm(plan):
             self.log("renumbering of %s cancelled" % resource)
             return False
+        typed = self.typed_part(packs.FIGHTER, (resource,))
         self.log("renumbering %s: %d path(s) moved" % (resource, len(plan["moves"])))
         for line in packs.apply_renumber(self.folder, plan):
             self.log("    " + line)
@@ -551,8 +566,10 @@ class Workbench(ttk.Frame):
             if packs.identity(part, packs.FIGHTER) == resource:
                 self.kind.set(packs.FIGHTER)
                 self.index[packs.FIGHTER] = index
+                part.update(typed)
                 part["color_start"] = 0
                 self.show_kind()
+                self.save_state()
                 break
         return True
 
@@ -2190,47 +2207,73 @@ class IdentityPanel(ttk.Frame):
         free = [name for name in on_disk if name not in others]
         guess = free[0] if len(free) == 1 else (typed if typed in on_disk else on_disk[0])
 
-        def confirm(plan: dict) -> bool:
-            message = ["Rename %s to %s?" % (plan["old"], plan["new"]), "",
-                       "%d folders and files renamed, %d text file(s) edited."
-                       % (len(plan["moves"]), len(plan["edits"]))]
-            if plan.get("kept"):
-                message += ["", "%d file(s) below costume folders (c00, c01, ...) keep their names, "
-                                "and the paths that point at them stay as they are:"
-                            % len(plan["kept"])]
-                message += ["  " + line for line in packs.folder_summary(plan["kept"])]
-            if plan["stuck"]:
-                message += ["", "%d file(s) still carry the old name inside and need a "
-                                "rebuild or a hand edit:" % len(plan["stuck"])]
-                message += ["  " + line for line in packs.folder_summary(plan["stuck"])]
-                message.append("The Output tab lists them after the rename.")
-            return messagebox.askyesno(TITLE, "\n".join(message))
-
         RenameDialog(self, kind, on_disk, guess, typed if typed != guess else "",
-                     lambda old, new: self.app.rename_part(kind, old, new, confirm))
+                     lambda old, new: self.app.rename_part(kind, old, new, self.confirm_rename))
+
+    @staticmethod
+    def confirm_rename(plan: dict) -> bool:
+        message = ["Rename %s to %s?" % (plan["old"], plan["new"]), "",
+                   "%d folders and files renamed, %d text file(s) edited."
+                   % (len(plan["moves"]), len(plan["edits"]))]
+        if plan.get("kept"):
+            message += ["", "%d file(s) below costume folders (c00, c01, ...) keep their names, "
+                            "and the paths that point at them stay as they are:"
+                        % len(plan["kept"])]
+            message += ["  " + line for line in packs.folder_summary(plan["kept"])]
+        if plan["stuck"]:
+            message += ["", "%d file(s) still carry the old name inside and need a "
+                            "rebuild or a hand edit:" % len(plan["stuck"])]
+            message += ["  " + line for line in packs.folder_summary(plan["stuck"])]
+            message.append("The Output tab lists them after the rename.")
+        return messagebox.askyesno(TITLE, "\n".join(message))
 
     def renumber_costumes(self) -> None:
         """Move the fighter's costumes to c00..: the select screen the engine
-        publishes starts at c00, and every added-slot moveset starts higher."""
+        publishes starts at c00, and every added-slot moveset starts higher.
+        An added-slot tree still under its base's name is renamed to the
+        Resource name first."""
         if not self.app.require_folder():
             return
         self.collect(quiet=True)
         resource = packs.identity(self.app.state, packs.FIGHTER)
-        on_disk = packs.own_names(self.app.folder, packs.FIGHTER,
-                                  self.app.vanilla_names(packs.FIGHTER))
+        vanilla = self.app.vanilla_names(packs.FIGHTER)
+        on_disk = packs.own_names(self.app.folder, packs.FIGHTER, vanilla)
         if resource not in on_disk:
             if not on_disk:
-                self.app.log("nothing to renumber: the pack ships no fighter of its own "
-                             "(Rename files first if it is an added-slot moveset)")
-                return
-            resource = on_disk[0]
+                slots = packs.vanilla_slot_names(self.app.folder, packs.FIGHTER, vanilla)
+                if not slots:
+                    self.app.log("nothing to renumber: the pack ships no fighter")
+                    messagebox.showinfo(TITLE, "This pack ships no fighter to renumber.")
+                    return
+                if len(slots) > 1 or not resource or resource in vanilla:
+                    self.app.log("nothing to renumber yet: fighter/%s is an added-slot moveset "
+                                 "under the base's own name" % "/".join(slots))
+                    messagebox.showinfo(TITLE, (
+                        "fighter/%s is %s's own tree: an added-slot moveset.\n\n"
+                        "Type your clone's name in Resource name and press Renumber costumes "
+                        "again, or use Rename files first.") % (slots[0], slots[0]))
+                    return
+                if not messagebox.askyesno(TITLE, (
+                        "fighter/%s is %s's own tree: an added-slot moveset. Its costumes can "
+                        "only move once it has your clone's name.\n\nRename it to %s first, "
+                        "then renumber its costumes?") % (slots[0], slots[0], resource)):
+                    self.app.log("renumbering cancelled: fighter/%s keeps its name" % slots[0])
+                    return
+                if not self.app.rename_part(packs.FIGHTER, slots[0], resource, self.confirm_rename):
+                    return
+            else:
+                resource = on_disk[0]
+        part = self.app.part(packs.FIGHTER)
+        ui_name = str(part.get("ui_chara") or "")
+        ui_names = (ui_name[len("ui_chara_"):] if ui_name.startswith("ui_chara_") else ui_name,)
 
         def confirm(plan: dict) -> bool:
             numbers = sorted(plan["mapping"])
             lines = ["Move %s's costumes c%02d to c%02d onto c00 to c%02d?" % (
                 resource, numbers[0], numbers[-1], len(numbers) - 1),
                 "", "%d folder(s) and file(s) move (model, motion, camera, Kirby copy, "
-                    "sound banks, one-slot effects, trails)." % len(plan["moves"])]
+                    "sound banks, one-slot effects, trails, select screen pictures)."
+                    % len(plan["moves"])]
             if plan["effect"]:
                 lines.append("%s is copied to %s, the name the engine loads."
                              % (plan["effect"][0].rsplit("/", 1)[-1],
@@ -2249,7 +2292,7 @@ class IdentityPanel(ttk.Frame):
             lines += ["", "config.json is not changed: write it again afterwards."]
             return messagebox.askyesno(TITLE, "\n".join(lines))
 
-        self.app.renumber_part(resource, confirm)
+        self.app.renumber_part(resource, confirm, ui_names)
 
     def set_item_candidates(self, names) -> None:
         """Offer every item tree the pack ships, since a pack may hold several."""

@@ -39,6 +39,8 @@ NON_ASSET_SUFFIXES = {"yml", "yaml", "lua", "md", "txt", "json", "toml", "py",
                       "psd", "7z", "rar", "ini"}
 PATCH_FOLDER_SUFFIXES = (".nus3audio", ".nus3bank")
 COSTUME_NAME_RE = re.compile(r"_c(\d{2,3})(?=[_.])")
+UI_COSTUME_RE = re.compile(r"^(chara_\d+_(.+)_)(\d{2,3})(\.bntx)$")
+UI_PICTURE_TREES = ("ui/replace", "ui/replace_patch")
 ADDED_SLOT_LEFTOVERS = ("ui/param/database/ui_chara_db.prcxml",)
 COLOR_RE = re.compile(r"/c(\d{2,3})(?=/|$)")
 COSTUME_FOLDER_RE = re.compile(r"c\d{2,3}")
@@ -1136,14 +1138,24 @@ def body_costumes(folder: Path, resource: str) -> list[int]:
     return sorted(found) or costumes(folder, FIGHTER, resource)
 
 
-def costume_paths(folder: Path, resource: str):
+def costume_paths(folder: Path, resource: str, ui_names=()):
     """(relative path, number, kind) for every path of this fighter's that
     carries a costume: `cNN` directories under its trees, its camera, its
-    Kirby copy models and body animations, and `_cNN` in the names of its
-    sound banks, one-slot effects and trail textures. kind is "dir" or
-    "file"."""
+    Kirby copy models and body animations, `_cNN` in the names of its sound
+    banks, one-slot effects and trail textures, and `_NN` at the end of its
+    select screen pictures (named for the resource or any of ui_names). kind
+    is "dir", "file" or "ui"."""
     folder = Path(folder)
     found = []
+    names = {resource} | {name for name in ui_names if name}
+    for tree in UI_PICTURE_TREES:
+        base = folder / tree / "chara"
+        if not base.is_dir():
+            continue
+        for entry in base.rglob("*.bntx"):
+            match = UI_COSTUME_RE.match(entry.name)
+            if entry.is_file() and match and match.group(2) in names:
+                found.append((entry.relative_to(folder).as_posix(), int(match.group(3)), "ui"))
     dir_roots = [Path(FIGHTER, resource), Path("camera", FIGHTER, resource)]
     kirby = folder / FIGHTER / "kirby"
     for tree in ("model", "motion"):
@@ -1192,12 +1204,14 @@ def renumbered(relative: str, kind: str, new: int) -> str:
     head, _, name = relative.rpartition("/")
     if kind == "dir":
         name = re.sub(r"^(trail_)?c\d{2,3}$", lambda m: "%sc%02d" % (m.group(1) or "", new), name)
+    elif kind == "ui":
+        name = UI_COSTUME_RE.sub(lambda m: "%s%02d%s" % (m.group(1), new, m.group(4)), name)
     else:
         name = COSTUME_NAME_RE.sub("_c%02d" % new, name, count=1)
     return head + "/" + name if head else name
 
 
-def renumber_plan(folder: Path, resource: str) -> dict:
+def renumber_plan(folder: Path, resource: str, ui_names=()) -> dict:
     """Move the fighter's costumes to c00, c01, ... in the order the body ships
     them: the engine's select screen offers costumes from c00, so a pack at
     c120-c127 (every added-slot moveset) must become c00-c07 before it can
@@ -1205,13 +1219,15 @@ def renumber_plan(folder: Path, resource: str) -> dict:
     range that the body does not number; unmapped: numbers past the range
     that nothing maps, left alone; blocked: moves whose target exists;
     effect: the one-slot effect copied to the main name, if any; leftovers:
-    added-slot files a clone must not ship."""
+    added-slot files a clone must not ship. ui_names: other names the select
+    screen pictures go by, such as the ui_chara name."""
     folder = Path(folder)
     body = body_costumes(folder, resource)
     mapping = {old: rank for rank, old in enumerate(body)}
     moves, kept, unmapped, blocked = [], [], [], []
     targets = set()
-    for relative, number, kind in sorted(costume_paths(folder, resource), key=lambda t: (t[1], t[0])):
+    for relative, number, kind in sorted(costume_paths(folder, resource, ui_names),
+                                         key=lambda t: (t[1], t[0])):
         if number in mapping:
             new = mapping[number]
             if new == number:

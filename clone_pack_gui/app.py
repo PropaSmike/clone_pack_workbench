@@ -1823,6 +1823,8 @@ class IdentityPanel(ttk.Frame):
         fields.flag("ships_battle_tree", "Ships a stage/<place>/battle tree")
         fields.choice("normal_tree", "Normal form loads", ["", "normal", "battle"],
                       hint="battle: a stage made only as a battle form plays it in every form")
+        fields.choice("hazards", "Hazards", ["", "off", "on"],
+                      hint="off or on whatever the Stage Hazards rule says; blank follows the rule")
         fields.choice("bgm", "Music playlist",
                       [""] + [name for name, _ in catalog.bgm_sets()],
                       hint="blank borrows the donor's music")
@@ -2543,6 +2545,8 @@ class IdentityPanel(ttk.Frame):
         command = str(stage.get("secret_command") or "l")
         self.secret_hold.set(next((label for label, code in packs.SECRET_HOLDS.items() if code == command),
                                   "L"))
+        self.fields[packs.STAGE].vars["hazards"].set(
+            next((label for label, value in packs.STAGE_HAZARDS.items() if stage.get("hazards") is value), ""))
         for key in packs.STAGE_LIST_KEYS:
             self.fields[packs.STAGE].vars[key].set(", ".join(spawn_list(stage.get(key))))
         for table, editor in self.stage_editors.items():
@@ -2628,6 +2632,7 @@ class IdentityPanel(ttk.Frame):
                                if name.strip().strip('"')] or ""
             state["gimmicks"] = {table: [dict(row) for row in editor.rows]
                                  for table, editor in self.stage_editors.items() if editor.rows}
+            values["hazards"] = packs.STAGE_HAZARDS.get(str(values.get("hazards", "")).strip(), "")
         elif kind == packs.MENU:
             known = dict(state.get("tables") or {})
             for table, editor in self.menu_editors.items():
@@ -2639,7 +2644,9 @@ class IdentityPanel(ttk.Frame):
                 known[table] = [dict(row) for row in editor.rows]
             state["tables"] = {table: rows for table, rows in known.items() if rows}
         for key, value in values.items():
-            if value in ("", None):
+            if value in ("", None) and kind == packs.STAGE and key in packs.STAGE_KEYS_CLEARED_WHEN_BLANK:
+                state[key] = ""
+            elif value in ("", None):
                 state.pop(key, None)
             else:
                 state[key] = value

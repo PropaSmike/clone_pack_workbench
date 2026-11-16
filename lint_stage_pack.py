@@ -1302,6 +1302,9 @@ def lint_stage(mod_dir, arc_index, settings, declared_places, write_config=False
     if normal_tree not in ("normal", "battle"):
         error('normal_tree must be "normal" or "battle"; the engine refuses the whole stage.toml')
         normal_tree = "normal"
+    hazards = settings.get("hazards")
+    if hazards is not None and not isinstance(hazards, bool):
+        error("hazards must be true or false; the engine refuses the whole stage.toml")
     declared = bool(settings.get("ships_battle_tree", False)) or normal_tree == "battle"
     if normal_tree == "battle":
         if not ships_battle:

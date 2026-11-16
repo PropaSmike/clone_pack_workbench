@@ -55,16 +55,17 @@ ASSIGN_RE = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+?)\s*$")
 ITEM_KEYS = ("base_kind", "resource_name", "base_item", "members", "agent_name", "ui_id",
              "training_order", "spawn_per", "spawn_min", "spawn_max", "spawn_from")
 STAGE_KEYS = ("place", "display_name", "id_name", "forms", "ships_battle_tree", "normal_tree",
-              "series", "disp_order", "donor", "resource_place", "bgm",
+              "hazards", "series", "disp_order", "donor", "resource_place", "bgm",
               "bgm_setting_no", "bgm_selector", "dynamic_collisions", "paused_motions",
               "content_donor", "content_donor_tree", "carry_donor_scenery", "secret_of",
               "secret_command")
 STAGE_ENGINE_KEYS = ("place", "display_name", "id_name", "forms", "ships_battle_tree", "normal_tree",
-                     "series", "disp_order", "donor", "resource_place", "bgm",
+                     "hazards", "series", "disp_order", "donor", "resource_place", "bgm",
                      "bgm_setting_no", "bgm_selector", "dynamic_collisions", "paused_motions",
                      "secret_of", "secret_command")
 STAGE_SECRET_KEYS = ("secret_of", "secret_command")
-STAGE_KEYS_CLEARED_WHEN_BLANK = STAGE_SECRET_KEYS + ("normal_tree",)
+STAGE_KEYS_CLEARED_WHEN_BLANK = STAGE_SECRET_KEYS + ("normal_tree", "hazards")
+STAGE_HAZARDS = {"off": False, "on": True}
 SECRET_HOLDS = {"L": "l", "R": "r", "L and R": "l_r"}
 STAGE_TABLES = ("ladder", "barrel", "spring", "door")
 STAGE_LIST_KEYS = ("dynamic_collisions", "paused_motions")

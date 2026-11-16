@@ -142,6 +142,9 @@ For a stage, every `stage.toml` key, and:
 - **Normal form loads** `battle` (`normal_tree`): a stage made only as a
   battle form plays its battle tree in every form, Normal included. Opening
   a pack with only a battle tree sets it. Blank removes the line.
+- **Hazards** `off` or `on` (`hazards`): the donor's hazards stay off, or on,
+  whatever the Stage Hazards rule says. Blank follows the rule and removes the
+  line.
 - **Ladders**, **Barrel cannons**, **Springs** and **Doors**, written after
   the stage's keys. A table you did not change keeps its lines and comments.
 
@@ -682,6 +685,7 @@ checked in turn, and one `config.json` holds them all. `stage_bank_ids.py` and
   `normal_tree = "battle"` without a `stage/<place>/battle/` tree; a normal
   tree it would never read is a warning. `config.json` is then written for
   the battle tree alone.
+- `hazards` other than `true` or `false` is an error.
 
 ## lint_menu_pack.py
 

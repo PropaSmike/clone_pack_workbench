@@ -494,22 +494,22 @@ def gimmick_problem(table, raw):
     return ""
 
 
-def stage_set_shipped(paths, vanilla_dirs, place, resource_place, model_set):
-    """Whether stage/<place>/normal/model/<set> is shipped, or found where the stage loads from."""
-    prefix = "stage/%s/normal/model/%s/" % (place, model_set)
+def stage_set_shipped(paths, vanilla_dirs, place, resource_place, model_set, tree="normal"):
+    """Whether stage/<place>/<tree>/model/<set> is shipped, or found where the stage loads from."""
+    prefix = "stage/%s/%s/model/%s/" % (place, tree, model_set)
     if any(path.lower().startswith(prefix) for path in paths):
         return True
     if resource_place and vanilla_dirs:
-        return "stage/%s/normal/model/%s" % (resource_place, model_set) in vanilla_dirs
+        return "stage/%s/%s/model/%s" % (resource_place, tree, model_set) in vanilla_dirs
     return False
 
 
-def stage_motion_shipped(paths, vanilla_files, place, resource_place, model_set):
-    wanted = "stage/%s/normal/motion/%s/%s_00.nuanmb" % (place, model_set, model_set)
+def stage_motion_shipped(paths, vanilla_files, place, resource_place, model_set, tree="normal"):
+    wanted = "stage/%s/%s/motion/%s/%s_00.nuanmb" % (place, tree, model_set, model_set)
     if wanted in {path.lower() for path in paths}:
         return True
     if resource_place and vanilla_files:
-        return ("stage/%s/normal/motion/%s/%s_00.nuanmb" % (resource_place, model_set, model_set)
+        return ("stage/%s/%s/motion/%s/%s_00.nuanmb" % (resource_place, tree, model_set, model_set)
                 in vanilla_files)
     return False
 
@@ -520,6 +520,7 @@ def check_gimmicks(mod_dir, block, paths, vanilla_files, vanilla_dirs):
     settings = block["settings"]
     place = settings.get("place", "")
     resource_place = settings.get("resource_place")
+    tree = normal_tree_of(settings)
     plugin = os.path.isfile(os.path.join(mod_dir, "plugin.nro"))
     for key in STAGE_LIST_KEYS:
         if key not in block["raw"]:
@@ -530,13 +531,13 @@ def check_gimmicks(mod_dir, block, paths, vanilla_files, vanilla_dirs):
                                       "the whole stage.toml" % (key, block["raw"][key])))
             continue
         for model_set in (name.lower() for name in parsed[1]):
-            if not stage_set_shipped(paths, vanilla_dirs, place, resource_place, model_set):
-                findings.append(("WARN", "%s names %s, but stage/%s/normal/model/%s/ is not shipped"
-                                 % (key, model_set, place, model_set)))
-            if not stage_motion_shipped(paths, vanilla_files, place, resource_place, model_set):
-                findings.append(("WARN", "%s names %s, but stage/%s/normal/motion/%s/%s_00.nuanmb is not "
+            if not stage_set_shipped(paths, vanilla_dirs, place, resource_place, model_set, tree):
+                findings.append(("WARN", "%s names %s, but stage/%s/%s/model/%s/ is not shipped"
+                                 % (key, model_set, place, tree, model_set)))
+            if not stage_motion_shipped(paths, vanilla_files, place, resource_place, model_set, tree):
+                findings.append(("WARN", "%s names %s, but stage/%s/%s/motion/%s/%s_00.nuanmb is not "
                                          "shipped, so %s" % (
-                                             key, model_set, place, model_set, model_set,
+                                             key, model_set, place, tree, model_set, model_set,
                                              "nothing moves its collision" if key == "dynamic_collisions"
                                              else "there is no motion to hold")))
         if key == "paused_motions" and parsed[1] and not plugin:
@@ -571,14 +572,15 @@ def check_gimmicks(mod_dir, block, paths, vanilla_files, vanilla_dirs):
         model = model[1].lower() if model and model[0] == "text" else None
         if model:
             drawn.setdefault(model, []).append("line %d [[%s]]" % (line, name))
-            if not stage_set_shipped(paths, vanilla_dirs, place, resource_place, model):
-                findings.append(("WARN", "line %d: [[%s]] model %s is not under stage/%s/normal/model/, so "
-                                         "the %s draws nothing" % (line, name, model, place, name)))
+            if not stage_set_shipped(paths, vanilla_dirs, place, resource_place, model, tree):
+                findings.append(("WARN", "line %d: [[%s]] model %s is not under stage/%s/%s/model/, so "
+                                         "the %s draws nothing" % (line, name, model, place, tree, name)))
         if name == "spring":
             if model and "launch_frame" in table["raw"] and not stage_motion_shipped(
-                    paths, vanilla_files, place, resource_place, model):
+                    paths, vanilla_files, place, resource_place, model, tree):
                 findings.append(("WARN", "line %d: [[spring]] launch_frame plays %s_00.nuanmb, which "
-                                         "stage/%s/normal/motion/%s/ does not ship" % (line, model, place, model)))
+                                         "stage/%s/%s/motion/%s/ does not ship"
+                                 % (line, model, place, tree, model)))
             if not model and ("launch_frame" in table["raw"] or "joint" in table["raw"]):
                 findings.append(("INFO", "line %d: [[spring]] launch_frame and joint need a model; without "
                                          "one the launch is immediate" % line))
@@ -631,7 +633,14 @@ def based_ancestors(directory, based):
     return [parent for parent in all_parents(directory_of(directory)) if parent in based]
 
 
-def arc_trees(forms, ships_battle_tree):
+def normal_tree_of(settings):
+    """The folder the Normal form loads: battle when normal_tree = "battle"."""
+    return "battle" if settings.get("normal_tree") == "battle" else "normal"
+
+
+def arc_trees(forms, ships_battle_tree, normal_tree="normal"):
+    if normal_tree == "battle":
+        return ["battle"]
     trees = ["normal"]
     if ships_battle_tree and any(form != "normal" for form in forms):
         trees.append("battle")
@@ -649,7 +658,7 @@ def protected_directories(shipped_dirs, tree_roots, place):
 def donor_tree_sources(trees, donor, vanilla_dirs, normal_override=None):
     sources = {}
     for name in trees:
-        donor_tree = normal_override if name == "normal" and normal_override else name
+        donor_tree = normal_override if name == trees[0] and normal_override else name
         if (
             not normal_override
             and vanilla_dirs
@@ -932,12 +941,12 @@ def sound_shares(place, donor, shipped, vanilla_files):
 
 def build_config(mod_dir, place, donor, forms_present, ships_battle_tree,
                  vanilla_dirs, vanilla_files=None, carry_donor_scenery=True,
-                 content_donor_tree=None, stdat_donor=None):
+                 content_donor_tree=None, stdat_donor=None, normal_tree="normal"):
     stdat_donor = stdat_donor or donor
     shipped = shipped_files(mod_dir)
     tree = stage_directories(shipped, place)
     shipped_dirs = set(tree)
-    trees = arc_trees(forms_present, ships_battle_tree)
+    trees = arc_trees(forms_present, ships_battle_tree, normal_tree)
     tree_sources = donor_tree_sources(
         trees, donor, vanilla_dirs, content_donor_tree
     )
@@ -1289,14 +1298,29 @@ def lint_stage(mod_dir, arc_index, settings, declared_places, write_config=False
         error("a stage without its Normal form cannot be loaded")
 
     ships_battle = any(path.startswith("stage/%s/battle/" % place) for path in paths)
-    declared = bool(settings.get("ships_battle_tree", False))
-    if declared and not ships_battle:
+    normal_tree = settings.get("normal_tree", "normal")
+    if normal_tree not in ("normal", "battle"):
+        error('normal_tree must be "normal" or "battle"; the engine refuses the whole stage.toml')
+        normal_tree = "normal"
+    declared = bool(settings.get("ships_battle_tree", False)) or normal_tree == "battle"
+    if normal_tree == "battle":
+        if not ships_battle:
+            error(
+                'normal_tree = "battle" but there is nothing under stage/%s/battle/. '
+                "Every form would point at a missing tree and fail to load." % place
+            )
+        if any(path.startswith("stage/%s/normal/" % place) for path in paths):
+            warn(
+                'normal_tree = "battle", so every form loads stage/%s/battle/ and '
+                "stage/%s/normal/ is never read" % (place, place)
+            )
+    elif declared and not ships_battle:
         error(
             "ships_battle_tree = true but there is nothing under stage/%s/battle/. "
             "Omega and Battlefield would point at a missing tree and fail to load."
             % place
         )
-    if ships_battle and not declared:
+    elif ships_battle and not declared:
         error(
             "stage/%s/battle/ exists but ships_battle_tree = false, so Omega and "
             "Battlefield would use normal/ and the battle tree never loads." % place
@@ -1365,19 +1389,20 @@ def lint_stage(mod_dir, arc_index, settings, declared_places, write_config=False
 
     if vanilla_files is not None:
         cam_donor = settings.get("content_donor") or settings.get("donor") or place
-        cam_tree = settings.get("content_donor_tree") or "normal"
+        own_tree = normal_tree_of(settings)
+        cam_tree = settings.get("content_donor_tree") or own_tree
         donor_camera = "stage/%s/%s/motion/camera" % (cam_donor, cam_tree)
-        ours_camera = "stage/%s/normal/motion/camera" % place
+        ours_camera = "stage/%s/%s/motion/camera" % (place, own_tree)
         if any(f.startswith(donor_camera + "/") for f in vanilla_files):
             if any(p.startswith(ours_camera + "/") for p in paths):
                 pass
-            elif any(p.startswith("stage/%s/normal/motion/" % place) for p in paths):
+            elif any(p.startswith("stage/%s/%s/motion/" % (place, own_tree)) for p in paths):
                 warn(
                     "%s has camera animations (%s) and this pack ships motion files "
-                    "but no camera. stage/%s/normal/motion is then yours with only "
+                    "but no camera. stage/%s/%s/motion is then yours with only "
                     "the camera borrowed, a mix nothing has tested. Ship %s/ "
                     "yourself, or drop the motion files so the whole motion tree "
-                    "is borrowed." % (cam_donor, donor_camera, place, ours_camera)
+                    "is borrowed." % (cam_donor, donor_camera, place, own_tree, ours_camera)
                 )
             else:
                 note(
@@ -1573,7 +1598,7 @@ def lint_stage(mod_dir, arc_index, settings, declared_places, write_config=False
 
     generated = build_config(mod_dir, place, content_donor, forms, declared,
                              vanilla_dirs, vanilla_files, carry_donor_scenery,
-                             content_donor_tree, stdat_donor=donor)
+                             content_donor_tree, stdat_donor=donor, normal_tree=normal_tree)
 
     inherited = sorted(
         directory for directory in generated.get("new-dir-infos-base", {})
@@ -1639,10 +1664,10 @@ def lint_stage(mod_dir, arc_index, settings, declared_places, write_config=False
         )
 
     if config:
-        findings.extend(check_config(config, place, tree, forms, declared))
+        findings.extend(check_config(config, place, tree, forms, declared, normal_tree))
         findings.extend(check_effect_group(config, place, content_donor, vanilla_files))
         sources = donor_tree_sources(
-            arc_trees(forms, declared),
+            arc_trees(forms, declared, normal_tree),
             content_donor,
             vanilla_dirs,
             content_donor_tree,
@@ -1883,7 +1908,7 @@ def check_borrowed_sources_replaced(config, mod_dir, place):
     return findings
 
 
-def check_config(config, place, tree, forms, ships_battle_tree):
+def check_config(config, place, tree, forms, ships_battle_tree, normal_tree="normal"):
     findings = []
     dir_infos = set(config.get("new-dir-infos", []))
     bases = config.get("new-dir-infos-base", {})
@@ -1915,7 +1940,7 @@ def check_config(config, place, tree, forms, ships_battle_tree):
 
     tree_roots = {
         "stage/%s/%s" % (place, name)
-        for name in arc_trees(forms, ships_battle_tree)
+        for name in arc_trees(forms, ships_battle_tree, normal_tree)
     }
     ancestors = set(tree_roots)
     ancestors.add("stage/%s" % place)

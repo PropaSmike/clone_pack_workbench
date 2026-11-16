@@ -1821,6 +1821,8 @@ class IdentityPanel(ttk.Frame):
         fields.choice("resource_place", "Resource place", [""] + places,
                       hint="load files from this stage's folders instead of your own")
         fields.flag("ships_battle_tree", "Ships a stage/<place>/battle tree")
+        fields.choice("normal_tree", "Normal form loads", ["", "normal", "battle"],
+                      hint="battle: a stage made only as a battle form plays it in every form")
         fields.choice("bgm", "Music playlist",
                       [""] + [name for name, _ in catalog.bgm_sets()],
                       hint="blank borrows the donor's music")

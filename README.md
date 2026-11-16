@@ -139,6 +139,9 @@ For a stage, every `stage.toml` key, and:
   this one instead, like Boxing Ring's Punch-Out!! version (`secret_of`,
   `secret_command`). Blank removes both lines; a Grid position of -1 leaves
   the stage no icon of its own.
+- **Normal form loads** `battle` (`normal_tree`): a stage made only as a
+  battle form plays its battle tree in every form, Normal included. Opening
+  a pack with only a battle tree sets it. Blank removes the line.
 - **Ladders**, **Barrel cannons**, **Springs** and **Doors**, written after
   the stage's keys. A table you did not change keeps its lines and comments.
 
@@ -667,6 +670,10 @@ checked in turn, and one `config.json` holds them all. `stage_bank_ids.py` and
   naming the stage itself, a place not in data.arc, or Boxing Ring or
   Minecraft World (which have a secret of their own) is a warning; a form the
   stage lacks gets a note.
+- `normal_tree` other than `normal` or `battle` is an error, and so is
+  `normal_tree = "battle"` without a `stage/<place>/battle/` tree; a normal
+  tree it would never read is a warning. `config.json` is then written for
+  the battle tree alone.
 
 ## lint_menu_pack.py
 

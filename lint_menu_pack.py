@@ -781,15 +781,21 @@ def lint(mod_dir, arc_index=DEFAULT_ARC_INDEX):
                         findings.append(("WARN", "%s: no runs_as and %s has no enter, so choosing the row "
                                                  "does nothing" % (label, compiled)))
             if table["button"]:
-                if table["button"] not in shipped:
-                    findings.append(("WARN", "%s: button %s is not in this pack; the area shows the "
-                                             "mode's name" % (label, table["button"])))
-                else:
+                if table["button"] in shipped:
                     findings += check_layout_file(mod_dir, shipped, table["button"], label, needs_root=True)
+                elif vanilla is None or table["button"] not in vanilla:
+                    findings.append(("ERROR", "%s: button %s is not in this pack; the button is a main menu "
+                                              "layout, so older Dionysus releases crash at the main menu and "
+                                              "current ones leave it out" % (label, table["button"])))
         elif kind == "layout":
             if table["file"] in shipped:
                 findings += check_layout_file(mod_dir, shipped, table["file"], label)
-            elif vanilla is not None and table["file"] not in vanilla:
+            elif table["file"] == MAIN_MENU_LAYOUT or (vanilla is not None and table["file"] in vanilla):
+                pass
+            elif not table["gallery"]:
+                findings.append(("ERROR", "%s: %s is not in this pack; older Dionysus releases crash at the "
+                                          "main menu and current ones leave it out" % (label, table["file"])))
+            elif vanilla is not None:
                 findings.append(("WARN", "%s: %s is neither in this pack nor in the game" % (label, table["file"])))
             if table["over_side_panel"] and table["under_movies"]:
                 findings.append(("INFO", "%s: under_movies wins over over_side_panel" % label))

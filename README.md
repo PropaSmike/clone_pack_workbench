@@ -709,6 +709,9 @@ python lint_menu_pack.py "path/to/your/mod folder"
 - A picture layout needs `blyt/<folder>.bflyt`, and every layout's
   `timg/__Combined.bntx` must start on a 4096-byte boundary, or the main menu
   stops at load.
+- A main menu `[[layout]]` or a mode `button` the pack does not ship is an
+  error: older Dionysus releases crash at the main menu, current ones leave
+  it out.
 - Popup rows another pack also adds, popup booleans that are not `true` or
   `false`, movie paths past 62 bytes and `.lua` files in the pack are
   reported.

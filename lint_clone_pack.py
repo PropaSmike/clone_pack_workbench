@@ -585,8 +585,38 @@ def lint(mod_dir, arc_index, cross_color_resources=()):
     findings.extend(lint_motion_list_folders(mod_dir, shipped, vanilla_dirs, added_dirs))
     findings.extend(lint_undeclared_shipped(added_dirs, dir_files, shipped))
     findings.extend(lint_kirby_copy_articles(dir_files, shipped, vanilla))
+    findings.extend(lint_picture_trees(shipped, vanilla))
     findings.extend(check_fighter_manifest(mod_dir, shipped, vanilla))
     findings.extend(check_work_ids(mod_dir))
+    return findings
+
+
+CHARA_PICTURE_RE = re.compile(r"^ui/(replace|replace_patch)/chara/chara_\d+/chara_\d+_(.+)_\d{2,3}\.bntx$")
+
+
+def lint_picture_trees(shipped, vanilla):
+    """A fighter's row reads one picture tree; the engine points a clone's row at the one its pictures are in."""
+    vanilla_names = set()
+    for path in vanilla or ():
+        if path.startswith("ui/replace"):
+            match = CHARA_PICTURE_RE.match(path)
+            if match:
+                vanilla_names.add(match.group(2))
+    trees = collections.defaultdict(set)
+    for path in shipped:
+        match = CHARA_PICTURE_RE.match(path.lower())
+        if match and match.group(2) not in vanilla_names:
+            trees[match.group(2)].add(match.group(1))
+    findings = []
+    for name, found in sorted(trees.items()):
+        if len(found) == 2:
+            findings.append(("WARN", "select-screen pictures for %s are under both ui/replace/chara and "
+                                     "ui/replace_patch/chara; a fighter reads one tree, so the other one's "
+                                     "never show. Keep them in one" % name))
+        elif found == {"replace_patch"}:
+            findings.append(("INFO", "select-screen pictures for %s are under ui/replace_patch/chara, as DLC "
+                                     "fighters' are; the engine points its row at that tree (an engine newer "
+                                     "than 0.8.1-beta.2)" % name))
     return findings
 
 

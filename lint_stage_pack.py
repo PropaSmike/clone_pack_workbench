@@ -47,7 +47,7 @@ VANILLA_FILE_HOST_PREFIXES = (
     "ui/replace_patch/stage/stage_",
 )
 
-MINTED_ART_PREFIX = "ui/replace/stage/stage_"
+STAGE_ART_RE = re.compile(r"^ui/(replace|replace_patch)/stage/stage_\d+/stage_\d+_(.+)\.bntx$")
 
 VANILLA_FILE_HOST_DIRS = ("sound/bank/stage", "sound/sequence/stage")
 
@@ -1536,16 +1536,23 @@ def lint_stage(mod_dir, arc_index, settings, declared_places, write_config=False
                 "stage at its files itself; remove them from the JSON" % path
             )
 
-    patched_art = sorted(
-        path for path in paths
-        if path.startswith("ui/replace_patch/stage/") and path.endswith(".bntx")
-    )
-    if patched_art:
+    art_name = str(settings.get("id_name") or place).lower()
+    art_trees = {
+        match.group(1)
+        for match in (STAGE_ART_RE.match(path.lower()) for path in paths)
+        if match and match.group(2) == art_name
+    }
+    if len(art_trees) == 2:
         warn(
-            "%d stage-select icon(s) are under ui/replace_patch/. A clone stage "
-            "finds its art under %s<N>/, so move them there (for example %s)."
-            % (len(patched_art), MINTED_ART_PREFIX,
-               patched_art[0].replace("ui/replace_patch/", "ui/replace/", 1))
+            "stage-select icons for %s are under both ui/replace/stage and "
+            "ui/replace_patch/stage; a stage reads one tree, so the other one's "
+            "never show. Keep them in one" % art_name
+        )
+    elif art_trees == {"replace_patch"}:
+        note(
+            "stage-select icons are under ui/replace_patch/stage, as the patch-era "
+            "stages' are; the engine points this stage's row at that tree (an "
+            "engine newer than 0.8.1-beta.2)"
         )
 
     disp_order = settings.get("disp_order", -1)

@@ -602,7 +602,11 @@ Costumes and effects:
 - a one-slot effect name (`ef_<clone>_c00.eff`) with no `ef_<clone>.eff` is an
   error, one beside a borrowed `ef_<clone>.eff` a warning (the pack's effects
   are not loaded); an effect model missing from some costume groups is a
-  warning.
+  warning;
+- a clone's select-screen pictures may sit under `ui/replace/chara/` or, as
+  the DLC fighters' do, `ui/replace_patch/chara/` (a note: it needs an engine
+  newer than 0.8.1-beta.2); one fighter's pictures in both trees are a
+  warning, since a fighter reads one.
 
 `fighter.toml` is read with the engine's rules (an unknown key or table is an
 error with its line) and checked against the folders:
@@ -666,6 +670,10 @@ checked in turn, and one `config.json` holds them all. `stage_bank_ids.py` and
 - A missing model set or motion, a set drawn twice or also bound in
   `config_stage.toml`, and doors or paused motions with no `plugin.nro` are
   warnings.
+- Stage-select icons under `ui/replace_patch/stage/`, as the patch-era
+  stages' are, get a note (an engine newer than 0.8.1-beta.2 reads them
+  there); one stage's icons in both trees are a warning, since a stage reads
+  one.
 - `secret_command` other than `l`, `r` or `l_r` is an error. `secret_of`
   naming the stage itself, a place not in data.arc, or Boxing Ring or
   Minecraft World (which have a secret of their own) is a warning; a form the

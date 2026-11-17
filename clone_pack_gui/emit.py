@@ -459,12 +459,7 @@ def command_lines(state: dict) -> list[str]:
                      % ("command(%s)" % command_call(command), command["name"]))
     if not calls:
         return []
-    return (["    let manifest = if dionysus_api::runtime_capabilities() & dionysus_api::CAP_COMMAND_INPUTS != 0 {",
-             "        manifest"]
-            + ["            " + call for call in calls]
-            + ["    } else {",
-               "        manifest // an older engine would refuse the whole manifest",
-               "    };"])
+    return guarded_calls("CAP_COMMAND_INPUTS", calls)
 
 
 def command_uses(state: dict) -> set:
@@ -660,14 +655,14 @@ def article_gimmick_uses(state: dict) -> set:
 
 
 def guarded_calls(capability: str, calls: list[str]) -> list[str]:
+    """Builder calls for a feature an older Dionysus lacks: register() leaves
+    them out there and logs it, so they need no check of their own."""
     if not calls:
         return []
-    return (["    let manifest = if dionysus_api::runtime_capabilities() & dionysus_api::%s != 0 {"
-             % capability, "        manifest"]
-            + ["            " + call for call in calls]
-            + ["    } else {",
-               "        manifest // an older engine would refuse the whole manifest",
-               "    };"])
+    lines = ["    let manifest = manifest // register() leaves these out on a Dionysus without %s" % capability]
+    lines += ["        " + call for call in calls]
+    lines[-1] = end_statement(lines[-1])
+    return lines
 
 
 def move_list_lines(state: dict) -> list[str]:
@@ -887,20 +882,16 @@ def raw_fence(text: str) -> str:
 
 
 def guarded_tables(tables, capability: str, note: str) -> list[str]:
-    """fighter.toml tables added to the manifest only when the engine has the
-    feature: an engine without it refuses the whole manifest."""
+    """fighter.toml tables for a feature an older Dionysus lacks: register()
+    leaves them out there and logs it."""
     tables = (tables or "").strip()
     if not tables:
         return []
     fence = raw_fence(tables)
-    return (["    let manifest = if dionysus_api::runtime_capabilities() & dionysus_api::%s != 0 {"
-             % capability,
-             "        manifest.raw(r%s\"" % fence]
+    return (["    let manifest = manifest.raw(r%s\"" % fence]
             + tables.splitlines()
-            + ["\"%s) // %s, as fighter.toml carries them" % (fence, note),
-               "    } else {",
-               "        manifest // an older engine would refuse the whole manifest",
-               "    };"])
+            + ["\"%s); // %s, as fighter.toml carries them; left out on a Dionysus without %s"
+               % (fence, note, capability)])
 
 
 GAME_SWITCH_BASES = ("eflame", "elight", "pzenigame", "pfushigisou", "plizardon")
@@ -933,13 +924,7 @@ def entry_group_lines(state: dict) -> list[str]:
     lines = []
     if calls:
         capability = "CAP_ANY_BASE_GROUPS" if any_base else "CAP_ENTRY_GROUPS"
-        chain = ["        manifest." + calls[0]] + ["            ." + call for call in calls[1:]]
-        lines = (["    let manifest = if dionysus_api::runtime_capabilities() & dionysus_api::%s != 0 {"
-                  % capability]
-                 + chain
-                 + ["    } else {",
-                    "        manifest // an older engine would refuse the whole manifest",
-                    "    };"])
+        lines = guarded_calls(capability, ["." + call for call in calls])
     if "partner_params" in state:
         params = [row for row in state.get("partner_params") or [] if row.get("key")]
         tables = ("[partner_params]\n" + "\n".join("%s = %s" % (row["key"], row["value"]) for row in params)

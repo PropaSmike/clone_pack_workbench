@@ -355,12 +355,10 @@ Per fighter:
   keep them, and so do article hurtboxes and platforms (`article_hurtbox`,
   `article_lvd`).
 - `[[global_motion]]`, `[[grab]]`, `[hud]`, `[tether]`, `[partner_params]` and
-  `[move_list]`, and `switch_with`, `partner` and `partner_with`, go in last,
-  each behind a check of the engine's capability (`CAP_GLOBAL_MOTIONS`,
-  `CAP_GRAB_RULES`, `CAP_HUD`, `CAP_TETHER`, `CAP_MOVE_LIST_PAGES`,
-  `CAP_ENTRY_GROUPS`, and `CAP_ANY_BASE_GROUPS` for a partner or switch group
-  beyond the game's own): an engine without the feature refuses the whole
-  manifest.
+  `[move_list]`, and `switch_with`, `partner` and `partner_with`, go in last.
+  `register` leaves out any of them the installed Dionysus lacks and logs it,
+  so the generated code checks nothing; it needs this release's
+  `dionysus_api`.
 - With the plugin flag: `register_css_entry` (CSK's call, one layout per
   costume) and `register_params` (ParamConfig's calls with the clone's kind).
 
@@ -449,9 +447,9 @@ The window needs nothing installed. What the packs it writes need:
   `smashline::Agent` (older engines take them through `article(..).status()`).
 - A `dionysus_api` that has `float` and `glide`: the float and the glide.
 
-An engine refuses a `fighter.toml` with a feature it lacks, so the Rust tab
-checks the capability first. A call the engine lacks prints
-`was not applied: EngineUnavailable` in the log.
+A `fighter.toml` with a feature the installed Dionysus lacks is refused
+whole; in a plugin, `register` leaves that feature out instead. A call the
+engine lacks prints `was not applied: EngineUnavailable` in the log.
 
 ## Stage packs
 

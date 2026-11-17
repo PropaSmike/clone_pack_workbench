@@ -653,6 +653,22 @@ Items:
 When the pack folder holds its Rust source under `src/`, a custom work id past
 a base's `_TERM` is warned about: a clone's work arrays are its base's size.
 
+prcxml files (`lint_prcxml.py`, also run by the stage linter):
+
+- a clone's `fighter/<name>/param/fighter_param.prcxml`,
+  `fighter_param_motion.prcxml`, `common.prcxml` (and `item`, `etc`,
+  `power_up`, `effect`, `sound`), its `fighter/<name>/ai/param/fighter_param.prcxml`,
+  an item's `common_param.prcxml`, an enemy's `enemy/<name>/common.prcxml` and a
+  stage's `item_switch_param.prcxml`, `stage_sound_settings.prcxml` and
+  `stage_param.prcxml` are read as Dionysus reads them: a file that is
+  not XML is an error, a missing row or a field the engine does not know is a
+  warning, and a label, list or fixed field it leaves out gets a note;
+- a prcxml for the shared file itself (`fighter/common/param/`,
+  `fighter/common/ai/param/`, `item/common/param/`, `enemy/common/common.prcxml`,
+  `param/sound/stage_sound_settings.prcxml`) is a warning: it changes the
+  vanilla rows for every player. So is an item `param.prcxml` written for the
+  shared row (ARCropolis applies it to the item's own `param.prc`).
+
 ## lint_stage_pack.py
 
 ```

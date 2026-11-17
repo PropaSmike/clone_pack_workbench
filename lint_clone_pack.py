@@ -16,6 +16,10 @@ try:
 except ImportError:
     fighter_manifest = None
 try:
+    import lint_prcxml
+except ImportError:
+    lint_prcxml = None
+try:
     from make_clone_pack import is_asset
 except ImportError:
     def is_asset(path):
@@ -588,6 +592,8 @@ def lint(mod_dir, arc_index, cross_color_resources=()):
     findings.extend(lint_picture_trees(shipped, vanilla))
     findings.extend(check_fighter_manifest(mod_dir, shipped, vanilla))
     findings.extend(check_work_ids(mod_dir))
+    if lint_prcxml is not None:
+        findings.extend(lint_prcxml.lint_pack(mod_dir, ("fighter", "item", "enemy")))
     return findings
 
 

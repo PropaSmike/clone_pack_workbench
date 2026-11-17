@@ -14,6 +14,10 @@ try:
 except ImportError:
     stage_bank_ids = None
 try:
+    import lint_prcxml
+except ImportError:
+    lint_prcxml = None
+try:
     import stage_sqb_tones
 except ImportError:
     stage_sqb_tones = None
@@ -1240,6 +1244,8 @@ def lint(mod_dir, arc_index, write_config=False):
             found = [(level, "%s: %s" % (settings.get("place") or "?", message))
                      for level, message in found]
         findings.extend(found)
+    if lint_prcxml is not None:
+        findings.extend(lint_prcxml.lint_pack(mod_dir, ("stage",)))
     return findings
 
 

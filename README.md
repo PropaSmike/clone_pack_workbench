@@ -145,6 +145,11 @@ For a stage, every `stage.toml` key, and:
 - **Hazards** `off` or `on` (`hazards`): the donor's hazards stay off, or on,
   whatever the Stage Hazards rule says. Blank follows the rule and removes the
   line.
+- **Items start from**, **Items left out** and **Items let back in**
+  (`items_start`, `items_off`, `items_on`): the items, Assist Trophies and
+  Poké Ball Pokémon the stage leaves out, starting from the donor's list or
+  from all. **Pick items** ticks every one by its English name; ticked can
+  appear. Blank removes the lines.
 - **Ladders**, **Barrel cannons**, **Springs** and **Doors**, written after
   the stage's keys. A table you did not change keeps its lines and comments.
 
@@ -684,6 +689,10 @@ checked in turn, and one `config.json` holds them all. `stage_bank_ids.py` and
   tree it would never read is a warning. `config.json` is then written for
   the battle tree alone.
 - `hazards` other than `true` or `false` is an error.
+- `items_start` other than `donor` or `all`, or an `items_off` or `items_on`
+  that is not a list of names, is an error. A name no stage can leave out, or
+  one in both lists, is a warning; letting in what the donor leaves out is a
+  note.
 
 ## lint_menu_pack.py
 

@@ -750,6 +750,69 @@ class RenameDialog(tk.Toplevel):
         self.done(old, new)
 
 
+class ItemPickDialog(tk.Toplevel):
+    """Every item, Assist Trophy and Poke Ball Pokemon as a box: ticked can appear on
+    the stage. The boxes start from the stage's start list and its two keys."""
+
+    def __init__(self, parent: tk.Misc, entries, base, off, on, source: str, done):
+        super().__init__(parent)
+        self.title("Items on this stage")
+        theme.dress(self)
+        self.done = done
+        self.entries = list(entries)
+        self.base = set(base)
+        order = [name for name, _, _ in self.entries]
+        allowed = packs.items_allowed(order, self.base, set(off), set(on))
+        self.vars = {name: tk.BooleanVar(value=allowed[name]) for name in order}
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        body = ttk.Frame(self, padding=12)
+        body.grid(sticky="nsew")
+        body.columnconfigure(0, weight=1)
+        body.rowconfigure(1, weight=1)
+        ttk.Label(body, text="Ticked can appear. " + source, style="Hint.TLabel",
+                  wraplength=640, justify="left").grid(row=0, column=0, sticky="w", pady=(0, 6))
+        tabs = ttk.Notebook(body)
+        tabs.grid(row=1, column=0, sticky="nsew")
+        for group, title in packs.ITEM_GROUPS:
+            members = [(name, display) for name, kind, display in self.entries if kind == group]
+            page = ttk.Frame(tabs, padding=6)
+            page.columnconfigure(0, weight=1)
+            page.rowconfigure(1, weight=1)
+            tabs.add(page, text="%s (%d)" % (title, len(members)))
+            row = ttk.Frame(page)
+            row.grid(row=0, column=0, sticky="w", pady=(0, 4))
+            ttk.Button(row, text="Tick all",
+                       command=lambda chosen=members: self.set_all(chosen, True)).pack(
+                side="left", padx=(0, 6))
+            ttk.Button(row, text="Untick all",
+                       command=lambda chosen=members: self.set_all(chosen, False)).pack(side="left")
+            scroll = Scrolled(page)
+            scroll.grid(row=1, column=0, sticky="nsew")
+            for index, (name, display) in enumerate(members):
+                text = display + ("  (the donor leaves it out)" if name in self.base else "")
+                ttk.Checkbutton(scroll.body, text=text, variable=self.vars[name]).grid(
+                    row=index // 3, column=index % 3, sticky="w", padx=(0, 14), pady=1)
+        buttons = ttk.Frame(body)
+        buttons.grid(row=2, column=0, sticky="e", pady=(8, 0))
+        ttk.Button(buttons, text="Use these", command=self.confirm).pack(side="left", padx=(0, 6))
+        ttk.Button(buttons, text="Cancel", command=self.destroy).pack(side="left")
+        self.geometry("760x540")
+        self.bind("<Escape>", lambda _: self.destroy())
+        self.transient(parent.winfo_toplevel())
+        self.grab_set()
+
+    def set_all(self, members, value: bool) -> None:
+        for name, _ in members:
+            self.vars[name].set(value)
+
+    def confirm(self) -> None:
+        allowed = {name: variable.get() for name, variable in self.vars.items()}
+        order = [name for name, _, _ in self.entries]
+        self.destroy()
+        self.done(*packs.item_lists(order, self.base, allowed))
+
+
 class Scrolled(ttk.Frame):
     """A frame whose contents scroll when the window is shorter than they are:
     build into .body, and the bar appears only while it is needed.
@@ -1825,6 +1888,15 @@ class IdentityPanel(ttk.Frame):
                       hint="battle: a stage made only as a battle form plays it in every form")
         fields.choice("hazards", "Hazards", ["", "off", "on"],
                       hint="off or on whatever the Stage Hazards rule says; blank follows the rule")
+        fields.choice("items_start", "Items start from", ["", "donor", "all"],
+                      hint="donor: leave out what the donor leaves out; all: leave out nothing. "
+                           "Blank is donor")
+        fields.entry("items_off", "Items left out", width=40,
+                     hint="items, Assist Trophies and Poke Ball Pokemon this stage also leaves "
+                          "out (items_off)")
+        fields.entry("items_on", "Items let back in", width=40,
+                     hint="ones the start leaves out that this stage allows (items_on)")
+        fields.buttons((("Pick items", self.pick_stage_items),))
         fields.choice("bgm", "Music playlist",
                       [""] + [name for name, _ in catalog.bgm_sets()],
                       hint="blank borrows the donor's music")
@@ -2937,6 +3009,35 @@ class IdentityPanel(ttk.Frame):
                          "keep one item per pack folder")
         self.app.save_state()
         self.app.log_kept()
+
+    def stage_item_start(self) -> tuple[set, str]:
+        """What the stage's items start from, and a line saying so."""
+        variables = self.fields[packs.STAGE].vars
+        donor = variables["donor"].get().strip().lower()
+        if variables["items_start"].get().strip().lower() == "all":
+            return set(), "Starting from every item: nothing left out."
+        if not donor:
+            return set(), "No behaviour donor, so the start leaves nothing out."
+        bans = self.app.catalog.stage_item_bans(donor)
+        if bans is None:
+            return set(), "%s has no item list, so the start leaves nothing out." % donor
+        return bans, "Starting from %s's list: %d left out." % (donor, len(bans))
+
+    def pick_stage_items(self) -> None:
+        entries = self.app.catalog.item_switch()
+        if not entries:
+            messagebox.showinfo(TITLE, "item_switch.tsv is missing, so there is nothing to "
+                                       "pick from.")
+            return
+        variables = self.fields[packs.STAGE].vars
+        base, source = self.stage_item_start()
+
+        def chosen(off, on) -> None:
+            variables["items_off"].set(", ".join(off))
+            variables["items_on"].set(", ".join(on))
+
+        ItemPickDialog(self, entries, base, spawn_list(variables["items_off"].get()),
+                       spawn_list(variables["items_on"].get()), source, chosen)
 
     def write_stage_toml(self) -> None:
         if not self.app.require_folder():

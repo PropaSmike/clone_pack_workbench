@@ -58,17 +58,32 @@ STAGE_KEYS = ("place", "display_name", "id_name", "forms", "ships_battle_tree", 
               "hazards", "series", "disp_order", "donor", "resource_place", "bgm",
               "bgm_setting_no", "bgm_selector", "dynamic_collisions", "paused_motions",
               "content_donor", "content_donor_tree", "carry_donor_scenery", "secret_of",
-              "secret_command")
+              "secret_command", "items_start", "items_off", "items_on")
 STAGE_ENGINE_KEYS = ("place", "display_name", "id_name", "forms", "ships_battle_tree", "normal_tree",
                      "hazards", "series", "disp_order", "donor", "resource_place", "bgm",
                      "bgm_setting_no", "bgm_selector", "dynamic_collisions", "paused_motions",
-                     "secret_of", "secret_command")
+                     "secret_of", "secret_command", "items_start", "items_off", "items_on")
 STAGE_SECRET_KEYS = ("secret_of", "secret_command")
-STAGE_KEYS_CLEARED_WHEN_BLANK = STAGE_SECRET_KEYS + ("normal_tree", "hazards")
+STAGE_KEYS_CLEARED_WHEN_BLANK = STAGE_SECRET_KEYS + ("normal_tree", "hazards", "items_start")
 STAGE_HAZARDS = {"off": False, "on": True}
 SECRET_HOLDS = {"L": "l", "R": "r", "L and R": "l_r"}
+
+
+def items_allowed(order, base, off, on) -> dict[str, bool]:
+    """Which of the stage's items can appear: what its start allows, minus items_off,
+    plus items_on; a name in both lists stays out, as in the engine."""
+    return {name: name not in off and (name in on or name not in base) for name in order}
+
+
+def item_lists(order, base, allowed) -> tuple[list[str], list[str]]:
+    """(items_off, items_on) that give these choices: what the stage leaves out that
+    its start allows, and what it allows that its start leaves out, in the game's order."""
+    off = [name for name in order if not allowed.get(name, True) and name not in base]
+    on = [name for name in order if allowed.get(name, True) and name in base]
+    return off, on
 STAGE_TABLES = ("ladder", "barrel", "spring", "door")
-STAGE_LIST_KEYS = ("dynamic_collisions", "paused_motions")
+STAGE_LIST_KEYS = ("dynamic_collisions", "paused_motions", "items_off", "items_on")
+ITEM_GROUPS = (("item", "Items"), ("assist", "Assist Trophies"), ("pokemon", "Poké Ball Pokémon"))
 FIGHTER_KEYS = ("name", "base", "display_name", "costumes", "color_start", "series",
                 "disp_order", "narration", "staffroll", "css", "ui_chara", "fighter_kind_name",
                 "owns_param_resources", "partner", "switch", "item_hand")

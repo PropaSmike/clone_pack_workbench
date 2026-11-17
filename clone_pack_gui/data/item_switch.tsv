@@ -1,0 +1,202 @@
+index	name	group	display
+0	assist	item	Assist Trophy
+1	barrel	item	Barrel
+2	box	item	Crate
+3	capsule	item	Capsule
+4	carrierbox	item	Rolling Crate
+5	kusudama	item	Party Ball
+6	pokeball	item	Poké Ball
+7	masterball	item	Master Ball
+8	sandbag	item	Sandbag
+9	grass	item	Grass
+10	maximtomato	item	Maxim Tomato
+11	heart	item	Heart Container
+12	tabemono	item	Food
+13	fairybottle	item	Fairy Bottle
+14	healball	item	Healing Sprout
+15	teamhealfield	item	Healing Field
+16	curry	item	Superspicy Curry
+17	metalblock	item	Metal Box
+18	mushd	item	Poison Mushroom
+19	mushroom	item	Super Mushroom
+20	slow	item	Timer
+21	superstar	item	Super Star
+22	thunder	item	Lightning
+23	warpstar	item	Warp Star
+24	fireflower	item	Fire Flower
+25	raygun	item	Ray Gun
+26	superscope	item	Super Scope
+27	drill	item	Drill
+28	steeldiver	item	Steel Diver
+29	magicpot	item	Gust Bellows
+30	revengeshooter	item	Rage Blaster
+31	bananagun	item	Banana Gun
+32	staff	item	Staff
+33	walkmush	item	Ramblin' Evil Mushroom
+34	beamsword	item	Beam Sword
+35	goldenhammer	item	Golden Hammer
+36	hammer	item	Hammer
+37	homerunbat	item	Home-Run Bat
+38	ripstick	item	Lip's Stick
+39	starrod	item	Star Rod
+40	club	item	Ore Club
+41	firebar	item	Fire Bar
+42	killsword	item	Killing Edge
+43	deathscythe	item	Death's Scythe
+44	banana	item	Banana Peel
+45	bombhei	item	Bob-omb
+46	bumper	item	Bumper
+47	chewing	item	Gooey Bomb
+48	deku	item	Deku Nut
+49	doseisan	item	Mr. Saturn
+50	freezer	item	Freezie
+51	greenshell	item	Green Shell
+52	pasaran	item	Hothead
+53	pitfall	item	Pitfall
+54	sensorbomb	item	Motion-Sensor Bomb
+55	smartbomb	item	Smart Bomb
+56	smokescreen	item	Smoke Ball
+57	crossbomb	item	X Bomb
+58	dolphinbomb	item	Hocotate Bomb
+59	boomerang	item	Boomerang
+60	honeycomb	item	Beehive
+61	killereye	item	Killer Eye
+62	bombchu	item	Bombchu
+63	togezoshell	item	Spiny Shell
+64	bossgalaga	item	Boss Galaga
+65	beetle	item	Beetle
+66	powblock	item	POW Block
+67	starring	item	Super Launch Star
+68	blackball	item	Black Hole
+69	magicball	item	Beastball
+70	soccerball	item	Soccer Ball
+71	unira	item	Unira
+72	badge	item	Franklin Badge
+73	screw	item	Screw Attack
+74	usagihat	item	Bunny Hood
+75	superleaf	item	Super Leaf
+76	backshield	item	Back Shield
+77	rocketbelt	item	Rocket Belt
+78	powderbox	item	Blast Box
+79	smashball	item	Smash Ball
+80	dragoon	item	Dragoon Parts
+81	killer	item	Bullet Bill
+82	genesis	item	Daybreak Parts
+83	chicken	item	Cucco
+84	specialflag	item	Special Flag
+85	smashbomb	item	Fake Smash Ball
+86	bomber	item	Bomber
+87	andross	assist	Andross
+88	goroh	assist	Samurai Goroh
+89	waluigi	assist	Waluigi
+90	stafy	assist	Starfy
+91	devil	assist	Devil
+92	metroid	assist	Metroid
+93	hammerbros	assist	Hammer Bro
+94	joe	assist	Knuckle Joe
+95	jeff	assist	Jeff
+96	shadow	assist	Shadow
+97	wright	assist	Dr. Wright
+98	lin	assist	Lyn
+99	nintendogs	assist	nintendog
+100	midna	assist	Midna
+101	motherbrain	assist	Mother Brain
+102	eleka	assist	Phosphora
+103	ghirahim	assist	Ghirahim
+104	starman	assist	Starman
+105	sheriff	assist	Sheriff
+106	skullkid	assist	Skull Kid
+107	ashley	assist	Ashley
+108	wanwan	assist	Chain Chomp
+109	monsters	assist	Ghosts
+110	kawashima	assist	Dr. Kawashima
+111	riki	assist	Riki
+112	tvgame	assist	Color TV-Game 15
+113	sable	assist	Prince of Sablé
+114	takamaru	assist	Takamaru
+115	nightmare	assist	Nightmare
+116	jiro	assist	Dillon
+117	robin	assist	Isaac
+118	cyborg	assist	Gray Fox
+119	guile	assist	Guile
+120	shiokarazu	assist	Squid Sisters
+121	krystal	assist	Krystal
+122	bomberman	assist	Bomberman
+123	akira	assist	Akira
+124	alucard	assist	Alucard
+125	hebigarasu	assist	Burrowing Snagret
+126	zero	assist	Zero (Mega Man)
+127	shovelknight	assist	Shovel Knight
+128	moon	assist	Moon
+129	kawasaki	assist	Chef Kawasaki
+130	lioleus	assist	Rathalos
+131	darkknight	assist	Black Knight
+132	rodin	assist	Rodin
+133	knuckles	assist	Knuckles
+134	kozukata	assist	Yuri Kozukata
+135	sukapon	assist	Sukapon
+136	baito	assist	Arcade Bunny
+137	claptrap	assist	Klaptrap
+138	driver	assist	Kapp'n
+139	dossun	assist	Thwomp
+140	springman	assist	Spring Man
+141	wilycapsule	assist	Wily Capsule
+142	flyandhand	assist	Flies & Hand
+143	vince	assist	Vince
+144	tiki	assist	Tiki
+145	nikki	assist	Nikki
+146	nyarth	pokemon	Meowth
+147	marumine	pokemon	Electrode
+148	tosakinto	pokemon	Goldeen
+149	hitodeman	pokemon	Staryu
+150	kabigon	pokemon	Snorlax
+151	togepy	pokemon	Togepi
+152	kireihana	pokemon	Bellossom
+153	sirnight	pokemon	Gardevoir
+154	metagross	pokemon	Metagross
+155	fire	pokemon	Moltres
+156	mew	pokemon	Mew
+157	entei	pokemon	Entei
+158	suicune	pokemon	Suicune
+159	lugia	pokemon	Lugia
+160	latiaslatios	pokemon	Latias & Latios
+161	kyogre	pokemon	Kyogre
+162	deoxys	pokemon	Deoxys
+163	eievui	pokemon	Eevee
+164	yukinooh	pokemon	Abomasnow
+165	yayakoma	pokemon	Fletchling
+166	kofuurai	pokemon	Spewpa
+167	maaiika	pokemon	Inkay
+168	giratina	pokemon	Giratina
+169	darkrai	pokemon	Darkrai
+170	zoroark	pokemon	Zoroark
+171	meloetta	pokemon	Meloetta
+172	genesect	pokemon	Genesect
+173	tsutarja	pokemon	Snivy
+174	mijumaru	pokemon	Oshawott
+175	harimaron	pokemon	Chespin
+176	fokko	pokemon	Fennekin
+177	gogoat	pokemon	Gogoat
+178	peroppafu	pokemon	Swirlix
+179	dedenne	pokemon	Dedenne
+180	palkia	pokemon	Palkia
+181	arceus	pokemon	Arceus
+182	victini	pokemon	Victini
+183	kyurem	pokemon	Kyurem
+184	keldeo	pokemon	Keldeo
+185	xerneas	pokemon	Xerneas
+186	rokona	pokemon	Alolan Vulpix
+187	nassya	pokemon	Alolan Exeggutor
+188	kiteruguma	pokemon	Bewear
+189	mimikkyu	pokemon	Mimikyu
+190	solgaleo	pokemon	Solgaleo
+191	lunala	pokemon	Lunala
+192	rokon	pokemon	Vulpix
+193	raichua	pokemon	Alolan Raichu
+194	namakobushi	pokemon	Pyukumuku
+195	togedemaru	pokemon	Togedemaru
+196	kapukokeko	pokemon	Tapu Koko
+197	kasey	pokemon	Abra
+198	metamon	pokemon	Ditto
+199	marshadow	pokemon	Marshadow
+200	hassam	pokemon	Scizor

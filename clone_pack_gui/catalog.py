@@ -118,6 +118,21 @@ class Catalog:
                       in self._table("item_kinds.tsv", ("kind", "name", "root"))
                       if (root == "item" and (not present or name in present)) or name in owners)
 
+    def item_switch(self) -> list[tuple[str, str, str]]:
+        """The 201 things a stage can leave out, in the game's order: (name, group,
+        display), group being item, assist or pokemon."""
+        return [(name, group, display) for _, name, group, display
+                in self._table("item_switch.tsv", ("index", "name", "group", "display"))]
+
+    def stage_item_bans(self, stage: str) -> set[str] | None:
+        """What a vanilla StageID (dolly_stadium, battle_dolly_stadium) leaves out,
+        or None for a stage the table does not know."""
+        bans = {name: off for name, off
+                in self._table("stage_item_bans.tsv", ("stage", "off"))}
+        if stage not in bans:
+            return None
+        return {name for name in bans[stage].split(",") if name}
+
     def item_families(self) -> dict[str, tuple[str, list[str]]]:
         """Every item family by its first member: its category and members, in the game's order."""
         return {owner: (category, members.split(",")) for owner, category, members

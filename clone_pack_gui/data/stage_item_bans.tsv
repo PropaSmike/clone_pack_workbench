@@ -1,0 +1,345 @@
+stage	off
+75m	andross,devil,moon,driver,nikki,lunala
+animal_city	slow,bossgalaga,monsters,kawashima,tvgame,driver
+animal_island	bossgalaga,andross,devil,metroid,motherbrain,skullkid,ashley,kawashima,riki,tvgame,shiokarazu,driver,metagross,fire,entei,suicune,lugia,kyogre,giratina,gogoat,palkia,arceus,kyurem,xerneas,kasey,marshadow
+animal_village	
+balloonfight	devil,wanwan,moon,driver,nikki,kyogre,giratina,palkia,arceus,victini,xerneas,lunala,kasey
+battle_75m	moon,nikki,lunala
+battle_animal_city	shiokarazu,driver
+battle_animal_island	bossgalaga,andross,devil,kawashima,nightmare,driver,lugia
+battle_animal_village	shiokarazu
+battle_balloonfight	moon,nikki,kyogre,giratina,lunala
+battle_bayo_clock	andross,motherbrain,skullkid,nightmare,nikki,lugia,palkia,lunala
+battle_brave_altar	
+battle_buddy_spiral	
+battle_demon_dojo	andross,moon,flyandhand,nikki,lugia,lunala
+battle_dk_jungle	shiokarazu,nikki
+battle_dk_lodge	devil,skullkid,ashley,nightmare,shiokarazu,nikki,fire,kyogre,giratina,palkia,arceus,kyurem,xerneas
+battle_dk_waterfall	bossgalaga,kawashima,shiokarazu
+battle_dolly_stadium	
+battle_dracula_castle	nikki,lunala
+battle_duckhunt	andross,jeff,wright,nightmare,shiokarazu,moon,kabigon,lugia,xerneas,lunala
+battle_end	
+battle_fe_arena	moon
+battle_fe_colloseum	
+battle_fe_shrine	
+battle_fe_siege	andross,moon,nikki
+battle_ff_cave	
+battle_ff_midgar	nintendogs,skullkid,nightmare,nikki
+battle_flatzonex	andross,jeff,wright,nightmare,shiokarazu,moon,kabigon,arceus,lunala
+battle_fox_corneria	andross,ashley,nightmare,lugia
+battle_fox_lylatcruise	shiokarazu,nikki
+battle_fox_venom	kozukata,nikki
+battle_fzero_bigblue	
+battle_fzero_mutecity3ds	andross,nightmare,lunala
+battle_fzero_porttown	moon
+battle_icarus_angeland	andross,nikki
+battle_icarus_skyworld	lugia
+battle_icarus_uprising	devil,nightmare,shiokarazu,moon,nikki
+battle_ice_top	
+battle_jack_mementoes	nikki
+battle_kart_circuitfor	andross,nightmare
+battle_kart_circuitx	
+battle_kirby_cave	moon,nikki,lunala
+battle_kirby_fountain	shiokarazu,moon,nikki
+battle_kirby_gameboy	andross,devil,wright,nightmare,moon,lugia,kyogre,giratina,palkia,arceus,kyurem,xerneas,lunala
+battle_kirby_greens	shiokarazu
+battle_kirby_halberd	andross,moon,nikki
+battle_kirby_pupupu64	devil,skullkid,shiokarazu,moon,lunala
+battle_luigimansion	andross,nightmare,shiokarazu,moon,nikki,lugia
+battle_mario_3dland	
+battle_mario_castle64	andross,devil,skullkid,shiokarazu
+battle_mario_castledx	
+battle_mario_dolpic	moon
+battle_mario_galaxy	shiokarazu,lugia
+battle_mario_maker	andross,wright,nintendogs,skullkid,ashley,nightmare,kabigon,lugia,arceus,xerneas,lunala
+battle_mario_newbros2	moon
+battle_mario_odyssey	moon
+battle_mario_paper	
+battle_mario_past64	
+battle_mario_pastusa	moon,lunala
+battle_mario_pastx	
+battle_mario_rainbow	
+battle_mario_uworld	shiokarazu
+battle_mariobros	moon,nikki
+battle_metroid_kraid	shiokarazu,moon,nikki
+battle_metroid_norfair	moon,nikki
+battle_metroid_orpheon	andross,moon,nikki,lugia,lunala
+battle_metroid_zebesdx	shiokarazu,moon,nikki,giratina
+battle_mg_shadowmoses	andross,moon,nikki
+battle_mother_fourside	nikki
+battle_mother_magicant	shiokarazu,marshadow
+battle_mother_newpork	tvgame,nikki
+battle_mother_onett	bossgalaga
+battle_nintendogs	devil,moon
+battle_pac_land	andross,jeff,skullkid,nightmare,shiokarazu,moon,nikki,kabigon,xerneas,lunala
+battle_pickel_world	
+battle_pictochat2	moon,nikki
+battle_pikmin_garden	
+battle_pikmin_planet	moon
+battle_pilotwings	
+battle_plankton	moon,lunala
+battle_poke_kalos	nikki
+battle_poke_stadium	
+battle_poke_stadium2	nikki
+battle_poke_tengam	moon,nikki
+battle_poke_tower	andross,moon
+battle_poke_unova	nightmare,moon,nikki,lugia,palkia
+battle_poke_yamabuki	
+battle_punchoutsb	andross,kawashima,moon,baito,nikki
+battle_punchoutw	moon,baito,nikki
+battle_rock_wily	nikki
+battle_sf_suzaku	nikki,lugia
+battle_sonic_greenhill	knuckles,lunala
+battle_sonic_windyhill	
+battle_spla_parking	kawashima
+battle_streetpass	nikki
+battle_tantan_spring	
+battle_tomodachi	shiokarazu
+battle_trail_castle	kawashima,lunala
+battle_wario_gamer	andross,devil,nightmare,shiokarazu,moon,nikki,lunala
+battle_wario_madein	andross,nightmare,moon,nikki,lugia,lunala
+battle_wiifit	andross,nightmare,moon,lugia,arceus,lunala
+battle_wreckingcrew	nikki
+battle_wufuisland	
+battle_xeno_alst	
+battle_xeno_gaur	shiokarazu
+battle_yoshi_cartboard	shiokarazu,moon
+battle_yoshi_island	lunala
+battle_yoshi_story	moon,lunala
+battle_yoshi_yoster	andross,lugia
+battle_zelda_gerudo	
+battle_zelda_greatbay	shiokarazu,moon
+battle_zelda_hyrule	andross,devil,skullkid,shiokarazu,lugia
+battle_zelda_oldin	
+battle_zelda_pirates	andross,devil,lugia
+battle_zelda_skyward	
+battle_zelda_temple	
+battle_zelda_tower	shiokarazu
+battle_zelda_train	andross,nightmare,lugia,raichua
+battlefield	
+battlefield_l	
+battlefield_s	
+bayo_clock	andross,motherbrain,skullkid,nightmare,nikki,lugia,palkia,lunala
+brave_altar	
+buddy_spiral	pasaran,bombchu,jeff,shadow,wright,ashley,riki,kozukata,baito,vince,marshadow
+demon_dojo	mushroom,thunder,fireflower,magicpot,walkmush,pasaran,smokescreen,bombchu,togezoshell,bossgalaga,beetle,killer,andross,devil,wright,nintendogs,tvgame,moon,baito,driver,dossun,flyandhand,nikki,lugia,nassya,lunala,kasey
+dk_jungle	shiokarazu,nikki,marshadow
+dk_lodge	devil,skullkid,ashley,tvgame,nightmare,shiokarazu,claptrap,nikki,fire,kyogre,giratina,darkrai,palkia,arceus,victini,kyurem,xerneas
+dk_waterfall	bossgalaga,kawashima,tvgame,claptrap,metagross,marshadow
+dolly_stadium	mushroom,thunder,warpstar,magicpot,walkmush,pasaran,boomerang,bombchu,bossgalaga,starring,magicball,killer,andross,devil,wright,monsters,kawashima,robin,shiokarazu,kawasaki,baito,driver,dossun,wilycapsule,flyandhand,tiki,hitodeman,sirnight,kyogre,eievui,yayakoma,giratina,genesect,mijumaru,gogoat,nassya,kiteruguma,mimikkyu,lunala,namakobushi,kasey,marshadow,hassam
+dracula_castle	moon,nikki,lunala
+duckhunt	andross,jeff,wright,nightmare,shiokarazu,moon,kabigon,lugia,xerneas,lunala,kasey
+end	nikki
+end_75m	moon,nikki,lunala
+end_animal_city	shiokarazu,driver
+end_animal_island	bossgalaga,andross,devil,kawashima,nightmare,driver,lugia
+end_animal_village	shiokarazu
+end_balloonfight	moon,nikki,kyogre,giratina,lunala
+end_battlefield	
+end_bayo_clock	andross,motherbrain,skullkid,nightmare,nikki,lugia,palkia,lunala
+end_brave_altar	
+end_buddy_spiral	
+end_demon_dojo	andross,moon,flyandhand,nikki,lugia,lunala
+end_dk_jungle	shiokarazu,nikki
+end_dk_lodge	devil,skullkid,ashley,nightmare,shiokarazu,nikki,fire,kyogre,giratina,palkia,arceus,kyurem,xerneas
+end_dk_waterfall	bossgalaga,kawashima
+end_dolly_stadium	
+end_dracula_castle	nikki,lunala
+end_duckhunt	andross,jeff,wright,nightmare,shiokarazu,moon,kabigon,lugia,xerneas,lunala
+end_fe_arena	moon
+end_fe_colloseum	
+end_fe_shrine	
+end_fe_siege	andross,moon,nikki
+end_ff_cave	
+end_ff_midgar	nintendogs,skullkid,nightmare,nikki
+end_flatzonex	andross,jeff,wright,nightmare,shiokarazu,moon,kabigon,arceus,lunala
+end_fox_corneria	andross,ashley,nightmare,lugia
+end_fox_lylatcruise	nikki
+end_fox_venom	kozukata,nikki
+end_fzero_bigblue	
+end_fzero_mutecity3ds	andross,nightmare,lunala
+end_fzero_porttown	moon
+end_icarus_angeland	andross,nikki
+end_icarus_skyworld	lugia
+end_icarus_uprising	devil,nightmare,shiokarazu,moon,nikki
+end_ice_top	
+end_jack_mementoes	nikki
+end_kart_circuitfor	andross,nightmare
+end_kart_circuitx	
+end_kirby_cave	moon,nikki,lunala
+end_kirby_fountain	shiokarazu,moon,nikki
+end_kirby_gameboy	andross,devil,wright,nightmare,moon,lugia,kyogre,giratina,palkia,arceus,kyurem,xerneas,lunala
+end_kirby_greens	shiokarazu
+end_kirby_halberd	andross,moon,nikki
+end_kirby_pupupu64	devil,skullkid,shiokarazu,moon,lunala
+end_luigimansion	andross,nightmare,shiokarazu,moon,nikki,lugia
+end_mario_3dland	
+end_mario_castle64	andross,devil,skullkid,shiokarazu
+end_mario_castledx	
+end_mario_dolpic	moon
+end_mario_galaxy	shiokarazu,lugia
+end_mario_maker	andross,wright,nintendogs,skullkid,ashley,nightmare,kabigon,lugia,arceus,xerneas,lunala
+end_mario_newbros2	moon
+end_mario_odyssey	moon
+end_mario_paper	
+end_mario_past64	
+end_mario_pastusa	moon,lunala
+end_mario_pastx	
+end_mario_rainbow	
+end_mario_uworld	shiokarazu
+end_mariobros	moon,nikki
+end_metroid_kraid	shiokarazu,moon,nikki
+end_metroid_norfair	moon,nikki
+end_metroid_orpheon	andross,moon,nikki,lugia,lunala
+end_metroid_zebesdx	shiokarazu,moon,nikki,giratina
+end_mg_shadowmoses	andross,moon,nikki
+end_mother_fourside	nikki
+end_mother_magicant	shiokarazu,marshadow
+end_mother_newpork	tvgame,nikki
+end_mother_onett	bossgalaga
+end_nintendogs	devil,moon
+end_pac_land	andross,jeff,skullkid,nightmare,shiokarazu,moon,nikki,kabigon,xerneas,lunala
+end_pickel_world	
+end_pictochat2	moon,nikki
+end_pikmin_garden	
+end_pikmin_planet	moon
+end_pilotwings	
+end_plankton	moon,lunala
+end_poke_kalos	nikki
+end_poke_stadium	
+end_poke_stadium2	nikki
+end_poke_tengam	moon,nikki
+end_poke_tower	andross,moon
+end_poke_unova	nightmare,moon,nikki,lugia,palkia
+end_poke_yamabuki	
+end_punchoutsb	andross,kawashima,moon,baito,nikki
+end_punchoutw	moon,baito,nikki
+end_rock_wily	nikki
+end_sf_suzaku	nikki,lugia
+end_sonic_greenhill	knuckles,lunala
+end_sonic_windyhill	
+end_spla_parking	kawashima
+end_streetpass	nikki
+end_tantan_spring	
+end_tomodachi	shiokarazu
+end_trail_castle	kawashima,lunala
+end_wario_gamer	andross,devil,nightmare,moon,nikki,lunala
+end_wario_madein	andross,nightmare,moon,nikki,lugia,lunala
+end_wiifit	andross,nightmare,moon,lugia,arceus,lunala
+end_wreckingcrew	nikki
+end_wufuisland	
+end_xeno_alst	
+end_xeno_gaur	shiokarazu
+end_yoshi_cartboard	shiokarazu,moon
+end_yoshi_island	lunala
+end_yoshi_story	moon,lunala
+end_yoshi_yoster	andross,lugia
+end_zelda_gerudo	
+end_zelda_greatbay	shiokarazu,moon
+end_zelda_hyrule	andross,devil,skullkid,lugia
+end_zelda_oldin	
+end_zelda_pirates	andross,devil,lugia
+end_zelda_skyward	
+end_zelda_temple	
+end_zelda_tower	shiokarazu
+end_zelda_train	andross,nightmare,lugia,raichua
+fe_arena	jeff,wright,skullkid,ashley,riki,shiokarazu,moon,togepy,sirnight,metagross,lugia,kyogre,meloetta,palkia,arceus,victini,xerneas
+fe_colloseum	slow,bossgalaga,devil,metroid,monsters,kawashima,tvgame,kasey
+fe_shrine	pasaran,bombchu,andross,devil,tvgame,nightmare,moon,baito,driver,flyandhand,kasey,marshadow
+fe_siege	bumper,andross,devil,kawashima,tvgame,shiokarazu,hebigarasu,moon,knuckles,nikki
+ff_cave	
+ff_midgar	thunder,andross,goroh,waluigi,devil,joe,shadow,nintendogs,midna,skullkid,monsters,kawashima,tvgame,nightmare,shiokarazu,moon,kozukata,nikki,lunala
+flatzonex	andross,devil,shadow,nintendogs,monsters,tvgame,nightmare,shiokarazu,moon,kozukata,kabigon,lunala,kasey
+fox_corneria	bumper,andross,jeff,wright,ashley,riki,tvgame,nightmare,knuckles,kozukata,togepy,fire,mew,suicune,lugia,kyogre,deoxys,giratina,arceus,kyurem,xerneas,marshadow
+fox_lylatcruise	slow,bossgalaga,monsters,kawashima,tvgame,nikki,marshadow
+fox_venom	hebigarasu,knuckles,kozukata,driver,nikki,marshadow
+fzero_bigblue	drill,bumper,pasaran,bombchu,devil,shiokarazu,kawasaki,kozukata,baito,driver,dossun,marshadow
+fzero_mutecity3ds	grass,walkmush,bumper,pasaran,bombchu,andross,goroh,waluigi,devil,metroid,hammerbros,joe,shadow,wanwan,monsters,tvgame,sable,takamaru,nightmare,shiokarazu,hebigarasu,kawasaki,lioleus,kozukata,driver,sirnight,eievui,yukinooh,giratina,zoroark,genesect,gogoat,palkia,lunala,marshadow
+fzero_porttown	bumper,devil,monsters,tvgame,shiokarazu,moon
+icarus_angeland	devil,moon,lioleus,baito,driver,tiki,nikki,nassya,lunala,marshadow
+icarus_skyworld	lugia
+icarus_uprising	devil,skullkid,ashley,shiokarazu,moon,lioleus,driver,tiki,nikki,fire,lugia,kyogre,giratina,palkia,arceus,kyurem,xerneas,nassya,marshadow
+ice_top	bumper,devil,shiokarazu,driver,dossun,lunala,marshadow
+jack_mementoes	bossgalaga,andross,devil,sheriff,tvgame,moon,lioleus,baito,wilycapsule,nikki,lugia,lunala,marshadow
+kart_circuitfor	bumper,andross,devil,skullkid,ashley,nightmare,shiokarazu,lugia
+kart_circuitx	devil,tvgame,kasey,marshadow
+kirby_cave	mushd,mushroom,thunder,andross,devil,motherbrain,ashley,nightmare,shiokarazu,moon,lioleus,baito,driver,tiki,nikki,fire,lugia,nassya,lunala,kasey,marshadow
+kirby_fountain	shiokarazu,moon,nikki
+kirby_gameboy	pasaran,bombchu,andross,devil,shadow,wright,monsters,tvgame,nightmare,shiokarazu,moon,kozukata,dossun,lugia,kyogre,giratina,zoroark,palkia,arceus,kyurem,xerneas,nassya,lunala,kasey
+kirby_greens	slow,bossgalaga,monsters,kawashima,tvgame,driver,solgaleo
+kirby_halberd	bumper,andross,devil,nightmare,shiokarazu,moon,nikki,marshadow
+kirby_pupupu64	devil,skullkid,ashley,shiokarazu,moon,lunala
+luigimansion	andross,devil,wright,motherbrain,wanwan,nightmare,shiokarazu,moon,lioleus,baito,driver,tiki,nikki,lugia,nassya,solgaleo,lunala
+mario_3dland	slow,bumper,killereye,andross,waluigi,devil,metroid,shadow,skullkid,ashley,wanwan,tvgame,nightmare,shiokarazu,lioleus,kozukata,baito,dossun,tiki,metagross,lugia,maaiika,darkrai,zoroark,peroppafu,palkia,nassya,lunala,kasey
+mario_castle64	bombchu,andross,devil,wright,ghirahim,starman,skullkid,riki,shiokarazu,victini,xerneas,marshadow
+mario_castledx	slow,bossgalaga,monsters,kawashima,tvgame,lioleus,driver,tiki,marshadow
+mario_dolpic	bumper,andross,devil,shiokarazu,moon,driver,lunala,kasey,marshadow
+mario_galaxy	devil,metroid,lugia,kasey
+mario_maker	andross,devil,wright,nintendogs,skullkid,ashley,nightmare,shiokarazu,nikki,kabigon,lugia,arceus,xerneas,lunala
+mario_newbros2	metalblock,mushroom,superstar,andross,devil,midna,tvgame,nightmare,shiokarazu,moon,kozukata,driver,metagross,entei,deoxys,giratina,zoroark,tsutarja,palkia,victini,kyurem,keldeo,xerneas,nassya,lunala,kasey
+mario_odyssey	devil,shiokarazu,moon,lunala,marshadow
+mario_paper	andross,devil,wright,ashley,nightmare,shiokarazu,moon,driver,lugia,palkia,lunala,marshadow
+mario_past64	powblock,kasey
+mario_pastusa	tvgame,moon,lunala,kasey
+mario_pastx	bumper,andross,devil,tvgame,nightmare,shiokarazu,lioleus,kozukata,baito,driver,dossun,flyandhand,tiki,mew,lugia,zoroark,palkia,nassya,lunala,kasey
+mario_rainbow	bumper,devil,motherbrain,wanwan,shiokarazu,moon,kozukata,baito,driver,dossun,vince,nikki,nassya,lunala,kasey,marshadow
+mario_uworld	slow,bumper,andross,nightmare,shiokarazu,lugia
+mariobros	mushroom,thunder,bossgalaga,powblock,devil,shiokarazu,moon,lioleus,baito,driver,dossun,tiki,nikki,lunala,kasey
+metroid_kraid	mushd,mushroom,thunder,devil,wanwan,shiokarazu,hebigarasu,moon,lioleus,knuckles,baito,driver,tiki,nikki,nassya,lunala,marshadow
+metroid_norfair	goroh,waluigi,devil,joe,monsters,tvgame,takamaru,shiokarazu,moon,driver,flyandhand,nikki,lunala
+metroid_orpheon	slow,bumper,bossgalaga,andross,monsters,kawashima,tvgame,moon,kozukata,nikki,lugia,lunala
+metroid_zebesdx	devil,jeff,wright,ashley,monsters,riki,tvgame,shiokarazu,moon,kozukata,driver,nikki,togepy,fire,lugia,kyogre,giratina,palkia,arceus,kyurem,xerneas,marshadow
+mg_shadowmoses	pasaran,bombchu,andross,devil,shiokarazu,moon,driver,nikki,lunala,kasey
+mother_fourside	lioleus,driver,nikki,keldeo
+mother_magicant	jeff,shadow,wright,nintendogs,skullkid,ashley,riki,nightmare,shiokarazu,togepy,sirnight,lugia,arceus,xerneas,marshadow
+mother_newpork	slow,bossgalaga,metroid,monsters,kawashima,tvgame,baito,driver,nikki,nassya,lunala,marshadow
+mother_onett	bossgalaga,devil,metroid,tvgame,shiokarazu,kozukata,driver,sirnight,arceus,xerneas,lunala,raichua,kasey,marshadow
+nintendogs	powblock,starring,blackball,magicball,devil,metroid,shiokarazu,moon,lioleus,driver,lugia,kyogre,giratina,palkia,arceus,kyurem,xerneas,kasey,marshadow
+pac_land	andross,devil,jeff,shadow,wright,motherbrain,monsters,tvgame,nightmare,shiokarazu,moon,darkknight,kozukata,baito,driver,dossun,nikki,kabigon,lugia,xerneas,nassya,lunala,kasey,marshadow
+pickel_world	mushroom,thunder,bossgalaga,starring,eleka,nightmare,jiro,shiokarazu,lioleus,kozukata,baito,driver,tiki,nikki,gogoat,nassya,lunala,kasey,hassam
+pictochat2	pasaran,bombchu,ashley,nightmare,shiokarazu,moon,nikki,kyogre,palkia,kyurem,xerneas,lunala,marshadow
+pikmin_garden	mushd,mushroom,thunder,andross,ashley,baito,driver,marshadow
+pikmin_planet	devil,shiokarazu,moon,driver,marumine,tosakinto,fire,kyogre,giratina,darkrai,zoroark,harimaron,fokko,dedenne,palkia,arceus,kyurem,xerneas
+pilotwings	bumper,monsters,tvgame,hebigarasu,knuckles,marshadow
+plankton	devil,shiokarazu,moon,driver,lunala
+poke_kalos	shiokarazu,lioleus,driver,nikki
+poke_stadium	pasaran,shiokarazu,hebigarasu,baito,driver,marshadow
+poke_stadium2	andross,shiokarazu,driver,nikki,marshadow
+poke_tengam	slow,devil,starman,skullkid,robin,moon,lioleus,nikki,palkia,nassya
+poke_tower	slow,bumper,bossgalaga,andross,devil,monsters,kawashima,tvgame,nightmare,moon,lugia,palkia,victini,lunala
+poke_unova	andross,devil,nightmare,shiokarazu,moon,nikki,lugia
+poke_yamabuki	driver
+punchoutsb	slow,bossgalaga,andross,devil,metroid,nintendogs,monsters,kawashima,tvgame,moon,baito,driver,nikki,palkia,kasey
+punchoutw	slow,bossgalaga,andross,devil,metroid,nintendogs,monsters,kawashima,tvgame,moon,baito,driver,nikki,palkia,kasey
+rock_wily	slow,nightmare,nikki
+sf_suzaku	goroh,waluigi,stafy,devil,joe,sable,jiro,darkknight,claptrap,driver,nikki,lugia,yayakoma,giratina,genesect,palkia,arceus,xerneas
+shamfight	
+sonic_greenhill	midna,tvgame,shiokarazu,knuckles,entei,suicune,kyogre,giratina,zoroark,palkia,keldeo,lunala,kasey,marshadow
+sonic_windyhill	marshadow
+sp_edit	grass
+spla_parking	slow,drill,bossgalaga,devil,monsters,kawashima,tvgame,baito,eievui,nassya
+streetpass	usagihat,nightmare,nikki,fire,kyogre
+tantan_spring	screw,devil,moon,baito,lunala
+tomodachi	andross,devil,metroid,wright,motherbrain,wanwan,nightmare,shiokarazu,lioleus,baito,driver,tiki,metagross,fire,suicune,lugia,kyogre,deoxys,yukinooh,giratina,zoroark,palkia,kyurem,xerneas,nassya,solgaleo,lunala
+trail_castle	kawashima,lunala
+wario_gamer	andross,devil,nightmare,shiokarazu,moon,nikki,lunala
+wario_madein	slow,bossgalaga,dragoon,genesis,andross,devil,shadow,nintendogs,skullkid,monsters,kawashima,tvgame,nightmare,shiokarazu,moon,kozukata,nikki,fire,lugia,kyogre,giratina,palkia,arceus,kyurem,xerneas,lunala,kasey,marshadow
+wiifit	andross,devil,nightmare,alucard,moon,kozukata,nikki,lugia,lunala,kasey
+wreckingcrew	warpstar,dolphinbomb,andross,devil,jeff,wright,ashley,riki,nightmare,shiokarazu,lioleus,baito,dossun,vince,tiki,nikki,sirnight,lugia,zoroark,xerneas,nassya,lunala
+wufuisland	bumper,andross,devil,nightmare,shiokarazu,solgaleo,marshadow
+xeno_alst	chewing,pitfall,bombchu,devil,metroid,ashley,jiro,shiokarazu,hebigarasu,moon,baito,vince,fokko,rokona,nassya,namakobushi,marshadow
+xeno_gaur	slow,devil,nightmare,shiokarazu,moon,nikki,metagross,lugia,maaiika,nassya,kasey,marshadow
+yoshi_cartboard	shiokarazu,moon
+yoshi_island	fire,kyogre,giratina,dedenne,palkia,arceus,victini,kyurem,xerneas,lunala,marshadow
+yoshi_story	shadow,moon,lunala,marshadow
+yoshi_yoster	devil,lioleus,kasey,marshadow
+zelda_gerudo	devil,nightmare,lugia,kasey
+zelda_greatbay	eleka,moon,driver,kasey,marshadow
+zelda_hyrule	andross,devil,skullkid,lugia
+zelda_oldin	devil,metroid,kasey
+zelda_pirates	bumper,pasaran,bombchu,devil,monsters,nightmare,shiokarazu,driver,marshadow
+zelda_skyward	bumper,andross,devil,skullkid,ashley,nightmare,shiokarazu,hitodeman,lugia
+zelda_temple	andross,devil,moon,lioleus,baito,tiki,lugia,nassya,lunala,marshadow
+zelda_tower	shiokarazu,baito,dossun,nassya
+zelda_train	grass,walkmush,bumper,pasaran,bombchu,andross,waluigi,devil,jeff,wright,nintendogs,midna,motherbrain,starman,ashley,wanwan,monsters,riki,tvgame,nightmare,robin,shiokarazu,hebigarasu,moon,kawasaki,lioleus,knuckles,driver,togepy,metagross,zoroark,arceus,xerneas,nassya,raichua,marshadow

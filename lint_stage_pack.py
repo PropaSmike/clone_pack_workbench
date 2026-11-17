@@ -25,6 +25,74 @@ MISSING_MODULES = [
     if module is None
 ]
 
+ITEM_TABLES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "clone_pack_gui", "data")
+
+
+def item_table(name):
+    """Rows of one of the Workbench's item tables, or None when it is not beside us."""
+    path = os.path.join(ITEM_TABLES, name)
+    if not os.path.isfile(path):
+        return None
+    with open(path, encoding="utf-8") as handle:
+        header = handle.readline().rstrip("\n").split("\t")
+        return [dict(zip(header, line.rstrip("\n").split("\t"))) for line in handle if line.strip()]
+
+
+def item_name(name):
+    name = name.strip().lower()
+    return name[len("item_kind_"):] if name.startswith("item_kind_") else name
+
+
+def check_items(settings, error, warn, note):
+    """items_start, items_off and items_on: what the stage leaves out."""
+    if not any(key in settings for key in ("items_start", "items_off", "items_on")):
+        return
+    start = settings.get("items_start", "donor")
+    if not isinstance(start, str) or start.strip().lower() not in ("donor", "all"):
+        error('items_start must be "donor" or "all"; the engine refuses the whole stage.toml')
+        return
+    lists = {}
+    for key in ("items_off", "items_on"):
+        value = settings.get(key, [])
+        if not isinstance(value, list) or not all(isinstance(entry, str) for entry in value):
+            error("%s must be a list of names; the engine refuses the whole stage.toml" % key)
+            return
+        lists[key] = [item_name(entry) for entry in value]
+    off, on = lists["items_off"], lists["items_on"]
+    both = sorted(set(off) & set(on))
+    if both:
+        warn("%s is in both items_off and items_on; it stays out" % ", ".join(both))
+    donor = str(settings.get("donor") or "").strip().lower()
+    if start.strip().lower() == "donor" and not donor and "items_start" in settings:
+        warn('items_start = "donor" but there is no donor, so items start from all of them')
+    rows = item_table("item_switch.tsv")
+    if rows is None:
+        note("clone_pack_gui/data/item_switch.tsv is missing, so item names go unchecked")
+        return
+    shown = {row["name"]: row["display"] for row in rows}
+    unknown = sorted({name for name in off + on if name not in shown})
+    if unknown:
+        warn("no stage can leave out %s, so the engine skips it; items_off and items_on take "
+             "the game's names (moon, kasey for Abra, warpstar)" % ", ".join(unknown))
+    if start.strip().lower() == "all" or not donor:
+        return
+    bans_rows = item_table("stage_item_bans.tsv") or []
+    bans = next(({entry for entry in row["off"].split(",") if entry} for row in bans_rows
+                 if row["stage"] == donor), None)
+    if bans is None:
+        return
+    back = [name for name in on if name in bans]
+    if back:
+        note("items_on lets in %s, which %s leaves out; some of those need room or a "
+             "background a stage may not have" % (", ".join(shown[name] for name in back), donor))
+    already = [name for name in on if name in shown and name not in bans]
+    if already:
+        note("items_on names %s, which %s already allows" % (", ".join(already), donor))
+    twice = [name for name in off if name in bans]
+    if twice:
+        note("items_off names %s, which %s already leaves out" % (", ".join(twice), donor))
+
+
 def _default_arc_index():
     here = os.path.dirname(os.path.abspath(__file__))
     for candidate in (
@@ -1305,6 +1373,7 @@ def lint_stage(mod_dir, arc_index, settings, declared_places, write_config=False
     hazards = settings.get("hazards")
     if hazards is not None and not isinstance(hazards, bool):
         error("hazards must be true or false; the engine refuses the whole stage.toml")
+    check_items(settings, error, warn, note)
     declared = bool(settings.get("ships_battle_tree", False)) or normal_tree == "battle"
     if normal_tree == "battle":
         if not ships_battle:

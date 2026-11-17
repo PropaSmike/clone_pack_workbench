@@ -211,6 +211,34 @@ def check_table_row(relative, root, list_name, table, owner):
     return findings + check_row(relative, found[0], [table], True)
 
 
+def check_vl(relative, root):
+    left_out = []
+    for group in root:
+        name = group.get("hash") or "?"
+        if group.tag == "list":
+            entries = [child for child in group if not is_dummy(child)]
+            if not entries or entries[0].tag != "struct":
+                left_out.append("%s (a list)" % name)
+                continue
+            group = entries[0]
+        if group.tag == "struct":
+            for field in group:
+                field_name = "%s.%s" % (name, field.get("hash") or "?")
+                if field.tag in ("list", "struct"):
+                    left_out.append("%s (a %s)" % (field_name, field.tag))
+                elif field.tag == "hash40":
+                    left_out.append("%s (a hash40)" % field_name)
+                elif field.tag == "string":
+                    left_out.append("%s (text)" % field_name)
+        elif group.tag == "hash40":
+            left_out.append("%s (a hash40)" % name)
+        elif group.tag == "string":
+            left_out.append("%s (text)" % name)
+    if left_out:
+        return [("INFO", "%s: Dionysus leaves out %s" % (relative, listing(left_out)))]
+    return []
+
+
 def check_stage(relative, root):
     found = rows(root, "itsw_normal")
     if not found:
@@ -347,9 +375,11 @@ def lint_pack(mod_dir, families=("fighter", "item", "enemy", "stage")):
         elif "fighter" in families and len(parts) == 4 and parts[0] == "fighter" and parts[2] == "param":
             if stem in FIGHTER_FILES:
                 role = "fighter"
-            elif stem != "vl":
+            elif stem == "vl":
+                role = "vl"
+            else:
                 findings.append(("WARN", "%s is not a file Dionysus reads for a clone (it reads %s)"
-                                 % (relative, ", ".join(name + ".prcxml" for name in FIGHTER_FILES))))
+                                 % (relative, ", ".join(name + ".prcxml" for name in list(FIGHTER_FILES) + ["vl"]))))
         elif "item" in families and len(parts) == 4 and parts[0] in ITEM_TOPS and parts[2] == "param":
             if parts[3] == ITEM_FILE:
                 role = "item"
@@ -372,6 +402,8 @@ def lint_pack(mod_dir, families=("fighter", "item", "enemy", "stage")):
             findings += check_fighter(relative, root, stem)
         elif role == "item":
             findings += check_item(relative, root)
+        elif role == "vl":
+            findings += check_vl(relative, root)
         elif role == "cpu":
             findings += check_table_row(relative, root, "base", "cpu", "clone")
         elif role == "enemy":

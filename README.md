@@ -657,7 +657,8 @@ prcxml files (`lint_prcxml.py`, also run by the stage linter):
 
 - a clone's `fighter/<name>/param/fighter_param.prcxml`,
   `fighter_param_motion.prcxml`, `common.prcxml` (and `item`, `etc`,
-  `power_up`, `effect`, `sound`), its `fighter/<name>/ai/param/fighter_param.prcxml`,
+  `power_up`, `effect`, `sound`), its `vl.prcxml` (any field, its own included),
+  its `fighter/<name>/ai/param/fighter_param.prcxml`,
   an item's `common_param.prcxml`, an enemy's `enemy/<name>/common.prcxml` and a
   stage's `item_switch_param.prcxml`, `stage_sound_settings.prcxml` and
   `stage_param.prcxml` are read as Dionysus reads them: a file that is

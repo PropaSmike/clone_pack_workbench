@@ -264,6 +264,28 @@ Pick a table, click a field, type a value, Add. Which syntax each table takes:
 Lists inside `vl.prc` (`hit_data`, ...) are not rules: ship your own
 `vl.prc` under every costume.
 
+### Param files
+
+The prcxml files the part can ship, each starting as a copy of the game's own
+values.
+
+- **Game files**: the folder you extracted data.arc into, the one holding
+  `fighter/`, `item/`, `stage/` and `param/`. The Workbench reads the game's
+  prc files from there and remembers the folder.
+- Pick a file. The list says whether the pack has it and where it starts
+  from. A row file (`fighter_param`, `fighter_param_motion`, the computer
+  player row, an item's or enemy's common row, a stage's sound, box and item
+  switches) starts from the base's or donor's row; `vl.prc` and an item's own
+  `param.prc` start from the pack's own file when it ships one.
+- Click a value, type the new one, **Set** (or Enter). Changed values are
+  green; **Back to the game's value** undoes one, and takes out a key of your
+  own.
+- **Save** writes what you changed, in the shape Dionysus reads. **Write every
+  value** writes the whole copy instead. The linter checks the file as it is
+  saved.
+- `vl.prc` and the item, enemy and stage params of their own take keys of your
+  own: name one (`field` or `group.field`), pick its type, **Add**.
+
 ### Lint
 
 Runs the checker and lists what it found.

@@ -18,7 +18,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from . import (backups, emit, enemy_code, gimmicks, guide, hands, menu_presets, optimize, packs, prc,
-               stickpad, theme, vtables)
+               prcxml_files, stickpad, theme, vtables)
 from .tables import Field, TableEditor
 from .catalog import (Catalog, OWNER_SURFACE, VL_SURFACE, is_float_field,
                       is_label_field, is_name_field)
@@ -209,13 +209,15 @@ class Workbench(ttk.Frame):
         self.identity = IdentityPanel(self.tabs, self)
         self.files = FilesPanel(self.tabs, self)
         self.params = ParamsPanel(self.tabs, self)
+        self.param_files = ParamFilesPanel(self.tabs, self)
         self.lint = LintPanel(self.tabs, self)
         self.optimize = OptimizePanel(self.tabs, self)
         self.vtables = VtablePanel(self.tabs, self)
         self.rust = RustPanel(self.tabs, self)
         self.help_tab = ttk.Frame(self.tabs)
         for panel, label in ((self.identity, "Identity"), (self.files, "Files"),
-                             (self.params, "Parameters"), (self.lint, "Lint"),
+                             (self.params, "Parameters"), (self.param_files, "Param files"),
+                             (self.lint, "Lint"),
                              (self.optimize, "Optimize"), (self.vtables, "Vtables"),
                              (self.rust, "Rust"), (self.help_tab, "Help")):
             self.tabs.add(panel, text=label)
@@ -521,6 +523,7 @@ class Workbench(ttk.Frame):
         self.identity.load()
         self.params.show(self.kind.get())
         self.params.load()
+        self.param_files.load()
         self.vtables.load()
         self.rust.refresh()
 
@@ -3841,6 +3844,479 @@ ITEM_HAND_NOTE = (
     "its own hand around the grip, so animate the other hand for a clean grip. Every base but Ivysaur "
     "has HaveL and HaveR; a skeleton of your own needs the bone. fighter.toml item_hand, the "
     "Manifest's .item_hand() on the Rust tab.")
+
+
+PARAM_FILE_COLUMNS = (("file", "File", 360, "w"), ("present", "In the pack", 90, "w"),
+                      ("source", "Starts from", 420, "w"))
+VALUE_TYPES = ("float", "int", "bool", "hash40", "byte", "short", "uint")
+
+
+class ParamFilesPanel(ttk.Frame):
+    """The prcxml files a clone ships: each starts as a copy of the game's own
+    values, read from the folder the player extracted data.arc into."""
+
+    def __init__(self, parent: tk.Misc, app: Workbench):
+        super().__init__(parent, padding=10)
+        self.app = app
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(4, weight=1)
+        self.listed: list = []
+        self.target = None
+        self.names = None
+        self.current = None
+        self.original = None
+        self.nodes: dict = {}
+        self.changed: set = set()
+        self.dirty = False
+        self.editable = False
+        self.trees: dict = {}
+
+        top = ttk.Frame(self)
+        top.grid(row=0, column=0, sticky="ew")
+        top.columnconfigure(1, weight=1)
+        ttk.Label(top, text="Game files").grid(row=0, column=0, sticky="w")
+        self.game_root = tk.StringVar(value=theme.load_setting("game_files", "") or "")
+        root_box = ttk.Entry(top, textvariable=self.game_root)
+        root_box.grid(row=0, column=1, sticky="ew", padx=4)
+        root_box.bind("<Return>", lambda _: self.game_root_changed())
+        root_box.bind("<FocusOut>", lambda _: self.game_root_changed())
+        ttk.Button(top, text="Browse", command=self.browse_game_root).grid(row=0, column=2)
+        hint = ttk.Label(top, style="Hint.TLabel", justify="left",
+                         text="The folder you extracted data.arc into, the one holding fighter/, item/, "
+                              "stage/ and param/. Each file starts as a copy of the game's values from there; "
+                              "a save writes the values you changed.")
+        hint.grid(row=1, column=0, columnspan=3, sticky="w", pady=(2, 6))
+
+        self.files = Sheet(self, PARAM_FILE_COLUMNS, height=6)
+        self.files.grid(row=1, column=0, sticky="nsew")
+        self.files.on_select(lambda _: self.choose_target())
+        self.note = ttk.Label(self, style="Hint.TLabel", justify="left")
+        self.note.grid(row=2, column=0, sticky="w", pady=(4, 4))
+
+        bar = ttk.Frame(self)
+        bar.grid(row=3, column=0, sticky="ew")
+        ttk.Label(bar, text="Find").pack(side="left")
+        self.search = tk.StringVar()
+        search_box = ttk.Entry(bar, textvariable=self.search, width=24)
+        search_box.pack(side="left", padx=4)
+        search_box.bind("<KeyRelease>", lambda _: self.show_tree())
+        self.every = tk.BooleanVar(value=False)
+        ttk.Checkbutton(bar, text="Write every value", variable=self.every).pack(side="left", padx=8)
+        self.save_button = ttk.Button(bar, text="Save", command=self.save)
+        self.save_button.pack(side="left")
+        ttk.Button(bar, text="Reload", command=self.reload).pack(side="left", padx=4)
+        self.reset_button = ttk.Button(bar, text="Back to the game's value", command=self.reset_value)
+        self.reset_button.pack(side="left")
+
+        holder = ttk.Frame(self)
+        holder.grid(row=4, column=0, sticky="nsew", pady=(6, 0))
+        holder.columnconfigure(0, weight=1)
+        holder.rowconfigure(0, weight=1)
+        self.tree = ttk.Treeview(holder, columns=("type", "value", "game"), selectmode="browse")
+        self.tree.heading("#0", text="Name", anchor="w")
+        self.tree.heading("type", text="Type", anchor="w")
+        self.tree.heading("value", text="Value", anchor="w")
+        self.tree.heading("game", text="Game's value", anchor="w")
+        self.tree.column("#0", width=360)
+        self.tree.column("type", width=70, stretch=False)
+        self.tree.column("value", width=200)
+        self.tree.column("game", width=200)
+        scroll = ttk.Scrollbar(holder, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscrollcommand=scroll.set)
+        self.tree.grid(row=0, column=0, sticky="nsew")
+        scroll.grid(row=0, column=1, sticky="ns")
+        self.tree.tag_configure("changed", foreground=theme.color("changed"))
+        theme.watch(lambda: self.tree.tag_configure("changed", foreground=theme.color("changed")))
+        self.tree.bind("<<TreeviewSelect>>", lambda _: self.node_chosen())
+        self.tree.bind("<Double-1>", lambda _: self.value_box.focus_set())
+
+        edit = ttk.Frame(self)
+        edit.grid(row=5, column=0, sticky="ew", pady=(6, 0))
+        ttk.Label(edit, text="Value").pack(side="left")
+        self.value = tk.StringVar()
+        self.value_box = ttk.Entry(edit, textvariable=self.value, width=30)
+        self.value_box.pack(side="left", padx=4)
+        self.value_box.bind("<Return>", lambda _: self.apply_value())
+        self.set_button = ttk.Button(edit, text="Set", command=self.apply_value)
+        self.set_button.pack(side="left")
+
+        self.own_row = ttk.LabelFrame(self, text="A key of your own", padding=6)
+        self.own_row.grid(row=6, column=0, sticky="ew", pady=(6, 0))
+        self.own_name = tk.StringVar()
+        self.own_type = tk.StringVar(value="float")
+        self.own_value = tk.StringVar()
+        ttk.Label(self.own_row, text="Name (field or group.field)").pack(side="left")
+        ttk.Entry(self.own_row, textvariable=self.own_name, width=28).pack(side="left", padx=4)
+        ttk.Combobox(self.own_row, textvariable=self.own_type, values=VALUE_TYPES, width=8,
+                     state="readonly").pack(side="left")
+        ttk.Label(self.own_row, text="Value").pack(side="left", padx=(8, 2))
+        ttk.Entry(self.own_row, textvariable=self.own_value, width=16).pack(side="left")
+        ttk.Button(self.own_row, text="Add", command=self.add_own).pack(side="left", padx=6)
+        self.own_row.grid_remove()
+
+        self.findings = ttk.Label(self, justify="left")
+        self.findings.grid(row=7, column=0, sticky="w", pady=(6, 0))
+        wrap_within(self, [hint, self.note, self.findings])
+        self.set_editable(False)
+
+    def labels(self) -> dict:
+        return self.app.catalog.labels()
+
+    def set_editable(self, editable: bool) -> None:
+        self.editable = editable
+        state = "normal" if editable else "disabled"
+        for widget in (self.save_button, self.reset_button, self.set_button, self.value_box):
+            widget.configure(state=state)
+
+    def browse_game_root(self) -> None:
+        folder = filedialog.askdirectory(title="The folder you extracted data.arc into",
+                                         initialdir=self.game_root.get() or None)
+        if folder:
+            self.game_root.set(folder)
+            self.game_root_changed()
+
+    def game_root_changed(self) -> None:
+        folder = self.game_root.get().strip()
+        if folder == (theme.load_setting("game_files", "") or ""):
+            return
+        theme.save_setting("game_files", folder)
+        self.trees.clear()
+        self.load()
+
+    def part_names(self):
+        kind = self.app.kind.get()
+        return prcxml_files.names_for(kind, self.app.state, self.app.catalog.item_root,
+                                      self.app.catalog.item_name)
+
+    def source_of(self, target, names):
+        """(the prc a file starts from or None, how the list shows it)."""
+        if not target.source:
+            return None, "nothing: keys of your own"
+        if names is None:
+            return None, "name the part first"
+        if self.app.folder is not None:
+            own = prcxml_files.own_prc(target, names, self.app.folder)
+            if own is not None:
+                return own, "your pack's %s" % own.relative_to(self.app.folder).as_posix()
+        if not names.base:
+            return None, "pick the part's base first"
+        relative = prcxml_files.fill(target.source, names)
+        found = prcxml_files.game_file(self.game_root.get().strip(), relative)
+        if found is None:
+            return None, "missing: %s" % relative
+        return found, "game: %s" % relative
+
+    def pack_path(self, target, names):
+        if self.app.folder is None or names is None:
+            return None
+        return self.app.folder / prcxml_files.fill(target.path, names)
+
+    def load(self) -> None:
+        """The files of the part being worked on; the open file follows the part."""
+        if not self.leave_file():
+            return
+        kind = self.app.kind.get()
+        self.listed = prcxml_files.targets(kind)
+        self.names = self.part_names()
+        self.files.clear()
+        for target in self.listed:
+            path = self.pack_path(target, self.names)
+            shown = prcxml_files.fill(target.path, self.names) if self.names else target.path
+            _, source = self.source_of(target, self.names)
+            self.files.append({"file": shown, "present": "yes" if path and path.is_file() else "",
+                               "source": source}, changed=bool(path and path.is_file()))
+        if not self.listed:
+            self.note.configure(text="Menus and Mii parts have no param files.")
+        elif self.names is None:
+            self.note.configure(text="Name the part on the Identity tab to see where its files go.")
+        else:
+            self.note.configure(text="Pick a file. A part ships only the files whose values it changes.")
+        self.target = None
+        self.clear_tree()
+
+    def clear_tree(self) -> None:
+        self.tree.delete(*self.tree.get_children())
+        self.nodes = {}
+        self.current = self.original = None
+        self.dirty = False
+        self.set_editable(False)
+        self.own_row.grid_remove()
+        self.findings.configure(text="")
+        self.value.set("")
+
+    def leave_file(self) -> bool:
+        """Offer to save unsaved changes; False when the player cancels."""
+        if not self.dirty or self.target is None:
+            return True
+        answer = messagebox.askyesnocancel(
+            TITLE, "Save your changes to %s first?" % prcxml_files.fill(self.target.path, self.names))
+        if answer is None:
+            return False
+        if answer:
+            self.save()
+        self.dirty = False
+        return True
+
+    def game_tree(self, path):
+        stamp = (str(path), path.stat().st_mtime)
+        if stamp not in self.trees:
+            self.trees[stamp] = prcxml_files.read_prc(path.read_bytes(), self.labels())
+        return self.trees[stamp]
+
+    def choose_target(self) -> None:
+        chosen = self.files.selection()
+        if not chosen or chosen[0] >= len(self.listed):
+            return
+        target = self.listed[chosen[0]]
+        if target is self.target:
+            return
+        if not self.leave_file():
+            return
+        self.open_target(target)
+
+    def reload(self) -> None:
+        if self.target is not None and self.leave_file():
+            self.open_target(self.target)
+
+    def open_target(self, target) -> None:
+        self.clear_tree()
+        self.target = target
+        self.names = self.part_names()
+        if self.names is None:
+            self.note.configure(text="Name the part on the Identity tab first.")
+            return
+        notes = [target.note]
+        source, shown = self.source_of(target, self.names)
+        game = None
+        if source is not None:
+            try:
+                game = self.game_tree(source)
+            except (OSError, ValueError) as error:
+                notes.append("%s could not be read: %s" % (shown, error))
+        elif target.source:
+            notes.append("Starts from %s. Extract that file from data.arc into the game files "
+                         "folder to see and change the game's values." % shown.split(": ", 1)[-1])
+        path = self.pack_path(target, self.names)
+        pack_file = None
+        if path is not None and path.is_file():
+            try:
+                pack_file = prcxml_files.parse_prcxml(path.read_text(encoding="utf-8-sig"))
+            except (OSError, ValueError) as error:
+                notes.append("Your %s cannot be read (%s); fix it by hand, the editor leaves it alone."
+                             % (path.name, error))
+                self.note.configure(text="\n".join(notes))
+                return
+        try:
+            self.current, self.original = prcxml_files.working_tree(target, game, self.names, pack_file)
+        except ValueError as error:
+            notes.append("The game's file has no row for this part: %s." % error)
+            self.note.configure(text="\n".join(notes))
+            return
+        if game is None and pack_file is None and not target.own_keys:
+            self.note.configure(text="\n".join(notes))
+            return
+        self.set_editable(True)
+        if target.own_keys:
+            self.own_row.grid()
+        self.note.configure(text="\n".join(notes))
+        self.show_tree()
+
+    def shown_root(self):
+        if self.current is None:
+            return None
+        if self.target.table:
+            return prcxml_files.first_row(self.current, self.target.table)
+        return self.current
+
+    def mark_changed(self) -> None:
+        """Nodes that differ from the game's copy, and the containers above them."""
+        self.changed = set()
+        if self.original is None:
+            return
+
+        def visit(node, twin) -> bool:
+            if node.tag in prcxml_files.CONTAINERS:
+                hit = twin is None
+                for child in node.children:
+                    inner = None
+                    if twin is not None and twin.tag == "struct" and child.name:
+                        inner = twin.member(child.name)
+                    elif twin is not None and twin.tag == "list" and child.index is not None \
+                            and child.index < len(twin.children):
+                        inner = twin.children[child.index]
+                    hit = visit(child, inner) or hit
+            else:
+                hit = twin is None or not prcxml_files.same(node, twin)
+            if hit:
+                self.changed.add(id(node))
+            return hit
+
+        visit(self.current, self.original)
+
+    def label_of(self, node, parent) -> str:
+        if node.index is None:
+            return node.name
+        if self.target is not None and self.target.key == "item_switch" and parent is not None \
+                and parent.name == "table":
+            switch = self.app.catalog.item_switch()
+            if node.index < len(switch):
+                return "[%d] %s" % (node.index, switch[node.index][2] or switch[node.index][0])
+        return "[%d]" % node.index
+
+    def row_values(self, node) -> tuple:
+        if node.tag in prcxml_files.CONTAINERS:
+            return (node.tag, "%d" % len(node.children), "")
+        twin = prcxml_files.twin_of(self.current, self.original, node)
+        game = prcxml_files.value_text(twin, self.labels()) if twin is not None and \
+            twin.tag not in prcxml_files.CONTAINERS else ""
+        return (node.tag, prcxml_files.value_text(node, self.labels()), game)
+
+    def show_tree(self) -> None:
+        self.tree.delete(*self.tree.get_children())
+        self.nodes = {}
+        root = self.shown_root()
+        if root is None:
+            return
+        self.mark_changed()
+        wanted = self.search.get().strip().lower()
+
+        def add(parent_item, node, parent, trail) -> None:
+            label = self.label_of(node, parent)
+            path = "%s/%s" % (trail, label) if trail else label
+            tags = ("changed",) if id(node) in self.changed else ()
+            if wanted:
+                if node.tag not in prcxml_files.CONTAINERS and wanted in path.lower():
+                    item = self.tree.insert("", "end", text=path, values=self.row_values(node), tags=tags)
+                    self.nodes[item] = node
+                for child in node.children:
+                    add("", child, node, path)
+                return
+            item = self.tree.insert(parent_item, "end", text=label, values=self.row_values(node), tags=tags)
+            self.nodes[item] = node
+            for child in node.children:
+                add(item, child, node, path)
+
+        for child in root.children:
+            add("", child, root, "")
+
+    def selected_node(self):
+        chosen = self.tree.selection()
+        return self.nodes.get(chosen[0]) if chosen else None
+
+    def node_chosen(self) -> None:
+        node = self.selected_node()
+        if node is None or node.tag in prcxml_files.CONTAINERS:
+            self.value.set("")
+            return
+        self.value.set(prcxml_files.value_text(node, self.labels()))
+
+    def refresh_item(self, item) -> None:
+        """One row and the containers above it, after a change."""
+        self.mark_changed()
+        while item:
+            node = self.nodes.get(item)
+            if node is not None:
+                self.tree.item(item, values=self.row_values(node),
+                               tags=("changed",) if id(node) in self.changed else ())
+            item = self.tree.parent(item)
+
+    def apply_value(self) -> None:
+        node = self.selected_node()
+        if not self.editable or node is None or node.tag in prcxml_files.CONTAINERS:
+            return
+        try:
+            prcxml_files.set_value(node, self.value.get(), self.labels())
+        except ValueError as error:
+            messagebox.showinfo(TITLE, "%s keeps its value: %s" % (node.label(), error))
+            return
+        self.dirty = True
+        self.refresh_item(self.tree.selection()[0])
+
+    def reset_value(self) -> None:
+        node = self.selected_node()
+        if not self.editable or node is None:
+            return
+        twin = prcxml_files.twin_of(self.current, self.original, node)
+        if twin is None:
+            if not messagebox.askyesno(TITLE, "%s is not in the game's file. Take it out?" % node.label()):
+                return
+            prcxml_files.remove_value(self.current, node)
+            self.dirty = True
+            self.show_tree()
+            return
+        if node.tag in prcxml_files.CONTAINERS:
+            replacement = twin.copy()
+            node.children = replacement.children
+            self.dirty = True
+            self.show_tree()
+            return
+        node.value = twin.value
+        self.dirty = True
+        self.node_chosen()
+        self.refresh_item(self.tree.selection()[0])
+
+    def add_own(self) -> None:
+        if self.current is None:
+            return
+        root = self.shown_root() if self.target.table else self.current
+        try:
+            node = prcxml_files.add_value(root, self.own_name.get(), self.own_type.get(),
+                                          self.own_value.get(), self.labels())
+        except ValueError as error:
+            messagebox.showinfo(TITLE, "Not added: %s" % error)
+            return
+        self.dirty = True
+        self.own_name.set("")
+        self.own_value.set("")
+        self.show_tree()
+        for item, held in self.nodes.items():
+            if held is node:
+                self.tree.selection_set(item)
+                self.tree.see(item)
+                break
+
+    def save(self) -> None:
+        if self.target is None or self.current is None or not self.app.require_folder():
+            return
+        path = self.pack_path(self.target, self.names)
+        tree = prcxml_files.file_tree(self.target, self.current, self.original, self.every.get())
+        text = prcxml_files.write_prcxml(tree, self.labels())
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text, encoding="utf-8", newline="\n")
+        except OSError as error:
+            messagebox.showerror(TITLE, "Could not write %s: %s" % (path, error))
+            return
+        self.dirty = False
+        relative = path.relative_to(self.app.folder).as_posix()
+        self.app.log("wrote %s (%s)" % (relative, "every value" if self.every.get() or self.original is None
+                                       else "the values you changed"))
+        self.lint_file(relative)
+        self.refresh_present()
+
+    def refresh_present(self) -> None:
+        for index, target in enumerate(self.listed):
+            path = self.pack_path(target, self.names)
+            row = self.files.row(index)
+            row["present"] = "yes" if path and path.is_file() else ""
+            self.files.tree.item(str(index), values=[row.get(key, "") for key in self.files.keys],
+                                 tags=("changed",) if row["present"] else ())
+
+    def lint_file(self, relative: str) -> None:
+        module = import_tool("lint_prcxml")
+        if module is None:
+            self.findings.configure(text="lint_prcxml.py is not beside this GUI, so the file is unchecked.")
+            return
+        try:
+            found = [(level, message) for level, message in module.lint_pack(str(self.app.folder))
+                     if relative in message]
+        except Exception:
+            self.app.log(traceback.format_exc())
+            return
+        if not found:
+            self.findings.configure(text="The linter finds nothing to say about %s." % relative)
+            return
+        self.findings.configure(text="\n".join("%s: %s" % finding for finding in found))
 
 
 class ItemHandBox(ttk.LabelFrame):

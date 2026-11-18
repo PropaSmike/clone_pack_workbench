@@ -49,6 +49,19 @@ def load_mode() -> str:
 
 
 def save_mode(mode: str) -> None:
+    save_setting("theme", mode)
+
+
+def load_setting(name: str, default=None):
+    """One value of the Workbench's settings file, kept across runs."""
+    try:
+        data = json.loads(settings_path().read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return default
+    return data.get(name, default) if isinstance(data, dict) else default
+
+
+def save_setting(name: str, value) -> None:
     path = settings_path()
     try:
         data = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
@@ -56,7 +69,7 @@ def save_mode(mode: str) -> None:
         data = {}
     if not isinstance(data, dict):
         data = {}
-    data["theme"] = mode
+    data[name] = value
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")

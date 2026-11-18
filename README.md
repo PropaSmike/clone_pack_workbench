@@ -256,9 +256,9 @@ Pick a table, click a field, type a value, Add. Which syntax each table takes:
 
 | Table | Syntax |
 |---|---|
-| a fighter's own `vl.prc` (`param_special_*`, ...) | ParamConfig: `param_config::update_*` on the Rust tab with the plugin flag, `.param(..)` on the Manifest or `[params]` without it |
-| `fighter_param`, `param_motion`, `common`, `param_thrown` | engine: `.param(..)` on the Manifest or `[params]`; the game reads these past ParamConfig |
-| an item's `item_common`, `item_owner_param` | `.common(..)` / `.owner_param(..)` on the ItemManifest or `[common]` / `[owner_params]`; label and name fields are Rust calls |
+| a fighter's own `vl.prc` (`param_special_*`, ...) | ParamConfig: `param_config::update_*` on the Rust tab with the plugin flag, `WAWA.param(..)` after `register` or `[params]` without it |
+| `fighter_param`, `param_motion`, `common`, `param_thrown` | engine: `WAWA.param(..)` after `register` or `[params]`; the game reads these past ParamConfig |
+| an item's `item_common`, `item_owner_param` | `WAWA.common(..)` / `WAWA.owner_param(..)` after `register` or `[common]` / `[owner_params]`; label and name fields are Rust calls |
 | an item's own `param.prc`, a stage | the files themselves |
 
 Lists inside `vl.prc` (`hit_data`, ...) are not rules: ship your own
@@ -342,7 +342,8 @@ save it as `lib.rs`. Every argument carries a comment.
 Per fighter:
 
 - `fighter!`, a `<NAME>_COSTUMES` constant that drives the manifest, the CSK
-  maps and the ParamConfig slots, and the `Manifest` and `register` in `main`.
+  maps and the ParamConfig slots, and the `Manifest` and `register` in `main`,
+  then one `WAWA.param("group.field")` call per value (`.set`, `.mul`, `.int`).
 - The Smashline agents: the fighter, one per article and Kirby when the clone
   has copy statuses. An article's scripts and statuses go on
   `Agent::new("<fighter>_<article>")`, a Kirby copy article's on
@@ -367,8 +368,9 @@ Per fighter:
 - With the plugin flag: `register_css_entry` (CSK's call, one layout per
   costume) and `register_params` (ParamConfig's calls with the clone's kind).
 
-Per item: `item!`, the `ItemManifest` and `register`, and
-`register_item_labels` for the label and name fields. An item with family
+Per item: `item!`, the `ItemManifest` and `register`, then one
+`WAWA.common(..)` or `WAWA.owner_param(..)` call per value (`.set`, `.int`,
+`.label`, `.hash`). An item with family
 members registers the family instead (`register_item_family`).
 
 A stage with doors or paused motions gets the door code of the engine's stage
@@ -659,9 +661,10 @@ prcxml files (`lint_prcxml.py`, also run by the stage linter):
   `fighter_param_motion.prcxml`, `common.prcxml` (and `item`, `etc`,
   `power_up`, `effect`, `sound`), its `vl.prcxml` (any field, its own included),
   its `fighter/<name>/ai/param/fighter_param.prcxml`,
-  an item's `common_param.prcxml`, an enemy's `enemy/<name>/common.prcxml` and a
+  an item's `common_param.prcxml`, an enemy's `enemy/<name>/common.prcxml`, a
   stage's `item_switch_param.prcxml`, `stage_sound_settings.prcxml` and
-  `stage_param.prcxml` are read as Dionysus reads them: a file that is
+  `stage_param.prcxml`, and the `param.prcxml` of an item, enemy or stage
+  (keys of its own) are read as Dionysus reads them: a file that is
   not XML is an error, a missing row or a field the engine does not know is a
   warning, and a label, list or fixed field it leaves out gets a note;
 - a prcxml for the shared file itself (`fighter/common/param/`,

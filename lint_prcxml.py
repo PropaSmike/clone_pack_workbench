@@ -2,9 +2,10 @@
 """The prcxml files a pack ships for its clones, checked the way Dionysus reads
 them: a fighter's fighter_param / fighter_param_motion / common files, an item's
 common_param.prcxml, a fighter's ai/param/fighter_param.prcxml, an enemy's
-common.prcxml and a stage's item_switch_param.prcxml, stage_sound_settings.prcxml
-and stage_param.prcxml. Also warns about a prcxml for the shared file itself,
-which changes the vanilla rows."""
+common.prcxml, a stage's item_switch_param.prcxml, stage_sound_settings.prcxml
+and stage_param.prcxml, and the keys of their own an item, enemy or stage takes
+from param.prcxml. Also warns about a prcxml for the shared file itself, which
+changes the vanilla rows."""
 
 import os
 import sys
@@ -32,6 +33,7 @@ STAGE_FILE = "item_switch_param.prcxml"
 SOUND_FILE = "stage_sound_settings.prcxml"
 AREA_FILE = "stage_param.prcxml"
 STAGE_FILES = (STAGE_FILE, SOUND_FILE, AREA_FILE)
+ASSET_FILE = "param.prcxml"
 REVERB_PRESETS = 11
 INTEGERS = ("sbyte", "byte", "short", "ushort", "int", "uint")
 NUMBERS = INTEGERS + ("float",)
@@ -239,6 +241,15 @@ def check_vl(relative, root):
     return []
 
 
+def check_asset(relative, root, family):
+    if not rows(root, "params"):
+        return check_vl(relative, root)
+    if family in ITEM_TOPS:
+        return [("WARN", "%s looks written for item/common/param/param.prc; ARCropolis applies it to your "
+                 "own param.prc instead. Name it %s" % (relative, ITEM_FILE))]
+    return [("WARN", "%s holds a params list; Dionysus does not use the file" % relative)]
+
+
 def check_stage(relative, root):
     found = rows(root, "itsw_normal")
     if not found:
@@ -372,6 +383,8 @@ def lint_pack(mod_dir, families=("fighter", "item", "enemy", "stage")):
             role = "cpu"
         elif "enemy" in families and len(parts) == 3 and parts[0] == "enemy" and parts[2] == ENEMY_FILE:
             role = "enemy"
+        elif "enemy" in families and len(parts) == 4 and parts[0] == "enemy" and parts[2:4] == ["param", ASSET_FILE]:
+            role = "asset"
         elif "fighter" in families and len(parts) == 4 and parts[0] == "fighter" and parts[2] == "param":
             if stem in FIGHTER_FILES:
                 role = "fighter"
@@ -383,15 +396,11 @@ def lint_pack(mod_dir, families=("fighter", "item", "enemy", "stage")):
         elif "item" in families and len(parts) == 4 and parts[0] in ITEM_TOPS and parts[2] == "param":
             if parts[3] == ITEM_FILE:
                 role = "item"
-            elif parts[3] == "param.prcxml":
-                root, _ = parse(full)
-                if root is not None and rows(root, "params"):
-                    findings.append(("WARN", "%s looks written for item/common/param/param.prc; ARCropolis "
-                                     "applies it to your own param.prc instead. Name it %s"
-                                     % (relative, ITEM_FILE)))
+            elif parts[3] == ASSET_FILE:
+                role = "asset"
         elif ("stage" in families and len(parts) == 5 and parts[0] == "stage" and parts[3] == "param"
-              and parts[2] in ("normal", "battle") and parts[4] in STAGE_FILES):
-            role = parts[4]
+              and parts[2] in ("normal", "battle") and parts[4] in STAGE_FILES + (ASSET_FILE,)):
+            role = "asset" if parts[4] == ASSET_FILE else parts[4]
         if role is None:
             continue
         root, problem = parse(full)
@@ -404,6 +413,8 @@ def lint_pack(mod_dir, families=("fighter", "item", "enemy", "stage")):
             findings += check_item(relative, root)
         elif role == "vl":
             findings += check_vl(relative, root)
+        elif role == "asset":
+            findings += check_asset(relative, root, parts[0])
         elif role == "cpu":
             findings += check_table_row(relative, root, "base", "cpu", "clone")
         elif role == "enemy":

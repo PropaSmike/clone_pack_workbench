@@ -3614,7 +3614,7 @@ class ParamsPanel(ttk.Frame):
                     "the value each holds. Click one, set a value, Add. A slash means "
                     "param/field. With a plugin that keeps its ParamConfig code these "
                     "are param_config::update_* calls on the Rust tab, with the clone's "
-                    "kind; without one they are .param(..) on the Manifest, or "
+                    "kind; without one they are WAWA.param(..) calls after register, or "
                     "fighter.toml's [params]. %s"
                     % (shown, len(self.rows), resource,
                        "%d value(s) differ from the game's default (Vanilla column) "
@@ -3652,8 +3652,8 @@ class ParamsPanel(ttk.Frame):
             return ("Where a held or thrown body sits: %d rule(s). A whole vector takes "
                     "Mul only; a single component takes Set or Mul. offset* is your "
                     "clone holding, held_offset* is your clone being held. Read by the "
-                    "game past ParamConfig: .param(\"param_thrown.<key>\", ..) on the "
-                    "Manifest or fighter.toml's [params], never ParamConfig." % shown)
+                    "game past ParamConfig: WAWA.param(\"param_thrown.<key>\") after "
+                    "register or fighter.toml's [params], never ParamConfig." % shown)
         if table == "item_common":
             path = self.values_file.get().strip()
             if self.extra:
@@ -3671,17 +3671,17 @@ class ParamsPanel(ttk.Frame):
             return ("%d of %d fields from the six per-fighter files (common, item, "
                     "etc, power_up, effect, sound); the File box picks one. Change "
                     "values that work together as a set (shield_max with shield_reset). "
-                    "Read by the game past ParamConfig: .param(\"common.<field>\", ..) on "
-                    "the Manifest or fighter.toml's [params], never ParamConfig."
+                    "Read by the game past ParamConfig: WAWA.param(\"common.<field>\") "
+                    "after register or fighter.toml's [params], never ParamConfig."
                     % (shown, len(self.rows)))
         if table == "param_motion":
             return ("%d of %d fields: dodge, roll and air dodge timings. Read by the "
-                    "game past ParamConfig: .param(\"param_motion.<field>\", ..) on the "
-                    "Manifest or fighter.toml's [params], never ParamConfig."
+                    "game past ParamConfig: WAWA.param(\"param_motion.<field>\") after "
+                    "register or fighter.toml's [params], never ParamConfig."
                     % (shown, len(self.fields)))
         return ("%d of %d fields. A rule applies to every costume. The game reads these "
                 "past ParamConfig (FighterParamAccessor2 and straight from the row), so "
-                "they are .param(..) on the Manifest or fighter.toml's [params]; the "
+                "they are WAWA.param(..) calls after register or fighter.toml's [params]; the "
                 "engine applies them and pushes them to ParamConfig too."
                 % (shown, len(self.fields)))
 

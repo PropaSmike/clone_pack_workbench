@@ -178,35 +178,6 @@ def param_config_calls(state: dict, suffix: str = "") -> str:
     return "\n".join(lines) + "\n"
 
 
-def reported(call: str, tag: str, what: str) -> list[str]:
-    """A call whose Err is printed rather than dropped: an engine older than the
-    call returns EngineUnavailable, and a refused value says why in its own line."""
-    return ["    if let Err(error) = %s {" % call,
-            "        skyline::println!(\"[%s] %s was not applied: {error:?}\");"
-            % (tag, what),
-            "    }"]
-
-
-def item_label_calls(state: dict, suffix: str = "") -> str:
-    """item_common_set_label and _hash for the fields of a clone item's common
-    row that item.toml cannot carry; the floats and ints are the file's."""
-    rules = [rule for rule in (state.get("item_params") or [])
-             if rule.get("style") in ("label", "hash")]
-    if not rules:
-        return ""
-    tag = state.get("resource_name") or "pack"
-    lines = ["pub fn register_item_labels%s(kind: i32) {" % suffix]
-    for rule in rules:
-        field = rule.get("field", "")
-        value = rule.get("value", "0")
-        call = ("dionysus_api::item_common_set_%s("
-                "kind, smash::hash40(\"%s\"), smash::hash40(\"%s\"))"
-                % (rule["style"], field, value))
-        lines += reported(call, tag, field)
-    lines.append("}")
-    return "\n".join(lines) + "\n"
-
-
 def item_table_lines(state: dict) -> list[str]:
     """The [common] and [owner_params] tables item.toml carries for the values
     the Parameters tab holds: float and int fields by name, owner words by
@@ -253,20 +224,63 @@ PARAM_NOTES = {
 }
 
 
-def manifest_param_calls(rules: list[dict]) -> list[str]:
-    """`.param(..)`, `.param_int(..)`, `.param_mul(..)` on the manifest, one per rule."""
-    q = '"'
+def param_lines(resource: str, calls: list[str]) -> list[str]:
+    """The param calls after register, one value each (name, then .set, .mul,
+    .int, .label or .hash), and one line that reports any the engine refused."""
+    if not calls:
+        return []
+    lines = ["    let mut applied = true; // each param call returns false when the value is refused"]
+    lines += ["    applied &= " + call for call in calls]
+    lines += ["    if !applied {",
+              "        skyline::println!(\"[%s] a param was refused; the log says which\");" % resource,
+              "    }"]
+    return lines
+
+
+def fighter_param_calls(rules: list[dict], constant: str) -> list[str]:
+    """`WAWA.param("group.field")` with .set, .mul or .int, one per rule."""
     out = []
     for rule in rules:
-        key = toml_key(rule)
+        call = '%s.param("%s")' % (constant, toml_key(rule))
         value = rule.get("value", "0")
         note = PARAM_NOTES.get(rule.get("table", "fighter_param"), "vl.prc value, pushed to ParamConfig")
         if rule.get("integer"):
-            out.append("    .param_int(%s%s%s, %s) // %s, integer" % (q, key, q, str(value).strip(), note))
+            out.append("%s.int(%s); // %s, integer" % (call, str(value).strip(), note))
         elif rule.get("op", "Set") == "Mul":
-            out.append("    .param_mul(%s%s%s, %s) // %s, multiplied" % (q, key, q, float_literal(value), note))
+            out.append("%s.mul(%s); // %s, multiplied" % (call, float_literal(value), note))
         else:
-            out.append("    .param(%s%s%s, %s) // %s" % (q, key, q, float_literal(value), note))
+            out.append("%s.set(%s); // %s" % (call, float_literal(value), note))
+    return out
+
+
+def item_param_calls(state: dict, constant: str) -> list[str]:
+    """`WAWA.common("field")` and `WAWA.owner_param("fighter", "field")`, one
+    per value of the item's common row and owner fighters."""
+    out = []
+    for rule in state.get("item_params") or []:
+        field = rule.get("field")
+        if not field:
+            continue
+        call = '%s.common("%s")' % (constant, field)
+        value = rule.get("value", "0")
+        style = rule.get("style", "float")
+        if style == "int":
+            out.append("%s.int(%d); // a field of item/common/param/param.prc" % (call, int(float(value))))
+        elif style == "label":
+            out.append('%s.label("%s"); // a kind field of item/common/param/param.prc, by label' % (call, value))
+        elif style == "hash":
+            out.append('%s.hash("%s"); // a bone or motion name field of item/common/param/param.prc' % (call, value))
+        else:
+            out.append("%s.set(%s); // a field of item/common/param/param.prc" % (call, float_literal(value)))
+    for rule in state.get("owner_params") or []:
+        if not (rule.get("owner") and rule.get("field")):
+            continue
+        call = '%s.owner_param("%s", "%s")' % (constant, rule["owner"], rule["field"].split("/")[-1])
+        value = rule.get("value", "0")
+        if rule.get("integer"):
+            out.append("%s.int(%d); // owner fighter, a field of its vl.prc" % (call, int(float(value))))
+        else:
+            out.append("%s.set(%s); // owner fighter, a field of its vl.prc" % (call, float_literal(value)))
     return out
 
 
@@ -361,8 +375,6 @@ def fighter_manifest_lines(state: dict, constant: str) -> list[str]:
     lines += article_gimmick_calls(state)
     engine, config = split_rules(state)
     rules = engine if own else engine + config
-    if rules:
-        lines += manifest_param_calls(rules)
     lines[-1] = end_statement(lines[-1])
     if "global_motions" in state:
         lines += guarded_tables(row_tables("global_motion", state.get("global_motions")), "CAP_GLOBAL_MOTIONS",
@@ -397,6 +409,7 @@ def fighter_manifest_lines(state: dict, constant: str) -> list[str]:
         "    };",
         "    skyline::println!(\"[%s] registered as fighter kind {kind}\");" % resource,
     ]
+    lines += param_lines(resource, fighter_param_calls(rules, constant))
     return lines
 
 
@@ -1126,23 +1139,6 @@ def item_manifest_lines(state: dict, constant: str) -> list[str]:
     if members:
         lines.append("    .members(&[%s]) // the family's members, in the base family's order"
                      % ", ".join("%s%s%s" % (q, name, q) for name in members))
-    for rule in state.get("item_params") or []:
-        if not rule.get("field") or rule.get("style", "float") not in ("float", "int"):
-            continue
-        value = rule.get("value", "0")
-        if rule.get("style") == "int":
-            lines.append("    .common_int(%s%s%s, %d) // a field of item/common/param/param.prc" % (q, rule["field"], q, int(float(value))))
-        else:
-            lines.append("    .common(%s%s%s, %s) // a field of item/common/param/param.prc" % (q, rule["field"], q, float_literal(value)))
-    for rule in state.get("owner_params") or []:
-        if not (rule.get("owner") and rule.get("field")):
-            continue
-        field = rule["field"].split("/")[-1]
-        value = rule.get("value", "0")
-        if rule.get("integer"):
-            lines.append("    .owner_param_int(%s%s%s, %s%s%s, %d) // owner fighter, a field of its vl.prc, value" % (q, rule["owner"], q, q, field, q, int(float(value))))
-        else:
-            lines.append("    .owner_param(%s%s%s, %s%s%s, %s) // owner fighter, a field of its vl.prc, value" % (q, rule["owner"], q, q, field, q, float_literal(value)))
     lines[-1] = end_statement(lines[-1])
     lines += [
         "    let Ok(kind) = %s.register(manifest) else {" % constant,
@@ -1150,26 +1146,24 @@ def item_manifest_lines(state: dict, constant: str) -> list[str]:
         "    };",
         "    skyline::println!(\"[%s] registered as item kind {kind:#x}\");" % resource,
     ]
+    lines += param_lines(resource, item_param_calls(state, constant))
     return lines
 
 
 def item_part(state: dict, suffix: str = "", taken: set | None = None,
               names_taken: set | None = None) -> dict:
     """What one item adds to the plugin: its declaration, its ItemManifest in
-    main, and the label and hash fields of its common row, which the manifest
-    cannot carry. An item named like a fighter of the pack is NAME_ITEM."""
+    main and its param calls after it. An item named like a fighter of the
+    pack is NAME_ITEM."""
     resource = state.get("resource_name", "wawa")
     constant = identifier(resource)
     if taken and constant in taken:
         constant += "_ITEM"
-    labels = item_label_calls(state, suffix)
     main = item_manifest_lines(state, constant)
-    if labels:
-        main.append("    register_item_labels%s(kind); // label and hash fields, by name" % suffix)
     main.append("    // %s.status(dionysus_api::ItemStatusLine::Main, \"STATUS\", %s_main); // status line, a status name of the base item, function"
                 % (constant, constant.lower()))
     uses = {"v2:item", "v2:ItemManifest"}
-    tail = [labels] if labels else []
+    tail = []
     install, hooks = hook_lines("item", state, constant, resource, names_taken)
     if install:
         uses |= hook_uses(install, hooks)

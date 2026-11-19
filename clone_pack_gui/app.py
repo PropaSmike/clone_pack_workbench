@@ -2307,8 +2307,9 @@ class IdentityPanel(ttk.Frame):
                 Field("is_patch", "Patch look", 6, "choice", TRISTATE)],
              self.describe_outfit, 4,
              "ids start with b_ and end in _m or _f like the game's. Files go in "
-             "fighter/<fighter>/model/<id>/c00 to c11 and fighter/<fighter>/motion/<id>/c00 (copy the "
-             "base's update, ik, flip and scharge .prc). The icon is mii_body_0_<icon name>, the id "
+             "fighter/<fighter>/model/<id>/c00 to c11 and fighter/<fighter>/motion/<id>/c00, each with "
+             "every file the base's folder has (model.xmb, dark_model.numatb, motion_list.bin, ...): a new "
+             "outfit has no game files to fall back on. The icon is mii_body_0_<icon name>, the id "
              "without _m or _f unless set"),
         )
         for table, title, row_fields, describe, per_row, hint in specs:

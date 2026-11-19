@@ -265,6 +265,61 @@ def load_vanilla(arc_index):
     return found if found["mii_hat"] else None
 
 
+def load_game_files(arc_index):
+    """{folder: file names} of the game's Mii hat and outfit folders, or None without arc_files.tsv."""
+    path = os.path.join(arc_index, "arc_files.tsv")
+    if not os.path.isfile(path):
+        return None
+    found = {}
+    with open(path, encoding="utf8", errors="replace") as handle:
+        for line in handle:
+            if line.startswith("fighter/mii") or line.startswith("miihat/"):
+                folder, _, name = line.split("\t", 1)[0].strip().rpartition("/")
+                found.setdefault(folder.lower(), set()).add(name.lower())
+    return found
+
+
+def part_folders(part, part_id):
+    """(model folder holding the cNN folders, motion folder) of a hat or outfit with this id."""
+    if part["table"] == "mii_hat":
+        return "miihat/%s/model/body" % part_id, "miihat/%s/motion/body/c00" % part_id
+    fighter = FIGHTERS[part["fighter"]]
+    return "fighter/%s/model/%s" % (fighter, part_id), "fighter/%s/motion/%s/c00" % (fighter, part_id)
+
+
+def colour_list(colours):
+    return "every colour" if len(colours) == COLOURS else ", ".join(colours)
+
+
+def game_file_problems(part, label, shipped, game_files):
+    """The files the base's own folders hold that this part leaves out. A new part has no game copy to
+    fall back on, so the game can wait for them forever."""
+    model, motion = part_folders(part, part["id"])
+    base_model, base_motion = part_folders(part, part["base"])
+    wanted = sorted(name for name in game_files.get((base_model + "/c00").lower(), ())
+                    if not name.endswith(".nutexb"))
+    short = {}
+    for index in range(COLOURS):
+        colour = "c%02d" % index
+        prefix = ("%s/%s/" % (model, colour)).lower()
+        names = {path[len(prefix):] for path in shipped if path.startswith(prefix)}
+        absent = tuple(name for name in wanted if name not in names)
+        if names and absent:
+            short.setdefault(absent, []).append(colour)
+    findings = []
+    for absent, colours in short.items():
+        findings.append(("ERROR", "%s: %s %s no %s, which base %s has; a new part has no game copy to fall back "
+                                  "on, so loading it can hang. Copy them from the base"
+                         % (label, colour_list(colours), "has" if len(colours) in (1, COLOURS) else "have",
+                            ", ".join(absent), part["base"])))
+    prefix = motion.lower() + "/"
+    absent = [name for name in sorted(game_files.get(base_motion.lower(), ())) if prefix + name not in shipped]
+    if absent:
+        findings.append(("ERROR", "%s: %s has no %s, which base %s has; loading it can hang. Copy them from "
+                                  "the base's motion folder" % (label, motion, ", ".join(absent), part["base"])))
+    return findings
+
+
 def folder_of(part):
     if part["table"] == "mii_hat":
         return "miihat/%s" % part["id"]
@@ -354,7 +409,7 @@ def labels(mod_dir):
         return set(re.findall(r'label="([^"]+)"', handle.read()))
 
 
-def check_part(part, mod_dir, shipped, config, vanilla, names, declared):
+def check_part(part, mod_dir, shipped, config, vanilla, names, declared, game_files=None):
     findings = []
     table, part_id = part["table"], part["id"]
     label = '%s "%s"' % (table[4:], part_id)
@@ -377,7 +432,10 @@ def check_part(part, mod_dir, shipped, config, vanilla, names, declared):
     elif missing:
         findings.append(("ERROR", "%s: colours %s have no model.numdlb; a Mii whose favourite colour is one "
                                   "of them loads nothing" % (label, ", ".join(missing))))
-    if table == "mii_outfit":
+    checked = game_files is not None and part["base"] not in declared
+    if checked:
+        findings += game_file_problems(part, label, shipped, game_files)
+    if table == "mii_outfit" and not checked:
         motion = "fighter/%s/motion/%s/c00/" % (FIGHTERS[part["fighter"]], part_id)
         absent = [name for name in OUTFIT_MOTION if (motion + name) not in shipped]
         if absent:
@@ -428,9 +486,10 @@ def lint(mod_dir, arc_index=DEFAULT_ARC_INDEX):
                          % arc_index))
     config = read_config(mod_dir)
     names = labels(mod_dir)
+    game_files = load_game_files(arc_index)
     declared = set()
     for part in parts:
-        findings += check_part(part, mod_dir, shipped, config, vanilla, names, declared)
+        findings += check_part(part, mod_dir, shipped, config, vanilla, names, declared, game_files)
         declared.add(part["id"])
     for table in TABLES:
         count = sum(part["table"] == table for part in parts)
@@ -438,7 +497,7 @@ def lint(mod_dir, arc_index=DEFAULT_ARC_INDEX):
         if count > room:
             findings.append(("ERROR", "%d %ss, but the save holds only %d added ones" % (count, table[4:], room)))
     findings.append(("INFO", "%d hat(s), %d outfit(s); each keeps its save number in "
-                             "sd:/ultimate/clone_engine/mii_parts.txt" % (
+                             "sd:/ultimate/dionysus/mii_parts.txt" % (
                                  sum(p["table"] == "mii_hat" for p in parts),
                                  sum(p["table"] == "mii_outfit" for p in parts))))
     findings.append(("INFO", "mii.toml needs an engine with Mii parts (CAP_MII_PARTS); older engines ignore it"))

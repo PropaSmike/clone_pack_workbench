@@ -857,6 +857,10 @@ python lint_mii_pack.py "path/to/your/mod folder"
   the whole file.
 - An id the game already has, or a base it does not have, is an error.
 - A missing colour folder, motion file, icon or name is reported.
+- Each colour folder and the motion folder must hold every file the base's
+  own folders have (`model.xmb`, `dark_model.numatb`, `motion_list.bin`, ...),
+  not only the ones a replacement mod changes: a new part has no game copy to
+  fall back on, and loading it can hang. A missing one is an error.
 
 ## lint_spirit_pack.py
 

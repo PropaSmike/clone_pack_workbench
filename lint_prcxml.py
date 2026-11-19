@@ -213,37 +213,76 @@ def check_table_row(relative, root, list_name, table, owner):
     return findings + check_row(relative, found[0], [table], True)
 
 
-def check_vl(relative, root):
-    left_out = []
+def values_under(element, path):
+    """The path of every value under `element`, dummies left out."""
+    if element.tag in SCALARS:
+        if not is_dummy(element):
+            yield path
+        return
+    for position, child in enumerate(element):
+        if element.tag == "list":
+            inner = "%s[%s]" % (path, child.get("index", position))
+        else:
+            inner = "%s.%s" % (path, child.get("hash") or "?")
+        yield from values_under(child, inner)
+
+
+def own_file_values(root):
+    """The values Dionysus cannot hand over itself, as "path (why)": it reads the
+    numbers under a top-level group, or in the first row of a top-level list."""
+    found = []
+
+    def unread(element, path, why):
+        found.extend("%s (%s)" % (inner, why) for inner in values_under(element, path))
+
+    def numbers_of(group, path):
+        for field in group:
+            inner = "%s.%s" % (path, field.get("hash") or "?")
+            if field.tag == "hash40":
+                unread(field, inner, "a hash40")
+            elif field.tag == "string":
+                unread(field, inner, "text")
+            elif field.tag in ("list", "struct"):
+                unread(field, inner, "a %s inside a group" % field.tag)
+
     for group in root:
         name = group.get("hash") or "?"
-        if group.tag == "list":
-            entries = [child for child in group if not is_dummy(child)]
-            if not entries or entries[0].tag != "struct":
-                left_out.append("%s (a list)" % name)
-                continue
-            group = entries[0]
-        if group.tag == "struct":
-            for field in group:
-                field_name = "%s.%s" % (name, field.get("hash") or "?")
-                if field.tag in ("list", "struct"):
-                    left_out.append("%s (a %s)" % (field_name, field.tag))
-                elif field.tag == "hash40":
-                    left_out.append("%s (a hash40)" % field_name)
-                elif field.tag == "string":
-                    left_out.append("%s (text)" % field_name)
-        elif group.tag == "hash40":
-            left_out.append("%s (a hash40)" % name)
+        if group.tag == "hash40":
+            unread(group, name, "a hash40")
         elif group.tag == "string":
-            left_out.append("%s (text)" % name)
-    if left_out:
+            unread(group, name, "text")
+        elif group.tag == "struct":
+            numbers_of(group, name)
+        elif group.tag == "list":
+            entries = [(child.get("index", position), child) for position, child in enumerate(group)
+                       if not is_dummy(child)]
+            if not entries:
+                continue
+            if entries[0][1].tag != "struct":
+                unread(group, name, "a list of values")
+                continue
+            numbers_of(entries[0][1], "%s[%s]" % (name, entries[0][0]))
+            for index, entry in entries[1:]:
+                unread(entry, "%s[%s]" % (name, index), "past the list's first row")
+    return found
+
+
+def check_vl(relative, root, own_file=None):
+    """own_file: the copy of the file the pack can ship (vl.prc, an item's param.prc),
+    True when it ships it, None when the part has no such file."""
+    left_out = own_file_values(root)
+    if not left_out or own_file is True:
+        return []
+    if own_file is None:
         return [("INFO", "%s: Dionysus leaves out %s" % (relative, listing(left_out)))]
-    return []
+    return [("WARN", "%s: Dionysus leaves out %s. Those reach the game only through your own %s, which "
+             "ARCropolis patches with this file; Save on the Workbench's Param files tab writes it"
+             % (relative, listing(left_out), own_file))]
 
 
-def check_asset(relative, root, family):
+def check_asset(relative, root, family, own_file=None):
     if not rows(root, "params"):
-        return check_vl(relative, root)
+        return check_vl(relative, root, own_file)
     if family in ITEM_TOPS:
         return [("WARN", "%s looks written for item/common/param/param.prc; ARCropolis applies it to your "
                  "own param.prc instead. Name it %s" % (relative, ITEM_FILE))]
@@ -412,9 +451,10 @@ def lint_pack(mod_dir, families=("fighter", "item", "enemy", "stage")):
         elif role == "item":
             findings += check_item(relative, root)
         elif role == "vl":
-            findings += check_vl(relative, root)
+            findings += check_vl(relative, root, os.path.isfile(full[:-3]) or relative[:-3])
         elif role == "asset":
-            findings += check_asset(relative, root, parts[0])
+            own = (os.path.isfile(full[:-3]) or relative[:-3]) if parts[0] in ITEM_TOPS else None
+            findings += check_asset(relative, root, parts[0], own)
         elif role == "cpu":
             findings += check_table_row(relative, root, "base", "cpu", "clone")
         elif role == "enemy":

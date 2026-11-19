@@ -3853,7 +3853,7 @@ VALUE_TYPES = ("float", "int", "bool", "hash40", "byte", "short", "uint")
 
 class ParamFilesPanel(ttk.Frame):
     """The prcxml files a clone ships: each starts as a copy of the game's own
-    values, read from the folder the player extracted data.arc into."""
+    values, kept as tables beside this package."""
 
     def __init__(self, parent: tk.Misc, app: Workbench):
         super().__init__(parent, padding=10)
@@ -3871,21 +3871,10 @@ class ParamFilesPanel(ttk.Frame):
         self.editable = False
         self.trees: dict = {}
 
-        top = ttk.Frame(self)
-        top.grid(row=0, column=0, sticky="ew")
-        top.columnconfigure(1, weight=1)
-        ttk.Label(top, text="Game files").grid(row=0, column=0, sticky="w")
-        self.game_root = tk.StringVar(value=theme.load_setting("game_files", "") or "")
-        root_box = ttk.Entry(top, textvariable=self.game_root)
-        root_box.grid(row=0, column=1, sticky="ew", padx=4)
-        root_box.bind("<Return>", lambda _: self.game_root_changed())
-        root_box.bind("<FocusOut>", lambda _: self.game_root_changed())
-        ttk.Button(top, text="Browse", command=self.browse_game_root).grid(row=0, column=2)
-        hint = ttk.Label(top, style="Hint.TLabel", justify="left",
-                         text="The folder you extracted data.arc into, the one holding fighter/, item/, "
-                              "stage/ and param/. Each file starts as a copy of the game's values from there; "
-                              "a save writes the values you changed.")
-        hint.grid(row=1, column=0, columnspan=3, sticky="w", pady=(2, 6))
+        hint = ttk.Label(self, style="Hint.TLabel", justify="left",
+                         text="Each file starts as a copy of the game's values (%s), which come with the "
+                              "Workbench; a save writes the values you changed." % prcxml_files.GAME_VERSION)
+        hint.grid(row=0, column=0, sticky="w", pady=(0, 6))
 
         self.files = Sheet(self, PARAM_FILE_COLUMNS, height=6)
         self.files.grid(row=1, column=0, sticky="nsew")
@@ -3968,28 +3957,13 @@ class ParamFilesPanel(ttk.Frame):
         for widget in (self.save_button, self.reset_button, self.set_button, self.value_box):
             widget.configure(state=state)
 
-    def browse_game_root(self) -> None:
-        folder = filedialog.askdirectory(title="The folder you extracted data.arc into",
-                                         initialdir=self.game_root.get() or None)
-        if folder:
-            self.game_root.set(folder)
-            self.game_root_changed()
-
-    def game_root_changed(self) -> None:
-        folder = self.game_root.get().strip()
-        if folder == (theme.load_setting("game_files", "") or ""):
-            return
-        theme.save_setting("game_files", folder)
-        self.trees.clear()
-        self.load()
-
     def part_names(self):
         kind = self.app.kind.get()
         return prcxml_files.names_for(kind, self.app.state, self.app.catalog.item_root,
                                       self.app.catalog.item_name)
 
     def source_of(self, target, names):
-        """(the prc a file starts from or None, how the list shows it)."""
+        """(the pack's own prc a file starts from or None, how the list shows where it starts)."""
         if not target.source:
             return None, "nothing: keys of your own"
         if names is None:
@@ -3998,13 +3972,34 @@ class ParamFilesPanel(ttk.Frame):
             own = prcxml_files.own_prc(target, names, self.app.folder)
             if own is not None:
                 return own, "your pack's %s" % own.relative_to(self.app.folder).as_posix()
-        if not names.base:
+        if not names.base and not target.top_only:
             return None, "pick the part's base first"
-        relative = prcxml_files.fill(target.source, names)
-        found = prcxml_files.game_file(self.game_root.get().strip(), relative)
+        return None, "game: %s" % prcxml_files.fill(target.source, names)
+
+    def starting_copy(self, target, names, own, notes):
+        """The game's copy a file starts from: the pack's own prc, or the shipped tables."""
+        if own is not None:
+            try:
+                return prcxml_files.starting_tree(target, self.game_tree(own), names)
+            except (OSError, ValueError) as error:
+                notes.append("Your %s cannot be read: %s." % (own.name, error))
+                return None
+        if not target.values or (not names.base and not target.top_only):
+            return None
+        try:
+            found = prcxml_files.game_values(target, names)
+        except (OSError, ValueError) as error:
+            notes.append("The game's values in data/params/%s cannot be read: %s." % (target.values, error))
+            return None
         if found is None:
-            return None, "missing: %s" % relative
-        return found, "game: %s" % relative
+            source = prcxml_files.fill(target.source, names)
+            if target.table:
+                notes.append("%s has no row for %s." % (source, prcxml_files.fill(target.value, names)))
+            elif target.top_only:
+                notes.append("The game's %s holds lists only, so nothing here starts from it." % source)
+            else:
+                notes.append("The game has no %s." % source)
+        return found
 
     def pack_path(self, target, names):
         if self.app.folder is None or names is None:
@@ -4086,16 +4081,8 @@ class ParamFilesPanel(ttk.Frame):
             self.note.configure(text="Name the part on the Identity tab first.")
             return
         notes = [target.note]
-        source, shown = self.source_of(target, self.names)
-        game = None
-        if source is not None:
-            try:
-                game = self.game_tree(source)
-            except (OSError, ValueError) as error:
-                notes.append("%s could not be read: %s" % (shown, error))
-        elif target.source:
-            notes.append("Starts from %s. Extract that file from data.arc into the game files "
-                         "folder to see and change the game's values." % shown.split(": ", 1)[-1])
+        own, _ = self.source_of(target, self.names)
+        game = self.starting_copy(target, self.names, own, notes)
         path = self.pack_path(target, self.names)
         pack_file = None
         if path is not None and path.is_file():
@@ -4106,12 +4093,7 @@ class ParamFilesPanel(ttk.Frame):
                              % (path.name, error))
                 self.note.configure(text="\n".join(notes))
                 return
-        try:
-            self.current, self.original = prcxml_files.working_tree(target, game, self.names, pack_file)
-        except ValueError as error:
-            notes.append("The game's file has no row for this part: %s." % error)
-            self.note.configure(text="\n".join(notes))
-            return
+        self.current, self.original = prcxml_files.working_tree(target, game, pack_file)
         if game is None and pack_file is None and not target.own_keys:
             self.note.configure(text="\n".join(notes))
             return
@@ -4275,15 +4257,35 @@ class ParamFilesPanel(ttk.Frame):
                 self.tree.see(item)
                 break
 
+    def own_copy(self, tree):
+        """Where the part's own copy of the game's file goes when the values being
+        saved reach the game only through one and the pack has none yet, else None."""
+        target = self.target
+        if not target.own_keys or not target.values or self.original is None or self.app.folder is None:
+            return None
+        if prcxml_files.own_prc(target, self.names, self.app.folder) is not None:
+            return None
+        if not prcxml_files.own_file_values(tree):
+            return None
+        return self.pack_path(target, self.names).with_suffix(".prc")
+
     def save(self) -> None:
         if self.target is None or self.current is None or not self.app.require_folder():
             return
         path = self.pack_path(self.target, self.names)
         tree = prcxml_files.file_tree(self.target, self.current, self.original, self.every.get())
         text = prcxml_files.write_prcxml(tree, self.labels())
+        copy = self.own_copy(tree)
+        try:
+            data = prcxml_files.write_prc(self.original) if copy is not None else None
+        except ValueError as error:
+            messagebox.showerror(TITLE, "Could not make the copy of the base's file: %s" % error)
+            return
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(text, encoding="utf-8", newline="\n")
+            if copy is not None:
+                copy.write_bytes(data)
         except OSError as error:
             messagebox.showerror(TITLE, "Could not write %s: %s" % (path, error))
             return
@@ -4291,14 +4293,32 @@ class ParamFilesPanel(ttk.Frame):
         relative = path.relative_to(self.app.folder).as_posix()
         self.app.log("wrote %s (%s)" % (relative, "every value" if self.every.get() or self.original is None
                                        else "the values you changed"))
+        if copy is not None:
+            self.declare_copy(copy.relative_to(self.app.folder).as_posix(),
+                              prcxml_files.own_file_values(tree))
         self.lint_file(relative)
         self.refresh_present()
+
+    def declare_copy(self, relative: str, values: list) -> None:
+        """Log the copy and write config.json, so the pack loads it."""
+        self.app.log("wrote %s, the base's values: ARCropolis patches it with your file, so %s reach%s the game"
+                     % (relative, ", ".join(values[:3]) + (" and %d more" % (len(values) - 3) if len(values) > 3
+                                                          else ""), "es" if len(values) == 1 else ""))
+        if not self.app.state.get("declare_shipped"):
+            self.app.log("%s loads only once config.json declares it: tick Declare the files this pack "
+                         "ships on the Identity tab, then Write config.json" % relative)
+            return
+        if self.app.kind.get() == packs.FIGHTER:
+            self.app.identity.write_fighter_config()
+        elif self.app.kind.get() == packs.ITEM:
+            self.app.identity.write_item_config()
 
     def refresh_present(self) -> None:
         for index, target in enumerate(self.listed):
             path = self.pack_path(target, self.names)
             row = self.files.row(index)
             row["present"] = "yes" if path and path.is_file() else ""
+            row["source"] = self.source_of(target, self.names)[1]
             self.files.tree.item(str(index), values=[row.get(key, "") for key in self.files.keys],
                                  tags=("changed",) if row["present"] else ())
 

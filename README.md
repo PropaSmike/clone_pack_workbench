@@ -267,11 +267,8 @@ Lists inside `vl.prc` (`hit_data`, ...) are not rules: ship your own
 ### Param files
 
 The prcxml files the part can ship, each starting as a copy of the game's own
-values.
+values (13.0.5). Those come with the Workbench, in `clone_pack_gui/data/params/`.
 
-- **Game files**: the folder you extracted data.arc into, the one holding
-  `fighter/`, `item/`, `stage/` and `param/`. The Workbench reads the game's
-  prc files from there and remembers the folder.
 - Pick a file. The list says whether the pack has it and where it starts
   from. A row file (`fighter_param`, `fighter_param_motion`, the computer
   player row, an item's or enemy's common row, a stage's sound, box and item
@@ -283,6 +280,11 @@ values.
 - **Save** writes what you changed, in the shape Dionysus reads. **Write every
   value** writes the whole copy instead. The linter checks the file as it is
   saved.
+- Dionysus sets the numbers under a group, or in a list's first row, of
+  `vl.prc` and an item's `param.prc` itself. Change anything else there (a
+  later row, a list inside a group, a hash40, text) and **Save** also writes
+  the part's own copy of the base's file, then writes `config.json`, so
+  ARCropolis patches that copy with your prcxml. The base keeps its own file.
 - `vl.prc` and the item, enemy and stage params of their own take keys of your
   own: name one (`field` or `group.field`), pick its type, **Add**.
 
@@ -809,6 +811,11 @@ python lint_enemy_pack.py "path/to/your/mod folder"
   [`smash-vtables`](https://github.com/theincredibleplayer/smash-vtables)
   (13.0.4); the item, enemy and common tables and the signatures were read off
   the game's code.
+- `clone_pack_gui/data/params/`: the game's param values (13.0.5) the Param
+  files tab starts from. A row table has one line per fighter, item or stage
+  and one column per field, with the types on the second line; `vl.tsv`,
+  `item_param.tsv` and `fighter_common.tsv` hold one value per line. They open
+  in any spreadsheet.
 - `docs/`: the parameter field lists for game version 13.0.4.
 - `arc_index/`: the file and folder paths inside `data.arc` (13.0.4), and
   `arc_dir_files.tsv`, which files each fighter and item directory loads.

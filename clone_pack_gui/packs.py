@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 from pathlib import Path
+from xml.sax.saxutils import escape, quoteattr, unescape
 
 from .emit import engine_param_lines
 
@@ -20,8 +21,9 @@ STAGE = "stage"
 MENU = "menu"
 MII = "mii"
 ENEMY = "enemy"
+SPIRIT = "spirit"
 UNKNOWN = "unknown"
-KINDS = (FIGHTER, ITEM, STAGE, MENU, MII, ENEMY)
+KINDS = (FIGHTER, ITEM, STAGE, MENU, MII, ENEMY, SPIRIT)
 MENU_MANIFEST = "menu.toml"
 MENU_TABLES = ("mode", "sequence", "layout", "preload", "patch", "gallery", "gallery_item")
 MII_MANIFEST = "mii.toml"
@@ -30,6 +32,17 @@ ENEMY_KEYS = ("name", "base")
 ENEMY_FOLDERS = ("model/body/c00", "motion/body/c00", "param", "script/animcmd")
 MII_TABLES = ("mii_hat", "mii_outfit")
 MII_TREES = ("miihat", "miibody")
+SPIRIT_MANIFEST = "spirit.toml"
+SPIRIT_TABLES = ("spirit", "board")
+SPIRIT_MESSAGES = ("ui", "message", "msg_spirits.xmsbt")
+SPIRIT_PRCXML = {"spirit": "spirit/ui_spirit_db.prcxml", "battle": "spirit/ui_spirits_battle_db.prcxml",
+                 "layout": "spirit/ui_spirit_layout_db.prcxml", "board": "spirit/spirits_board_special_param.prcxml"}
+SPIRIT_LISTS = {"spirit": ("db_root",), "battle": ("battle_data_tbl", "fighter_data_tbl"), "layout": ("db_root",),
+                "board": ("special_board_data_list",)}
+XML_NUMBERS = ("sbyte", "byte", "short", "ushort", "int", "uint", "float")
+SPIRIT_TREES = ("ui/replace/spirits", "ui/replace_patch/spirits")
+SPIRIT_KEY_RE = re.compile(r"^\s*([A-Za-z0-9_][A-Za-z0-9_.]*)\s*=\s*(.+?)\s*$")
+SPIRIT_SIZE_RE = re.compile(rb"spirits_([0-3])_[a-z0-9_]+")
 MENU_STATE_KEYS = ("namespace", "luac", "lua_folder")
 
 STATE_FILE = "clone_pack_gui.json"
@@ -110,6 +123,8 @@ def detect_kinds(folder: Path) -> list[str]:
         found.append(MII)
     if (folder / ENEMY_MANIFEST).is_file() or (folder / "enemy").is_dir():
         found.append(ENEMY)
+    if (folder / SPIRIT_MANIFEST).is_file() or spirit_prcxml_files(folder):
+        found.append(SPIRIT)
     return found
 
 
@@ -121,7 +136,8 @@ def detect(folder: Path) -> str:
 
 def manifest_name(kind: str) -> str | None:
     return {ITEM: "item.toml", STAGE: "stage.toml", FIGHTER: FIGHTER_MANIFEST,
-            MENU: MENU_MANIFEST, MII: MII_MANIFEST, ENEMY: ENEMY_MANIFEST}.get(kind)
+            MENU: MENU_MANIFEST, MII: MII_MANIFEST, ENEMY: ENEMY_MANIFEST,
+            SPIRIT: SPIRIT_MANIFEST}.get(kind)
 
 
 def header_of(line: str) -> str | None:
@@ -654,11 +670,12 @@ def manifest_table(kind_or_path) -> str:
     """The [[table]] header that separates one declaration from the next."""
     name = Path(str(kind_or_path)).name
     return {"item.toml": "item", "stage.toml": "stage", MENU_MANIFEST: MENU,
-            MII_MANIFEST: MII, ENEMY_MANIFEST: ENEMY}.get(name, name)
+            MII_MANIFEST: MII, ENEMY_MANIFEST: ENEMY, SPIRIT_MANIFEST: SPIRIT}.get(name, name)
 
 
 def identity_key(kind_or_path) -> str:
-    return {"stage": "place", MENU: "namespace", MII: "id", ENEMY: "name"}.get(manifest_table(kind_or_path),
+    return {"stage": "place", MENU: "namespace", MII: "id", ENEMY: "name", SPIRIT: "id"}.get(
+        manifest_table(kind_or_path),
                                                                "resource_name")
 
 
@@ -908,6 +925,299 @@ def write_mii_manifest(folder: Path, part: dict) -> list[str]:
     backups.keep(path)
     path.write_text(text, encoding="utf-8", newline="\n")
     return [table for table in MII_TABLES if table in wanted]
+
+
+def spirit_table_rows(lines) -> dict:
+    """spirit.toml's tables, {table: [row]}, each row its keys' TOML text, dotted keys included."""
+    rows: dict = {}
+    current = None
+    for line in lines:
+        text = strip_comment(line).strip()
+        if text.startswith("[[") and text.endswith("]]"):
+            current = {}
+            rows.setdefault(text[2:-2].strip(), []).append(current)
+            continue
+        match = SPIRIT_KEY_RE.match(text)
+        if match and current is not None:
+            current[match.group(1)] = match.group(2).strip()
+    return rows
+
+
+def spirit_prcxml_files(folder: Path) -> list[str]:
+    return [relative for relative in SPIRIT_PRCXML.values() if Path(folder).joinpath(*relative.split("/")).is_file()]
+
+
+def toml_of(value) -> str:
+    """A linter value (sort, raw) as spirit.toml writes it."""
+    sort, raw = value
+    if sort == "flag":
+        return "true" if raw else "false"
+    if sort in ("number", "float"):
+        return str(raw)
+    return gimmicks.toml_string(str(raw))
+
+
+def read_spirit_prcxml(folder: Path) -> tuple[dict, list]:
+    """The rows of the pack's spirit/ prcxml files as spirit.toml rows, and what the engine would refuse."""
+    tool = gimmicks._tool("lint_spirit_pack")
+    if tool is None or not spirit_prcxml_files(folder):
+        return {}, []
+    spirits, boards, problems = tool.parse_prcxml(str(folder))
+    rows: dict = {}
+    for spirit in spirits:
+        row = {"id": gimmicks.toml_string(spirit["id"]), "base": gimmicks.toml_string(spirit["base"])}
+        if spirit["fighters"]:
+            row["fighters"] = str(spirit["fighters"])
+        for table, fighter, name, value, _ in spirit["fields"]:
+            key = name if table == "spirit" else ("fighter.%d.%s" % (fighter, name) if table == "fighter"
+                                                  else "%s.%s" % (table, name))
+            row[key] = toml_of(value)
+        rows.setdefault("spirit", []).append(row)
+    for board in boards:
+        row = {"id": gimmicks.toml_string(board["id"]), "base": gimmicks.toml_string(board["base"])}
+        for key in ("name", "background", "art"):
+            if board[key]:
+                row[key] = gimmicks.toml_string(board[key])
+        row["spirits"] = "[%s]" % ", ".join('"%s"' % spirit for spirit in board["spirits"])
+        for name, (value, _) in board["fields"].items():
+            row[name] = toml_of(value)
+        rows.setdefault("board", []).append(row)
+    return rows, [message for _, message in problems]
+
+
+def read_spirit_manifest(folder: Path) -> dict:
+    """The pack's one spirit part: every spirit and board of its spirit/ prcxml files and of an older
+    spirit.toml, each spirit with the name msg_spirits.xmsbt gives it."""
+    path = Path(folder) / SPIRIT_MANIFEST
+    lines = path.read_text(encoding="utf-8", errors="replace").splitlines() if path.is_file() else []
+    rows = spirit_table_rows(lines)
+    xml, problems = read_spirit_prcxml(folder)
+    for table in SPIRIT_TABLES:
+        known = {gimmicks.display(row.get("id", "")) for row in rows.get(table) or []}
+        rows.setdefault(table, []).extend(row for row in xml.get(table) or []
+                                          if gimmicks.display(row["id"]) not in known)
+    rows = {table: found for table, found in rows.items() if found}
+    names = messages(folder, SPIRIT_MESSAGES)
+    for row in rows.get("spirit") or []:
+        text = names.get("spi_" + gimmicks.display(row.get("id", "")))
+        if text:
+            row["name"] = gimmicks.toml_string(unescape(text))
+    part = {"tables": rows}
+    if problems:
+        part["prcxml_problems"] = problems
+    return part
+
+
+def xml_kind(kind: str | None, value: str) -> tuple[str, str]:
+    """The prcxml element and text for one spirit.toml value of a field of this type."""
+    text = gimmicks.display(value)
+    if kind in ("hash40", "string", "bool") or (kind in XML_NUMBERS):
+        return kind, text.lower() if kind == "bool" else text
+    if value.startswith('"'):
+        return "hash40", text
+    if value in ("true", "false"):
+        return "bool", value
+    return ("float", value) if any(mark in value for mark in ".eE") else ("int", value)
+
+
+def xml_line(name: str, kind: str | None, value: str, indent: str) -> str:
+    tag, text = xml_kind(kind, value)
+    return '%s<%s hash="%s">%s</%s>' % (indent, tag, escape(name), escape(text), tag)
+
+
+def spirit_xml(lists: dict) -> str:
+    """A prcxml with these lists, each [rows], each row [(name, kind, value)] or a raw block of lines."""
+    lines = ['<?xml version="1.0" encoding="utf-8"?>', "<struct>"]
+    for listing, rows in lists.items():
+        lines.append('  <list hash="%s">' % listing)
+        for index, row in enumerate(rows):
+            lines.append('    <struct index="%d">' % index)
+            for item in row:
+                lines += item if isinstance(item, list) else [xml_line(*item, "      ")]
+            lines.append("    </struct>")
+        lines.append("  </list>")
+    lines.append("</struct>")
+    return "\n".join(lines) + "\n"
+
+
+def spirit_prcxml_text(tables: dict) -> dict:
+    """{file: prcxml text} for the part's spirits and boards."""
+    tool = gimmicks._tool("lint_spirit_pack")
+    kinds = tool.game_fields() if tool is not None else None
+    kinds = kinds or {}
+    spirit_rows, battles, fighters, layouts, board_rows = [], [], [], [], []
+    for row in tables.get("spirit") or []:
+        spirit = gimmicks.display(row.get("id", ""))
+        owner = row.get("id")
+        own = [("ui_spirit_id", "hash40", owner), ("name_id", "string", owner),
+               ("base", "hash40", row.get("base", '""'))]
+        battle, layout, numbered = [], [], {}
+        for key, value in row.items():
+            if key in ("id", "base", "name", "fighters"):
+                continue
+            parts = key.split(".", 2)
+            if len(parts) == 3 and parts[0] == "fighter" and parts[1].isdigit():
+                numbered.setdefault(int(parts[1]), []).append((parts[2], kinds.get("fighter", {}).get(parts[2]), value))
+            elif parts[0] == "battle" and len(parts) == 2:
+                battle.append((parts[1], kinds.get("battle", {}).get(parts[1]), value))
+            elif parts[0] == "layout" and len(parts) == 2:
+                layout.append((parts[1], kinds.get("layout", {}).get(parts[1]), value))
+            else:
+                own.append((key, kinds.get("spirit", {}).get(key), value))
+        spirit_rows.append(own)
+        if battle:
+            battles.append([("battle_id", "hash40", owner)] + battle)
+        if layout:
+            layouts.append([("ui_spirit_layout_id", "hash40", owner)] + layout)
+        count = gimmicks.display(row.get("fighters", ""))
+        if count.isdigit():
+            count = int(count)
+        else:
+            base = tool.base_values(gimmicks.display(row.get("base", ""))) if tool is not None else None
+            count = max([int((base or {}).get("fighters") or 0)] + [number + 1 for number in numbered]) if numbered else 0
+        for number in range(count):
+            fighters.append([("battle_id", "hash40", owner)] + numbered.get(number, []))
+        del spirit
+    for row in tables.get("board") or []:
+        board = gimmicks.display(row.get("id", ""))
+        own = [("label", "hash40", '"ui_chara_%s"' % board), ("base", "hash40", row.get("base", '""'))]
+        if row.get("name"):
+            own.append(("name", "string", row["name"]))
+        if row.get("background"):
+            own.append(("background", "hash40", row["background"]))
+        if row.get("art"):
+            own.append(("art", "string", row["art"]))
+        board_kinds = getattr(tool, "BOARD_FIELDS", {}) if tool is not None else {}
+        for key, value in row.items():
+            if key not in ("id", "base", "name", "background", "art", "spirits"):
+                own.append((key, board_kinds.get(key), value))
+        spirits = [item.strip() for item in gimmicks.display(row.get("spirits", "")).split(",") if item.strip()]
+        listing = ['      <list hash="spirit_list">']
+        for index, spirit in enumerate(spirits):
+            listing.append('        <struct index="%d"><hash40 hash="spirit_id">%s</hash40></struct>'
+                           % (index, escape(spirit)))
+        listing.append("      </list>")
+        board_rows.append(own + [listing])
+    return {SPIRIT_PRCXML["spirit"]: spirit_xml({"db_root": spirit_rows}),
+            SPIRIT_PRCXML["battle"]: spirit_xml({"battle_data_tbl": battles, "fighter_data_tbl": fighters}),
+            SPIRIT_PRCXML["layout"]: spirit_xml({"db_root": layouts}),
+            SPIRIT_PRCXML["board"]: spirit_xml({"special_board_data_list": board_rows})}
+
+
+def write_spirit_prcxml(folder: Path, part: dict) -> tuple[list[str], int]:
+    """The part's spirits and boards as the pack's spirit/ prcxml files, and their names in
+    msg_spirits.xmsbt. A spirit.toml that holds rows keeps only its comments: its rows move here.
+    Returns the files written and how many names changed."""
+    folder = Path(folder)
+    tables = part.get("tables") or {}
+    texts = spirit_prcxml_text(tables)
+    needed = {SPIRIT_PRCXML["spirit"]: bool(tables.get("spirit")), SPIRIT_PRCXML["board"]: bool(tables.get("board"))}
+    needed[SPIRIT_PRCXML["battle"]] = "<struct index" in texts[SPIRIT_PRCXML["battle"]]
+    needed[SPIRIT_PRCXML["layout"]] = "<struct index" in texts[SPIRIT_PRCXML["layout"]]
+    written = []
+    for relative, text in texts.items():
+        path = folder.joinpath(*relative.split("/"))
+        if not needed[relative] and not path.is_file():
+            continue
+        if path.is_file() and path.read_text(encoding="utf-8", errors="replace") == text:
+            continue
+        path.parent.mkdir(parents=True, exist_ok=True)
+        backups.keep(path)
+        path.write_text(text, encoding="utf-8", newline="\n")
+        written.append(relative)
+    manifest = folder / SPIRIT_MANIFEST
+    if manifest.is_file():
+        lines = manifest.read_text(encoding="utf-8", errors="replace").splitlines()
+        if any(spirit_table_rows(lines).get(table) for table in SPIRIT_TABLES):
+            head = lines[:first_table(lines)]
+            while head and not head[-1].strip():
+                head.pop()
+            backups.keep(manifest)
+            manifest.write_text("\n".join(head) + "\n" if head else "", encoding="utf-8", newline="\n")
+            written.append(SPIRIT_MANIFEST)
+    names = {"spi_" + gimmicks.display(row["id"]): gimmicks.display(row["name"])
+             for row in tables.get("spirit") or [] if row.get("id") and row.get("name")}
+    return written, write_messages(folder, SPIRIT_MESSAGES, names)
+
+
+def write_messages(folder: Path, place: tuple, texts: dict) -> int:
+    """Set these labels' texts in an xmsbt (UTF-16 with a mark, CRLF), keeping every other entry.
+    Returns how many labels changed; an unchanged file is not written."""
+    path = Path(folder).joinpath(*place)
+    entries = dict(raw_messages(path))
+    changed = 0
+    for label, text in texts.items():
+        raw = escape(text)
+        if entries.get(label) != raw:
+            entries[label] = raw
+            changed += 1
+    if not changed:
+        return 0
+    lines = ['<?xml version="1.0" encoding="utf-16"?>', "<xmsbt>"]
+    for label, raw in entries.items():
+        lines += ["\t<entry label=%s>" % quoteattr(label), "\t\t<text>%s</text>" % raw, "\t</entry>"]
+    lines.append("</xmsbt>")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    backups.keep(path)
+    path.write_bytes(b"\xff\xfe" + ("\r\n".join(lines) + "\r\n").encode("utf-16-le"))
+    return changed
+
+
+def raw_messages(path: Path) -> list[tuple[str, str]]:
+    """(label, text as the file writes it) for every entry of an xmsbt, in order."""
+    if not path.is_file():
+        return []
+    raw = path.read_bytes()
+    for encoding in ("utf-16", "utf-8", "latin-1"):
+        try:
+            text = raw.decode(encoding)
+        except (UnicodeDecodeError, UnicodeError):
+            continue
+        if "<entry" in text:
+            return [(label, value.strip()) for label, value in LABEL_RE.findall(text.replace("\x00", ""))]
+    return []
+
+
+def spirit_picture_size(path: Path) -> str | None:
+    """Which picture size a .bntx is (0 to 3), from its file name or the texture name inside it."""
+    match = re.search(r"spirits_([0-3])_", Path(path).name)
+    if match:
+        return match.group(1)
+    try:
+        match = SPIRIT_SIZE_RE.search(Path(path).read_bytes())
+    except OSError:
+        return None
+    return match.group(1).decode() if match else None
+
+
+def copy_spirit_pictures(folder: Path, spirit: str, files, patch_tree: bool = False) -> tuple[list, list]:
+    """Copy .bntx pictures to the names a spirit's pictures take. Returns (written paths, files whose
+    size could not be told)."""
+    tree = SPIRIT_TREES[1] if patch_tree else SPIRIT_TREES[0]
+    written, unknown = [], []
+    for source in files:
+        source = Path(source)
+        size = spirit_picture_size(source)
+        if size is None:
+            unknown.append(source)
+            continue
+        target = Path(folder) / tree / ("spirits_%s" % size) / ("spirits_%s_%s.bntx" % (size, spirit))
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if target.resolve() != source.resolve():
+            backups.keep(target)
+            shutil.copyfile(source, target)
+        written.append(target)
+    return written, unknown
+
+
+def spirit_pictures(folder: Path, spirit: str) -> list[str]:
+    """The sizes of the pictures the pack ships for one spirit."""
+    found = []
+    for size in "0123":
+        if any((Path(folder) / tree / ("spirits_%s" % size) / ("spirits_%s_%s.bntx" % (size, spirit))).is_file()
+               for tree in SPIRIT_TREES):
+            found.append(size)
+    return found
 
 
 def read_manifests(path: Path) -> list[dict]:
@@ -1383,7 +1693,7 @@ NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 NAME_TEXT_SUFFIXES = {".toml", ".json", ".xmsbt", ".prcxml", ".xml"}
 NAME_BINARY_SUFFIXES = {".nro", ".prc", ".nus3bank", ".nus3audio", ".eff", ".bntx"}
 TREE_OF_KIND = {FIGHTER: "fighter", ITEM: "item", STAGE: "stage", MENU: "ui/script/menu",
-                MII: "miihat", ENEMY: "enemy"}
+                MII: "miihat", ENEMY: "enemy", SPIRIT: SPIRIT_TREES[0]}
 
 
 def name_pattern(name: str) -> re.Pattern:
@@ -1550,9 +1860,10 @@ def apply_rename(folder: Path, plan: dict) -> list[str]:
     return lines
 
 
-def messages(folder: Path) -> dict:
-    """label to text from the pack's msg_name.xmsbt, whatever it is encoded as."""
-    path = Path(folder).joinpath(*MESSAGE_FILE)
+def messages(folder: Path, place: tuple = MESSAGE_FILE) -> dict:
+    """label to text from one of the pack's xmsbt files (msg_name.xmsbt unless told), whatever it is
+    encoded as."""
+    path = Path(folder).joinpath(*place)
     if not path.is_file():
         return {}
     raw = path.read_bytes()
@@ -1751,6 +2062,13 @@ def scan(folder: Path, fighters=(), items=(), places=()) -> dict:
         if hats:
             notes.append("Mii hats under miihat/: %s" % ", ".join(hats))
 
+    if (folder / SPIRIT_MANIFEST).is_file() or spirit_prcxml_files(folder):
+        spirits = read_spirit_manifest(folder)
+        found[SPIRIT].append(spirits)
+        rows = spirits["tables"]
+        notes.append("spirits: %d spirit(s), %d board(s)"
+                     % (len(rows.get("spirit") or []), len(rows.get("board") or [])))
+
     found["notes"] = notes
     return found
 
@@ -1815,6 +2133,19 @@ def scaffold(folder: Path, kind: str, values: dict, item_root: str = "item") -> 
         if not (folder / MII_MANIFEST).is_file() or (values.get("tables") or {}):
             write_mii_manifest(folder, values)
             made.append(MII_MANIFEST)
+    elif kind == SPIRIT:
+        resource = "spirits"
+        for size in "012":
+            (folder / SPIRIT_TREES[0] / ("spirits_%s" % size)).mkdir(parents=True, exist_ok=True)
+        made.append("%s/spirits_0, spirits_1, spirits_2" % SPIRIT_TREES[0])
+        if not spirit_prcxml_files(folder) or (values.get("tables") or {}):
+            path = folder.joinpath(*SPIRIT_PRCXML["spirit"].split("/"))
+            if not (values.get("tables") or {}):
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(spirit_xml({"db_root": []}), encoding="utf-8", newline="\n")
+            else:
+                write_spirit_prcxml(folder, values)
+            made.append(SPIRIT_PRCXML["spirit"])
     info = folder / "info.toml"
     if not info.is_file():
         display = values.get("display_name") or resource

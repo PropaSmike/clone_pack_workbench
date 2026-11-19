@@ -1,0 +1,1442 @@
+id	number	rank	type	is_dlc	pictures	name
+mario	1	normal	fighter	0	012	Mario
+builder_mario	2	normal	fighter	0	012	Builder Mario
+mario_wedding	3	normal	fighter	0	012	Mario
+luigi	4	normal	fighter	0	012	Luigi
+peach	5	normal	fighter	0	012	Peach
+daisy	6	normal	fighter	0	012	Daisy
+bowser	7	normal	fighter	0	012	Bowser
+dr_mario	8	normal	fighter	0	012	Dr. Mario
+rosalina_and_luma	9	normal	fighter	0	012	Rosalina
+bowser_jr	10	normal	fighter	0	012	Bowser Jr.
+iggy_koopa	11	normal	fighter	0	012	Iggy
+wendy_o_koopa	12	normal	fighter	0	012	Wendy
+lemmy_koopa	13	normal	fighter	0	012	Lemmy
+roy_koopa	14	normal	fighter	0	012	Roy
+larry_koopa	15	normal	fighter	0	012	Larry
+ludwig_von_koopa	16	normal	fighter	0	012	Ludwig
+morton_koopa_jr	17	normal	fighter	0	012	Morton
+super_mushroom	18	hope	support	0	012	Super Mushroom
+fire_flower	19	normal	support	0	012	Fire Flower
+super_star	20	ace	support	0	012	Super Star
+metal_mario	21	ace	attack	0	012	Metal Mario
+boo_mario	22	normal	support	0	012	Boo Mario
+rock_mario	23	hope	support	0	012	Rock Mario
+gold_mario	24	legend	support	0	012	Gold Mario
+fox_luigi	25	ace	support	0	012	Fox Luigi
+toad_flying_squirrel	26	hope	support	0	012	Flying Squirrel Toad
+baby_peach	27	hope	support	0	012	Baby Peach
+cat_princess_peach	28	ace	attack	0	012	Cat Princess Peach
+peach_wedding	29	ace	support	0	012	Peach
+bowser_wedding	30	ace	attack	0	012	Bowser
+toad	31	hope	attack	0	012	Toad
+captain_toad	32	ace	attack	0	012	Captain Toad
+toadett	33	normal	master	0	0123	Toadette
+toadsworth	34	normal	support	0	012	Toadsworth
+waluigi	35	ace	attack	0	012	Waluigi
+goomba	36	normal	attack	0	012	Goomba
+koopa_troopa	37	normal	support	0	012	Koopa Troopa
+hammer_bros	38	hope	attack	0	012	Hammer Bro
+lakitu_and_spiny	39	hope	attack	0	012	Lakitu & Spiny
+blooper	40	normal	attack	0	012	Blooper
+bullet_bill	41	normal	attack	0	012	Bullet Bill
+banzai_bill	42	hope	attack	0	012	Banzai Bill
+shy_guy	43	normal	attack	0	012	Shy Guy
+pidget	44	hope	support	0	012	Pidgit
+birdo	45	ace	attack	0	012	Birdo
+mouser	46	normal	attack	0	012	Mouser
+wart	47	hope	attack	0	012	Wart
+boo_buddy	48	normal	attack	0	012	Boo
+king_boo	49	hope	attack	0	012	King Boo
+bob_omb	50	hope	support	0	012	Bob-omb
+chain_chomp	51	hope	attack	0	012	Chain Chomp
+thwomp	52	hope	support	0	012	Thwomp
+nipper_plant	53	normal	attack	0	012	Nipper Plant
+petey_piranha	54	ace	attack	0	012	Petey Piranha
+boom_boom	55	hope	attack	0	012	Boom Boom
+boom_boom_pom_pom	56	ace	attack	0	012	Boom Boom & Pom Pom
+tatanga	57	hope	attack	0	012	Tatanga
+hothead	58	normal	support	0	012	Hothead
+chargin_chuck	59	normal	attack	0	012	Chargin' Chuck
+wiggler	60	normal	support	0	012	Wiggler
+kamek	61	hope	attack	0	012	Kamek
+mechakoopa	62	hope	support	0	012	Mechakoopa
+dry_bower	63	legend	attack	0	012	Dry Bowser
+nabbit	64	hope	support	0	012	Nabbit
+big_urchin	65	hope	attack	0	012	Big Urchin
+king_bob_omb	66	hope	attack	0	012	King Bob-omb
+shine_sprite	67	legend	support	0	012	Shine Sprite
+f_l_u_d_d	68	hope	support	0	012	F.L.U.D.D.
+piantas	69	normal	support	0	012	Piantas
+shadow_mario	70	ace	attack	0	012	Shadow Mario
+luma	71	hope	support	0	012	Luma
+hungry_luma	72	normal	support	0	012	Hungry Luma
+honey_queen	73	normal	master	0	0123	Honey Queen
+lubba	74	hope	support	0	012	Lubba
+starship_mario	75	hope	support	0	012	Starship Mario
+sprixie_princesses	76	hope	support	0	012	Sprixie Princesses
+plessie	77	normal	support	0	012	Plessie
+cappy	78	hope	support	0	012	Cappy
+pauline	79	legend	support	0	012	Pauline
+odyssey	80	hope	support	0	012	The Odyssey
+goo_goo_buggy	81	hope	attack	0	012	Goo-Goo Buggy
+dk_jumbo	82	hope	support	0	012	Barrel Train
+cutie_flower	83	normal	support	0	012	Bloom Coach
+turbo_yoshi	84	hope	support	0	012	Turbo Yoshi
+b_dasher	85	ace	support	0	012	B Dasher
+standard_kart	86	normal	support	0	012	Standard Kart
+standard_bike	87	normal	support	0	012	Standard Bike
+cheep_charger	88	normal	attack	0	012	Cheep Charger
+mach_8	89	hope	support	0	012	Mach 8
+biddybuggy	90	hope	attack	0	012	Biddybuggy
+badwagon	91	ace	attack	0	012	Badwagon
+city_tripper	92	ace	support	0	012	City Tripper
+master_cycle	93	legend	attack	0	012	Master Cycle
+paper_mario	94	ace	attack	0	012	Paper Mario
+paper_bowser	95	ace	attack	0	012	Paper Bowser
+paper_bowser_ss	96	legend	attack	0	012	Paper Bowser
+kammy_koopa	97	normal	attack	0	012	Kammy Koopa
+vivian	98	hope	attack	0	012	Vivian
+shadow_queen	99	ace	attack	0	012	Shadow Queen
+mr_l	100	hope	attack	0	012	Mr. L
+dimentio	101	hope	attack	0	012	Dimentio
+huey	102	normal	support	0	012	Huey
+mallow	103	hope	support	0	012	Mallow
+geno	104	legend	attack	0	012	Geno
+prince_peasley	105	normal	attack	0	012	Prince Peasley
+fawful	106	hope	attack	0	012	Fawful
+princess_shroob	107	hope	attack	0	012	Princess Shroob
+starlow	108	hope	support	0	012	Starlow
+broque_monsieur	109	normal	attack	0	012	Broque Monsieur
+dreambert	110	normal	attack	0	012	Dreambert
+antasma	111	hope	support	0	012	Antasma
+papercraft_mario	112	normal	attack	0	012	Papercraft Mario
+sidestepper	113	normal	support	0	012	Sidestepper
+freezie	114	normal	support	0	012	Freezie
+eggplant_men	115	normal	attack	0	012	Eggplant Man
+viruses	116	hope	support	0	012	Viruses
+watinga	117	hope	support	0	012	Flies & Hand
+wanda	118	normal	support	0	012	Wanda
+kid	119	normal	support	0	012	Kid
+professor_elvin_gadd	120	hope	support	0	012	Professor Elvin Gadd
+poltergust_3000	121	hope	support	0	012	Poltergust 5000
+polterpup	122	hope	support	0	012	Polterpup
+perry	123	normal	support	0	012	Perry
+waluigi_strikers	124	hope	attack	0	012	Waluigi
+petey_piranha_strikers	125	hope	attack	0	012	Petey Piranha
+mini_mario	126	hope	attack	0	012	Mini Mario
+hammer_mini_mario	127	ace	attack	0	012	Mini Mario & Hammers
+ballyhoo_big_top	128	normal	support	0	012	MC Ballyhoo & Big Top
+rabbid_peach	129	hope	attack	0	012	Rabbid Peach
+rabbid_mario	130	hope	attack	0	012	Rabbid Mario
+rabbid_kong	131	normal	attack	0	012	Rabbid Kong
+mario_tennis	132	ace	support	0	012	Mario
+luigi_tennis	133	hope	support	0	012	Luigi
+donkey_kong	134	normal	fighter	0	012	Donkey Kong
+diddy_kong	135	normal	fighter	0	012	Diddy Kong
+king_k_rool	136	normal	fighter	0	012	King K. Rool
+donkey_kong_sr	137	legend	attack	0	012	Donkey Kong & Lady
+donkey_kong_jr	138	ace	attack	0	012	Donkey Kong Jr.
+stanly	139	hope	attack	0	012	Stanley
+cranky_kong	140	ace	attack	0	012	Cranky Kong
+funky_kong	141	normal	master	0	0123	Funky Kong
+candy_kong	142	hope	support	0	012	Candy Kong
+swanky_kong	143	normal	support	0	012	Swanky Kong
+wrinkly_kong	144	hope	support	0	012	Wrinkly Kong
+dixie_kong	145	ace	attack	0	012	Dixie Kong
+dixie_kiddy	146	legend	attack	0	012	Dixie Kong & Kiddy Kong
+lanky_kong	147	hope	attack	0	012	Lanky Kong
+tiny_kong	148	ace	support	0	012	Tiny Kong
+chunky_kong	149	hope	attack	0	012	Chunky Kong
+rambi	150	ace	attack	0	012	Rambi
+enguarde	151	hope	attack	0	012	Enguarde
+squawks	152	hope	support	0	012	Squawks
+expresso	153	normal	support	0	012	Expresso
+winky	154	normal	support	0	012	Winky
+squitter	155	hope	support	0	012	Squitter
+rattly	156	hope	support	0	012	Rattly
+ellie	157	normal	support	0	012	Ellie
+professor_chops	158	normal	support	0	012	Professor Chops
+kritter	159	normal	attack	0	012	Kritter
+zinger	160	normal	attack	0	012	Zinger
+klaptrap	161	hope	attack	0	012	Klaptrap
+kaptain_k_rool	162	legend	attack	0	012	Kaptain K. Rool
+baron_k_roolenstein	163	ace	attack	0	012	Baron K. Roolenstein
+blast_o_matic_laser	164	legend	support	0	012	Blast-o-Matic
+tiki_tak_tribe	165	normal	attack	0	012	Tiki Tak Tribe
+lord_fredrik	166	normal	attack	0	012	Lord Fredrik
+kip	167	normal	attack	0	012	Kip
+kalypso	168	normal	support	0	012	Kalypso
+dk_bongos	169	hope	support	0	012	Donkey Kong & Bongos
+karate_kong	170	ace	attack	0	012	Karate Kong
+ninja_kong	171	normal	attack	0	012	Ninja Kong
+link_bow	172	normal	fighter	0	012	Link
+zelda	173	normal	fighter	0	012	Zelda
+sheik	174	normal	fighter	0	012	Sheik
+ganondorf	175	normal	fighter	0	012	Ganondorf
+young_link	176	normal	fighter	0	012	Young Link
+toon_link	177	normal	fighter	0	012	Toon Link
+link_first	178	legend	attack	0	012	Link
+octorok	179	normal	attack	0	012	Octorok
+moblin	180	normal	attack	0	012	Moblin
+tektite	181	normal	attack	0	012	Tektite
+like_like	182	hope	support	0	012	Like Like
+darknut	183	hope	attack	0	012	Darknut
+fairy_bottle	184	hope	support	0	012	Fairy Bottle
+agahnim	185	hope	attack	0	012	Agahnim
+cucco	186	normal	support	0	012	Cucco
+marin	187	hope	support	0	012	Marin
+wind_fish	188	legend	support	0	012	Wind Fish
+young_zelda	189	hope	attack	0	012	Young Zelda
+zelda_ocarina	190	legend	attack	0	012	Zelda
+ganon_ocarina	191	ace	attack	0	012	Ganon
+saria	192	ace	support	0	012	Saria
+impa	193	ace	attack	0	012	Impa
+kaepora_gaebora	194	hope	support	0	012	Kaepora Gaebora
+malon	195	hope	support	0	012	Malon
+epona	196	ace	support	0	012	Epona
+gorons	197	normal	support	0	012	Goron
+darunia	198	normal	master	0	0123	Darunia
+zoras	199	normal	support	0	012	Zora
+ruto	200	ace	attack	0	012	Ruto
+great_fairy	201	ace	support	0	012	Great Fairy
+koume_and_kotake	202	hope	attack	0	012	Koume & Kotake
+twinrova	203	ace	attack	0	012	Twinrova
+redead	204	normal	attack	0	012	ReDead
+skull_kid	205	hope	attack	0	012	Skull Kid
+skullkid_majorasmask	206	legend	attack	0	012	Skull Kid & Majora's Mask
+deku_link	207	hope	attack	0	012	Deku Link
+fierce_deity_link	208	legend	attack	0	012	Fierce Deity Link
+majoras_mask	209	ace	support	0	012	Majora's Mask
+moon	210	ace	support	0	012	Moon
+tingle	211	ace	support	0	012	Tingle
+happy_mask_salesman	212	hope	support	0	012	Happy Mask Salesman
+kafei	213	hope	support	0	012	Kafei
+postman	214	normal	support	0	012	Postman
+din	215	hope	support	0	012	Din
+nayru	216	hope	support	0	012	Nayru
+ricky	217	normal	support	0	012	Ricky
+dimitri	218	normal	support	0	012	Dimitri
+moosh	219	normal	support	0	012	Moosh
+ganondorf_tp	220	ace	attack	0	012	Ganondorf
+dark_beast_ganon	221	legend	attack	0	012	Beast Ganon
+midna	222	ace	attack	0	012	Midna
+wolf_link_and_midna	223	legend	attack	0	012	Wolf Link & Midna
+zant	224	hope	attack	0	012	Zant
+agitha	225	normal	support	0	012	Agitha
+king_bulblin	226	normal	attack	0	012	King Bulblin & Lord Bullbo
+fi	227	ace	support	0	012	Fi
+ghirahim	228	ace	attack	0	012	Ghirahim
+the_imprisoned	229	hope	attack	0	012	The Imprisoned
+demise	230	ace	attack	0	012	Demise
+loftwings	231	normal	support	0	012	Loftwing
+groose	232	hope	attack	0	012	Groose
+wall_merging_link	233	hope	attack	0	012	Wall-Merged Link
+link_albw	234	ace	attack	0	012	Link
+ravio	235	hope	support	0	012	Ravio
+hilda	236	ace	attack	0	012	Hilda
+yuga	237	ace	attack	0	012	Yuga
+zelda_bow	238	ace	support	0	012	Zelda
+mipha	239	hope	support	0	012	Mipha
+daruk	240	hope	attack	0	012	Daruk
+revali	241	hope	support	0	012	Revali
+urbosa	242	hope	attack	0	012	Urbosa
+ganon_botw	243	legend	attack	0	012	Calamity Ganon
+bokoblin	244	normal	attack	0	012	Bokoblin
+guardian	245	hope	support	0	012	Guardian
+tetra	246	ace	attack	0	012	Tetra
+zelda_wind_waker	247	legend	attack	0	012	Zelda
+king_of_red_lions	248	hope	attack	0	012	King of Red Lions
+king_of_hyrule	249	ace	attack	0	012	King of Hyrule
+aryll	250	ace	support	0	012	Aryll
+medli	251	ace	support	0	012	Medli
+valoo	252	hope	support	0	012	Valoo
+beedle	253	normal	master	0	0123	Beedle
+fishmen	254	normal	support	0	012	Fishman
+vaati	255	ace	attack	0	012	Vaati
+ezlo	256	hope	support	0	012	Ezlo
+linebeck	257	normal	master	0	0123	Linebeck
+phantom	258	hope	attack	0	012	Phantom
+zelda_spirit_tracks	259	ace	attack	0	012	Zelda
+alfonzo	260	hope	support	0	012	Alfonzo & Engineer Link
+byrne	261	normal	attack	0	012	Byrne
+links_totem	262	hope	attack	0	012	Totem Link
+madame_couture	263	hope	support	0	012	Madame Couture
+samus	264	normal	fighter	0	012	Samus
+dark_samus	265	normal	fighter	0	012	Dark Samus
+zerosuit_samus	266	normal	fighter	0	012	Zero Suit Samus
+ridley	267	normal	fighter	0	012	Ridley
+meta_ridley	268	normal	fighter	0	012	Meta Ridley
+gravity_suit	269	hope	support	0	012	Gravity Suit
+fusion_suit	270	ace	attack	0	012	Fusion Suit
+phazon_suit	271	ace	support	0	012	Phazon Suit
+dark_suit	272	hope	attack	0	012	Dark Suit
+light_suit	273	legend	attack	0	012	Light Suit
+young_samus	274	hope	attack	0	012	Young Samus
+zoomer	275	normal	attack	0	012	Geemer
+chozo_statue	276	hope	support	0	012	Chozo Statue
+metroid	277	ace	support	0	012	Metroid
+mother_brain	278	ace	attack	0	012	Mother Brain
+mother_brain_bipedal	279	legend	attack	0	012	Mother Brain
+samus_arans_gunship	280	hope	support	0	012	Gunship
+queen_metroid	281	legend	attack	0	012	Queen Metroid
+zebesian	282	hope	attack	0	012	Zebesian
+kraid	283	normal	master	0	0123	Kraid
+phantoon	284	hope	support	0	012	Phantoon
+x_parasite	285	normal	attack	0	012	X Parasite
+nightmare	286	ace	attack	0	012	Nightmare
+ridley_robot	287	hope	attack	0	012	Mecha Ridley
+adam_malkovich	288	normal	attack	0	012	Adam Malkovich
+little_bird	289	hope	support	0	012	Little Birdie
+diggernaut	290	hope	support	0	012	Diggernaut
+omega_ridley	291	legend	attack	0	012	Omega Ridley
+parasite_queen	292	hope	support	0	012	Parasite Queen
+kanden	293	normal	support	0	012	Kanden
+trace	294	normal	attack	0	012	Trace
+gandrayda	295	normal	support	0	012	Gandrayda
+mechs	296	normal	attack	0	012	Mech
+yoshi	297	normal	fighter	0	012	Yoshi
+yoshi_flocky	298	normal	fighter	0	012	Yoshi
+baby_mario	299	ace	attack	0	012	Baby Mario
+superstar_mario	300	legend	attack	0	012	Baby Mario
+baby_bowser	301	legend	attack	0	012	Baby Bowser
+stork	302	ace	support	0	012	Stork
+kamek_krew	303	hope	support	0	012	Toadies
+crazee_dayzee	304	normal	attack	0	012	Crazee Dayzee
+tap_tap_the_red_nose	305	normal	attack	0	012	Tap-Tap
+bandit	306	hope	support	0	012	Bandit
+slugger_green_glove	307	normal	support	0	012	Slugger & Green Glove
+little_mouser	308	normal	support	0	012	Little Mouser
+grim_leecher	309	normal	support	0	012	Grim Leecher
+roger_the_potted_ghost	310	hope	support	0	012	Roger the Potted Ghost
+burt_the_bashful	311	normal	attack	0	012	Burt the Bashful
+raphael_the_raven	312	hope	support	0	012	Raphael the Raven
+super_happy_tree	313	legend	support	0	012	Super Happy Tree
+pak_e_derm	314	hope	support	0	012	Pak E. Derm
+blargg	315	hope	support	0	012	Blargg
+don_bongo	316	hope	attack	0	012	Don Bongo
+hongo	317	normal	support	0	012	Hongo
+spirit_who_loves_surprises	318	normal	support	0	012	Spirit Who Loves Surprises
+mega_eggdozer	319	hope	support	0	012	Mega Eggdozer
+ukiki	320	normal	support	0	012	Ukiki
+yoshi_woolly_world	321	ace	attack	0	012	Yarn Yoshi
+poochy_woolly_world	322	hope	attack	0	012	Yarn Poochy
+kirby	323	normal	fighter	0	012	Kirby
+meta_knight	324	normal	fighter	0	012	Meta Knight
+dedede	325	normal	fighter	0	012	King Dedede
+warp_star	326	hope	support	0	012	Warp Star
+star_rod	327	ace	support	0	012	Star Rod
+ultra_sword	328	ace	support	0	012	Ultra Sword
+robobot_armor	329	hope	support	0	012	Robobot Armor
+halberd	330	legend	support	0	012	Halberd
+dragoon	331	legend	support	0	012	Dragoon
+rick	332	hope	support	0	012	Rick
+kine	333	hope	support	0	012	Kine
+coo	334	hope	support	0	012	Coo
+gooey	335	hope	attack	0	012	Gooey
+nago	336	normal	attack	0	012	Nago
+pitch	337	normal	support	0	012	Pitch
+chuchu	338	normal	support	0	012	ChuChu
+whispy_woods	339	ace	attack	0	012	Whispy Woods
+kracko	340	hope	attack	0	012	Kracko
+nightmare_power_orb	341	hope	attack	0	012	Nightmare's Power Orb
+nightmare_wizard	342	legend	attack	0	012	Nightmare Wizard
+dark_matter	343	legend	attack	0	012	Dark Matter
+gryll	344	normal	attack	0	012	Gryll
+dyna_blade	345	legend	attack	0	012	Dyna Blade
+heavy_lobster	346	hope	attack	0	012	Heavy Lobster
+marx	347	hope	attack	0	012	Marx
+marx_soul	348	legend	attack	0	012	Marx
+moley	349	normal	support	0	012	Moley
+dark_mind	350	ace	support	0	012	Dark Mind
+daroach	351	ace	attack	0	012	Daroach
+dark_daroach	352	legend	attack	0	012	Dark Daroach
+masked_dedede	353	ace	attack	0	012	Masked Dedede
+galacta_knight	354	legend	attack	0	012	Galacta Knight
+magolor	355	ace	attack	0	012	Magolor
+landia	356	hope	attack	0	012	Landia
+queen_sectonia	357	ace	attack	0	012	Queen Sectonia
+susie	358	hope	support	0	012	Susie
+sanmakan	359	hope	support	0	012	The Three Mage-Sisters
+waddle_dee	360	hope	attack	0	012	Waddle Dee
+bandana_waddle_dee	361	ace	attack	0	012	Bandana Waddle Dee
+waddle_doo	362	normal	attack	0	012	Waddle Doo
+bronto_burt	363	normal	support	0	012	Bronto Burt
+poppy_bros_jr	364	normal	attack	0	012	Poppy Bros. Jr.
+gordo	365	hope	attack	0	012	Gordo
+scarfy	366	normal	attack	0	012	Scarfy
+scarfy_transformed	367	hope	attack	0	012	Angry Scarfy
+rocky	368	normal	support	0	012	Rocky
+wheelie	369	hope	support	0	012	Wheelie
+bomber	370	hope	support	0	012	Bomber
+bugzzy	371	hope	support	0	012	Bugzzy
+bonkers	372	ace	attack	0	012	Bonkers
+mr_frosty	373	normal	support	0	012	Mr. Frosty
+meta_knights	374	ace	attack	0	012	Meta-Knights
+mr_shine_mr_bright	375	hope	attack	0	012	Mr. Shine & Mr. Bright
+plasma_wisp	376	normal	support	0	012	Plasma Wisp
+tac	377	hope	support	0	012	Tac
+chef_kawasaki	378	ace	support	0	012	Chef Kawasaki
+knuckle_joe	379	ace	attack	0	012	Knuckle Joe
+prince_fluff	380	normal	attack	0	012	Prince Fluff
+elline	381	hope	support	0	012	Elline
+fox_mccloud	382	normal	fighter	0	012	Fox McCloud
+falco_lombardi	383	normal	fighter	0	012	Falco Lombardi
+wolf_odonnell	384	normal	fighter	0	012	Wolf O'Donnell
+slippy_toad	385	ace	support	0	012	Slippy Toad
+peppy_hare	386	normal	master	0	0123	Peppy Hare
+krystal	387	legend	attack	0	012	Krystal
+rob_64	388	hope	support	0	012	ROB 64
+james_mccloud	389	legend	attack	0	012	James McCloud
+arwing	390	ace	support	0	012	Arwing
+great_fox	391	legend	support	0	012	Great Fox
+landmaster	392	hope	support	0	012	Landmaster
+walker	393	hope	support	0	012	Walker
+gyrowing	394	normal	support	0	012	Gyrowing
+leon_powalski	395	hope	attack	0	012	Leon Powalski
+pigma_dengar	396	hope	support	0	012	Pigma Dengar
+andrew_oikonny	397	normal	attack	0	012	Andrew Oikonny
+panther_caroso	398	normal	attack	0	012	Panther Caroso
+wolfen	399	ace	support	0	012	Wolfen
+andross	400	hope	attack	0	012	Andross
+dr_andross	401	ace	attack	0	012	Andross
+andross_brain	402	legend	attack	0	012	Andross
+winged_aparoid	403	hope	support	0	012	Aparoid
+general_pepper	404	hope	support	0	012	General Pepper
+rricky	405	normal	attack	0	012	Tricky
+dash_bowman	406	normal	attack	0	012	Dash Bowman
+pikachu	407	normal	fighter	0	012	Pikachu
+pikachu_libre	408	normal	fighter	0	012	Pikachu Libre
+jigglypuff	409	normal	fighter	0	012	Jigglypuff
+pichu	410	normal	fighter	0	012	Pichu
+mewtwo	411	normal	fighter	0	012	Mewtwo
+male_pokemon_trainer_ssb	412	normal	fighter	0		Pokémon Trainer
+female_pokemon_trainer_ssb	413	normal	fighter	0		Pokémon Trainer
+squirtle	414	normal	fighter	0	012	Squirtle
+ivysaur	415	normal	fighter	0	012	Ivysaur
+charizard	416	normal	fighter	0	012	Charizard
+lucario	417	normal	fighter	0	012	Lucario
+greninja	418	normal	fighter	0	012	Greninja
+incineroar	419	normal	fighter	0	012	Incineroar
+venusaur	420	hope	attack	0	012	Venusaur
+charmander	421	normal	attack	0	012	Charmander
+mega_charizard_x	422	ace	attack	0	012	Mega Charizard X
+blastoise	423	hope	attack	0	012	Blastoise
+metapod	424	normal	support	0	012	Metapod
+pidgey	425	normal	support	0	012	Pidgey
+arbok	426	normal	attack	0	012	Arbok
+alolan_raichu	427	hope	support	0	012	Alolan Raichu
+sandshrew	428	normal	support	0	012	Sandshrew
+clefairy	429	normal	attack	0	012	Clefairy
+vulpix	430	normal	support	0	012	Vulpix
+alolan_vulpix	431	normal	support	0	012	Alolan Vulpix
+dugtrio	432	normal	support	0	012	Dugtrio
+meowth	433	hope	support	0	012	Meowth
+psyduck	434	normal	support	0	012	Psyduck
+arcanine	435	hope	support	0	012	Arcanine
+abra	436	normal	support	0	012	Abra
+machamp	437	hope	attack	0	012	Machamp
+geodude	438	normal	attack	0	012	Geodude
+rapidash	439	hope	attack	0	012	Rapidash
+slowpoke	440	normal	master	0	0123	Slowpoke
+magneton	441	normal	attack	0	012	Magneton
+farfetchd	442	normal	support	0	012	Farfetch'd
+gengar	443	hope	support	0	012	Gengar
+electrode	444	hope	support	0	012	Electrode
+alolan_exeggutor	445	hope	support	0	012	Alolan Exeggutor
+cubone	446	normal	attack	0	012	Cubone
+hitmonlee	447	hope	attack	0	012	Hitmonlee
+weezing	448	normal	support	0	012	Weezing
+chansey	449	hope	support	0	012	Chansey
+kangaskhan	450	hope	attack	0	012	Kangaskhan
+mega_kangaskhan	451	ace	attack	0	012	Mega Kangaskhan
+goldeen	452	normal	support	0	012	Goldeen
+staryu	453	normal	attack	0	012	Staryu
+pinsir	454	hope	attack	0	012	Pinsir
+tauros	455	hope	attack	0	012	Tauros
+gyarados	456	hope	support	0	012	Gyarados
+lapras	457	hope	support	0	012	Lapras
+ditto	458	hope	support	0	012	Ditto
+eevee	459	normal	attack	0	012	Eevee
+porygon	460	normal	attack	0	012	Porygon
+snorlax	461	hope	support	0	012	Snorlax
+zapdos_moltres_articuno	462	legend	attack	0	012	Articuno, Zapdos, & Moltres
+dragonite	463	hope	attack	0	012	Dragonite
+mega_mewtwo_y	464	ace	attack	0	012	Mega Mewtwo Y
+mew	465	legend	support	0	012	Mew
+chikorita	466	normal	attack	0	012	Chikorita
+togepi	467	hope	support	0	012	Togepi
+ampharos	468	hope	attack	0	012	Ampharos
+bellossom	469	normal	support	0	012	Bellossom
+marill	470	normal	support	0	012	Marill
+sudowoodo	471	normal	support	0	012	Sudowoodo
+wooper	472	normal	support	0	012	Wooper
+unown	473	normal	support	0	012	Unown
+wobbuffet	474	hope	support	0	012	Wobbuffet
+steelix	475	hope	attack	0	012	Steelix
+scizor	476	hope	attack	0	012	Scizor
+heracross	477	hope	attack	0	012	Heracross
+skarmory	478	normal	attack	0	012	Skarmory
+houndoom	479	hope	attack	0	012	Houndoom
+smeargle	480	normal	attack	0	012	Smeargle
+miltank	481	normal	support	0	012	Miltank
+raikou_entei_suicune	482	ace	attack	0	012	Raikou, Entei, & Suicune
+tyranitar	483	hope	attack	0	012	Tyranitar
+lugia	484	ace	attack	0	012	Lugia
+ho_oh	485	legend	support	0	012	Ho-Oh
+celebi	486	legend	support	0	012	Celebi
+blaziken	487	hope	attack	0	012	Blaziken
+gardevoir	488	hope	support	0	012	Gardevoir
+shedinja	489	hope	support	0	012	Shedinja
+flygon	490	hope	attack	0	012	Flygon
+milotic	491	hope	support	0	012	Milotic
+absol	492	normal	attack	0	012	Absol
+salamence	493	hope	attack	0	012	Salamence
+metagross	494	hope	attack	0	012	Metagross
+latias_latios	495	ace	support	0	012	Latias & Latios
+kyogre	496	hope	attack	0	012	Kyogre
+primal_kyogre	497	ace	attack	0	012	Primal Kyogre
+groudon	498	hope	attack	0	012	Groudon
+primal_groudon	499	ace	attack	0	012	Primal Groudon
+rayquaza	500	ace	attack	0	012	Rayquaza
+jirachi	501	legend	support	0	012	Jirachi
+deoxys	502	legend	attack	0	012	Deoxys
+piplup	503	normal	support	0	012	Piplup
+garchomp	504	hope	attack	0	012	Garchomp
+mega_lucario	505	ace	attack	0	012	Mega Lucario
+abomasnow	506	normal	attack	0	012	Abomasnow
+rotom	507	hope	support	0	012	Rotom
+uxie_mesprit_azelf	508	ace	attack	0	012	Uxie, Mesprit, & Azelf
+dialga	509	ace	attack	0	012	Dialga
+palkia	510	ace	attack	0	012	Palkia
+regigigas	511	ace	support	0	012	Regigigas
+giratina	512	ace	attack	0	012	Giratina
+giratina_origin_form	513	legend	attack	0	012	Giratina
+cresselia	514	ace	attack	0	012	Cresselia
+manaphy	515	legend	support	0	012	Manaphy
+darkrai	516	ace	support	0	012	Darkrai
+shaymin_land_form	517	ace	attack	0	012	Shaymin
+shaymin_sky_form	518	legend	attack	0	012	Shaymin
+arceus	519	legend	attack	0	012	Arceus
+victini	520	legend	support	0	012	Victini
+oshawott	521	normal	attack	0	012	Oshawott
+zoroark	522	hope	attack	0	012	Zoroark
+chandelure	523	hope	support	0	012	Chandelure
+hydreigon	524	hope	attack	0	012	Hydreigon
+cobalion_terrakion_virizion	525	ace	attack	0	012	Cobalion, Terrakion, & Virizion
+tornadus	526	hope	support	0	012	Tornadus
+thundurus	527	hope	support	0	012	Thundurus
+reshiram	528	ace	attack	0	012	Reshiram
+zekrom	529	ace	attack	0	012	Zekrom
+landorus_therian	530	ace	attack	0	012	Landorus
+kyurem	531	hope	support	0	012	Kyurem
+kyurem_black	532	ace	attack	0	012	Kyurem
+kyurem_white	533	ace	attack	0	012	Kyurem
+keldeo	534	hope	attack	0	012	Keldeo
+keldeo_resolute	535	legend	attack	0	012	Keldeo
+meloetta	536	ace	support	0	012	Meloetta
+genesect	537	ace	attack	0	012	Genesect
+chespin	538	normal	attack	0	012	Chespin
+aegislash	539	hope	support	0	012	Aegislash
+inkay	540	hope	support	0	012	Inkay
+dedenne	541	normal	support	0	012	Dedenne
+xerneas	542	ace	attack	0	012	Xerneas
+yveltal	543	ace	attack	0	012	Yveltal
+zygarde	544	normal	attack	0	012	Zygarde
+zygarde_complete	545	legend	attack	0	012	Zygarde
+diancie	546	hope	attack	0	012	Diancie
+mega_diancie	547	legend	attack	0	012	Mega Diancie
+hoopa	548	hope	attack	0	012	Hoopa
+hoopa_unbound	549	ace	attack	0	012	Hoopa
+volcanion	550	ace	support	0	012	Volcanion
+rowlet	551	normal	attack	0	012	Rowlet
+bewear	552	hope	attack	0	012	Bewear
+pyukumuku	553	normal	support	0	012	Pyukumuku
+togedemaru	554	normal	attack	0	012	Togedemaru
+mimikyu	555	hope	support	0	012	Mimikyu
+tapu_koko	556	ace	attack	0	012	Tapu Koko
+solgaleo	557	ace	attack	0	012	Solgaleo
+lunala	558	ace	attack	0	012	Lunala
+nihilego	559	hope	support	0	012	Nihilego
+necrozma	560	ace	support	0	012	Necrozma
+magearna	561	ace	support	0	012	Magearna
+detective_pikachu	562	hope	support	0	012	Detective Pikachu
+ness	563	normal	fighter	0	012	Ness
+lucas	564	normal	fighter	0	012	Lucas
+ninten	565	legend	attack	0	012	Ninten
+ana	566	ace	support	0	012	Ana
+lloyd	567	ace	attack	0	012	Lloyd
+teddy	568	hope	attack	0	012	Teddy
+eve	569	ace	attack	0	012	EVE
+flying_men	570	ace	attack	0	012	Flying Man
+starmen	571	hope	attack	0	012	Starman
+paula	572	legend	attack	0	012	Paula
+jeff_andonuts	573	legend	support	0	012	Jeff
+poo	574	ace	attack	0	012	Poo
+buzz_buzz	575	normal	attack	0	012	Buzz Buzz
+dad	576	legend	support	0	012	Ness's Father
+mr_saturn	577	ace	support	0	012	Mr. Saturn
+dungeon_man	578	hope	support	0	012	Dungeon Man
+ramblin_evil_mushroom	579	normal	support	0	012	Ramblin' Evil Mushroom
+master_belch	580	hope	attack	0	012	Master Belch
+flint	581	hope	attack	0	012	Flint
+hinawa	582	legend	support	0	012	Hinawa
+boney	583	normal	attack	0	012	Boney
+duster	584	normal	attack	0	012	Duster
+kumatora	585	hope	attack	0	012	Kumatora
+salsa	586	normal	attack	0	012	Salsa
+ultimate_chimera	587	ace	support	0	012	Ultimate Chimera
+absolutely_safe_capsule	588	legend	attack	0	012	Absolutely Safe Capsule
+masked_man	589	ace	attack	0	012	Masked Man
+claus	590	legend	attack	0	012	Claus
+captain_falcon	591	normal	fighter	0	012	Captain Falcon
+dr_stewart	592	normal	master	0	0123	Dr. Stewart
+pico	593	hope	attack	0	012	Pico
+samurai_goroh	594	legend	attack	0	012	Samurai Goroh
+jody_summer	595	ace	support	0	012	Jody Summer
+mighty_gazelle	596	hope	attack	0	012	Mighty Gazelle
+baba	597	normal	support	0	012	Baba
+octoman	598	hope	attack	0	012	Octoman
+mr_ead	599	hope	support	0	012	Mr. EAD
+bio_rex	600	normal	attack	0	012	Bio Rex
+blood_falcon	601	ace	attack	0	012	Blood Falcon
+jack_levin	602	ace	attack	0	012	Jack Levin
+zoda	603	hope	attack	0	012	Zoda
+black_shadow	604	legend	attack	0	012	Black Shadow
+the_skull	605	normal	support	0	012	The Skull
+iceclimber	606	normal	fighter	0	012	Ice Climbers
+condor	607	hope	support	0	012	Condor
+white_bear	608	ace	support	0	012	Polar Bear
+vegetables	609	normal	support	0	012	Eggplant
+marth	610	normal	fighter	0	012	Marth
+lucina	611	normal	fighter	0	012	Lucina
+roy	612	normal	fighter	0	012	Roy
+chrom	613	normal	fighter	0	012	Chrom
+ike_path_of_radiance	614	normal	fighter	0	012	Ike
+ike_radiant_dawn	615	normal	fighter	0	012	Ike
+robin_male	616	normal	fighter	0		Robin
+robin_female	617	normal	fighter	0		Robin
+corrin_male	618	normal	fighter	0	012	Corrin
+corrin_female	619	normal	fighter	0	012	Corrin
+caeda	620	legend	attack	0	012	Caeda
+jagen	621	hope	attack	0	012	Jagen
+draug	622	normal	attack	0	012	Draug
+wrys	623	normal	support	0	012	Wrys
+saji_maji_barts	624	normal	attack	0	012	Bord & Cord & Barst
+navarre	625	hope	support	0	012	Navarre
+merric	626	normal	support	0	012	Merric
+minerva	627	hope	attack	0	012	Minerva
+linde	628	hope	support	0	012	Linde
+pegasus_sisters	629	ace	attack	0	012	Pegasus Sisters
+tiki	630	hope	attack	0	012	Tiki
+tiki_awakening	631	ace	attack	0	012	Tiki
+nyna	632	hope	support	0	012	Nyna
+camus	633	ace	attack	0	012	Camus
+sirius	634	legend	attack	0	012	Sirius
+medeus	635	hope	support	0	012	Medeus
+gharnef	636	normal	support	0	012	Gharnef
+alm_and_celica_childhood	637	normal	attack	0	012	Alm & Celica
+alm_and_celica	638	ace	attack	0	012	Alm & Celica
+sigurd	639	hope	attack	0	012	Sigurd
+deirdre	640	hope	support	0	012	Deirdre
+seliph	641	hope	attack	0	012	Seliph
+leif	642	ace	attack	0	012	Leif
+julius	643	normal	attack	0	012	Julius
+lilina	644	hope	attack	0	012	Lilina
+lyn	645	ace	attack	0	012	Lyn
+lyn_blade_lord	646	legend	attack	0	012	Lyn
+eliwod	647	ace	attack	0	012	Eliwood
+hector	648	ace	support	0	012	Hector
+leyvan	649	normal	attack	0	012	Raven
+ninian	650	hope	support	0	012	Ninian
+karel	651	hope	support	0	012	Karel
+nino	652	hope	support	0	012	Nino
+eirika	653	ace	attack	0	012	Eirika
+ephraim	654	ace	attack	0	012	Ephraim
+larachel	655	normal	support	0	012	L'Arachel
+lyon	656	hope	attack	0	012	Lyon
+titania	657	normal	attack	0	012	Titania
+soren	658	normal	support	0	012	Soren
+mist	659	hope	support	0	012	Mist
+sothe	660	hope	support	0	012	Sothe
+elincia	661	hope	attack	0	012	Elincia
+elincia_queen	662	legend	attack	0	012	Queen Elincia
+ashnard	663	hope	support	0	012	Ashnard
+zelgius	664	ace	attack	0	012	Zelgius
+black_knight	665	legend	attack	0	012	Black Knight
+micaiah	666	ace	attack	0	012	Micaiah
+lissa	667	hope	support	0	012	Lissa
+lonqu	668	hope	support	0	012	Lon'qu
+cordelia	669	hope	attack	0	012	Cordelia
+tharja	670	hope	attack	0	012	Tharja
+anna	671	normal	master	0	0123	Anna
+gangrel	672	hope	attack	0	012	Gangrel
+walhart	673	ace	support	0	012	Walhart
+owain	674	normal	attack	0	012	Owain
+severa	675	normal	attack	0	012	Severa
+azura	676	legend	support	0	012	Azura
+jakob	677	hope	support	0	012	Jakob
+ryoma	678	normal	master	0	0123	Ryoma
+hinoka	679	ace	attack	0	012	Hinoka
+takumi	680	ace	attack	0	012	Takumi
+sakura	681	ace	support	0	012	Sakura
+xander	682	legend	attack	0	012	Xander
+camilla	683	ace	attack	0	012	Camilla
+leo	684	ace	attack	0	012	Leo
+elise	685	ace	support	0	012	Elise
+garon	686	ace	support	0	012	Garon
+tsubasa_oribe	687	normal	attack	0	012	Tsubasa Oribe
+tsubasaoribe_carnage	688	ace	attack	0	012	Tsubasa Oribe
+mr_game_and_watch	689	normal	fighter	0	012	Mr. Game & Watch
+ball	690	hope	support	0	012	Ball
+flagman	691	hope	support	0	012	Flagman
+fire	692	ace	support	0	012	Fire
+judge	693	ace	support	0	012	Judge
+manhole	694	hope	support	0	012	Manhole
+helmet	695	normal	support	0	012	Helmet
+lion	696	hope	attack	0	012	Lion
+parachute	697	hope	support	0	012	Parachute
+octopus	698	legend	attack	0	012	Octopus
+chef	699	ace	support	0	012	Chef
+turtle_bridge	700	normal	support	0	012	Turtle Bridge
+fire_attack	701	normal	attack	0	012	Fire Attack
+oil_panic	702	hope	support	0	012	Oil Panic
+pit	703	normal	fighter	0	012	Pit
+dark_pit	704	normal	fighter	0	012	Dark Pit
+palutena	705	normal	fighter	0	012	Palutena
+pit_first	706	ace	attack	0	012	Pit
+centurion	707	normal	support	0	012	Centurion
+three_sacred_treasures	708	ace	attack	0	012	Three Sacred Treasures
+daybreak	709	hope	support	0	012	Daybreak
+medusa	710	hope	attack	0	012	Medusa
+medusa_uprising	711	legend	attack	0	012	Medusa
+twinbellows	712	hope	support	0	012	Twinbellows
+hewdraw	713	hope	attack	0	012	Hewdraw
+pandora	714	hope	attack	0	012	Pandora
+amazon_pandora	715	ace	attack	0	012	Amazon Pandora
+thanatos	716	hope	attack	0	012	Thanatos
+hades	717	ace	attack	0	012	Hades
+hades_final	718	legend	attack	0	012	Hades
+specknose	719	normal	attack	0	012	Specknose
+reapette_and_reaper	720	ace	support	0	012	Reaper & Reapette
+eggplant_wizard	721	ace	support	0	012	Eggplant Wizard
+pseudo_palutena	722	normal	support	0	012	Pseudo-Palutena
+viridi	723	legend	support	0	012	Viridi
+phosphora	724	ace	support	0	012	Phosphora
+lurchthorn	725	normal	attack	0	012	Lurchthorn
+magnus	726	hope	attack	0	012	Magnus
+dyntos	727	normal	master	0	0123	Dyntos
+mimicutie	728	normal	support	0	012	Mimicutie
+wario	729	normal	fighter	0	012	Wario
+wario_overall	730	normal	fighter	0	012	Wario
+jimmy_t	731	ace	attack	0	012	Jimmy T
+mona	732	ace	support	0	012	Mona
+9_volt_and_18_volt	733	ace	support	0	012	9-Volt & 18-Volt
+dribble_and_spitz	734	hope	support	0	012	Dribble & Spitz
+kat_and_ana	735	normal	master	0	0123	Kat & Ana
+dr_crygor	736	hope	attack	0	012	Dr. Crygor
+orbulon	737	hope	support	0	012	Orbulon
+wario_man	738	legend	attack	0	012	Wario-Man
+ashley	739	legend	support	0	012	Ashley
+young_cricket	740	normal	support	0	012	Young Cricket
+5_volt	741	hope	attack	0	012	5-Volt
+5_volt_angry	742	ace	attack	0	012	5-Volt
+phoro	743	hope	support	0	012	Pyoro
+fronks	744	normal	support	0	012	Fronks
+captain_syrup	745	hope	attack	0	012	Captain Syrup
+princess_shokora	746	normal	support	0	012	Princess Shokora
+count_cannoli	747	normal	attack	0	012	Count Cannoli
+shake_king	748	normal	attack	0	012	Shake King
+solid_snake	749	normal	fighter	0	012	Solid Snake
+liquid_snake	750	legend	attack	0	012	Liquid Snake
+gray_fox	751	ace	attack	0	012	Gray Fox
+hal_emmerich	752	hope	support	0	012	Hal Emmerich
+roy_campbell	753	hope	support	0	012	Roy Campbell
+meryl_silverburgh	754	normal	attack	0	012	Meryl Silverburgh
+mei_ling	755	normal	support	0	012	Mei Ling
+solidus_snake	756	hope	attack	0	012	Solidus Snake
+rosemary	757	normal	support	0	012	Rosemary
+naked_snake	758	ace	attack	0	012	Naked Snake
+big_boss	759	legend	attack	0	012	Big Boss
+the_boss	760	legend	attack	0	012	The Boss
+eva	761	hope	support	0	012	EVA
+revolver_ocelot_mgs3	762	hope	attack	0	012	Revolver Ocelot
+revolver_ocelot	763	ace	attack	0	012	Revolver Ocelot
+zero_mgs	764	hope	support	0	012	Zero
+raiden	765	legend	attack	0	012	Raiden
+kazuhira_miller	766	ace	support	0	012	Kazuhira Miller
+paz_ortega_andrade	767	hope	support	0	012	Paz Ortega Andrade
+strangelove	768	normal	support	0	012	Strangelove
+metal_gear_rex	769	ace	attack	0	012	Metal Gear REX
+metal_gear_ray	770	hope	attack	0	012	Metal Gear RAY
+gekko	771	hope	support	0	012	Gekko
+metal_gear_zeke	772	normal	attack	0	012	Metal Gear ZEKE
+sahelanthropus	773	ace	attack	0	012	Sahelanthropus
+cardboard_box	774	normal	support	0	012	Cardboard Box
+sonic_the_hedgehog	775	normal	fighter	0	012	Sonic the Hedgehog
+dr_eggman	776	legend	attack	0	012	Dr. Eggman
+tails	777	ace	support	0	012	Tails
+super_sonic	778	legend	attack	0	012	Super Sonic
+amy_rose	779	ace	support	0	012	Amy
+metal_sonic	780	hope	attack	0	012	Metal Sonic
+knuckles_the_echidna	781	ace	attack	0	012	Knuckles
+chaotix	782	normal	attack	0	012	Chaotix
+big_the_cat	783	normal	attack	0	012	Big the Cat
+e_102_gamma	784	normal	attack	0	012	Gamma
+chaos	785	hope	attack	0	012	Chaos
+chao	786	normal	attack	0	012	Chao
+hero_chao	787	ace	attack	0	012	Hero Chao
+shadow_the_hedgehog	788	ace	attack	0	012	Shadow the Hedgehog
+super_shadow	789	legend	attack	0	012	Super Shadow
+rouge_the_bat	790	hope	support	0	012	Rouge the Bat
+cream_and_cheese	791	hope	support	0	012	Cream & Cheese
+e_123_omega	792	normal	attack	0	012	Omega
+blaze_the_cat	793	hope	support	0	012	Blaze the Cat
+jet_the_hawk	794	hope	support	0	012	Jet the Hawk
+silver_the_hedgehog	795	hope	support	0	012	Silver the Hedgehog
+sonic_the_werehog	796	hope	support	0	012	Sonic the Werehog
+infinite	797	hope	attack	0	012	Infinite
+captain_olimar	798	normal	fighter	0	012	Olimar
+aoph	799	normal	fighter	0	012	Alph
+louie	800	ace	attack	0	012	Louie
+captain_charlie	801	normal	master	0	0123	Charlie
+brittany	802	ace	support	0	012	Brittany
+red_pikmin	803	hope	support	0	012	Red Pikmin
+blue_pikmin	804	hope	support	0	012	Blue Pikmin
+yellow_pikmin	805	hope	support	0	012	Yellow Pikmin
+white_pikmin	806	hope	support	0	012	White Pikmin
+purple_pikmin	807	hope	attack	0	012	Purple Pikmin
+winged_pikmin	808	normal	support	0	012	Winged Pikmin
+rock_pikmin	809	normal	attack	0	012	Rock Pikmin
+dwarf_bulborb	810	hope	attack	0	012	Bulborb
+empress_bulblax	811	legend	attack	0	012	Empress Bulblax
+emperor_bulblax	812	ace	support	0	012	Emperor Bulblax
+burrowing_snagret	813	ace	attack	0	012	Burrowing Snagret
+plasm_wraith	814	ace	attack	0	012	Plasm Wraith
+fiery_blowhog	815	normal	attack	0	012	Fiery Blowhog
+smoky_progg	816	normal	support	0	012	Smoky Progg
+swooping_snitchbug	817	normal	support	0	012	Swooping Snitchbug
+iridescent_glint_beetle	818	hope	support	0	012	Iridescent Glint Beetle
+yellow_wollywog	819	hope	support	0	012	Yellow Wollywog
+peckish_aristocrab	820	hope	attack	0	012	Peckish Aristocrab
+makky	821	normal	attack	0	012	Mockiwi
+r_o_b	822	normal	fighter	0	012	R.O.B.
+stack_up	823	hope	support	0	012	Stack-Up
+gyromite	824	hope	support	0	012	Gyromite
+player_male	825	normal	fighter	0	012	Villager
+player_female	826	normal	fighter	0	012	Villager
+isabelle	827	normal	fighter	0	012	Isabelle
+tom_nook	828	hope	attack	0	012	Tom Nook
+tom_nook_nookingtons	829	ace	attack	0	012	Tom Nook
+timmy_and_tommy	830	normal	master	0	0123	Timmy & Tommy
+dj_k_k	831	hope	attack	0	012	DJ K.K.
+k_k_slider	832	ace	attack	0	012	K.K. Slider
+resetti	833	ace	attack	0	012	Resetti
+don_resetti	834	hope	attack	0	012	Don
+rover	835	ace	support	0	012	Rover
+redd	836	hope	support	0	012	Redd
+gracie	837	hope	support	0	012	Gracie
+gulliver	838	hope	attack	0	012	Gulliver
+peta	839	ace	support	0	012	Pete
+phyllis_and_pelly	840	hope	support	0	012	Phyllis & Pelly
+copper_and_booker	841	normal	master	0	0123	Copper & Booker
+joan	842	hope	support	0	012	Joan
+katrina	843	hope	support	0	012	Katrina
+lloid	844	normal	attack	0	012	Lloid
+tortimer	845	ace	support	0	012	Tortimer
+kappn	846	ace	support	0	012	Kapp'n
+kappn_ww	847	hope	support	0	012	Kapp'n
+able_sisters	848	ace	support	0	012	Able Sisters
+blathers	849	ace	support	0	012	Blathers
+celeste	850	hope	support	0	012	Celeste
+harriet	851	hope	support	0	012	Harriet
+brewster	852	ace	support	0	012	Brewster
+lyle	853	normal	support	0	012	Lyle
+kaitlin_and_katie	854	hope	support	0	012	Kaitlin & Katie
+dr_shrunk	855	hope	support	0	012	Dr. Shrunk
+frillard	856	normal	support	0	012	Frillard
+kicks	857	hope	support	0	012	Kicks
+zipper_t_bunny	858	normal	attack	0	012	Zipper T. Bunny
+serena	859	normal	support	0	012	Serena
+reese_and_cyrus	860	ace	support	0	012	Cyrus & Reese
+leif_animal_crossing	861	hope	support	0	012	Leif
+digby	862	hope	attack	0	012	Digby
+lottie	863	normal	attack	0	012	Lottie
+mega_man	864	normal	fighter	0	012	Mega Man
+proto_man	865	legend	attack	0	012	Proto Man
+bass	866	ace	attack	0	012	Bass
+dr_light	867	ace	support	0	012	Dr. Light
+roll	868	ace	support	0	012	Roll
+rush	869	ace	support	0	012	Rush
+beat	870	hope	support	0	012	Beat
+auto	871	hope	support	0	012	Auto
+duo	872	hope	attack	0	012	Duo
+dr_wily	873	legend	support	0	012	Dr. Wily
+wily_capsule	874	ace	attack	0	012	Wily Capsule
+metall	875	normal	attack	0	012	Mettaur
+cut_man	876	hope	attack	0	012	Cut Man
+guts_man	877	hope	attack	0	012	Guts Man
+ice_man	878	hope	support	0	012	Ice Man
+bomb_man	879	hope	support	0	012	Bomb Man
+fire_man	880	hope	attack	0	012	Fire Man
+elec_man	881	hope	attack	0	012	Elec Man
+yellow_devil	882	ace	attack	0	012	Yellow Devil
+metal_man	883	hope	attack	0	012	Metal Man
+air_man	884	hope	support	0	012	Air Man
+aquick_man	885	hope	support	0	012	Quick Man
+crash_man	886	hope	support	0	012	Crash Man
+flash_man	887	hope	support	0	012	Flash Man
+wood_man	888	hope	attack	0	012	Wood Man
+hard_man	889	hope	support	0	012	Hard Man
+top_man	890	normal	support	0	012	Top Man
+snake_man	891	normal	attack	0	012	Snake Man
+spark_man	892	hope	support	0	012	Spark Man
+shadow_man	893	hope	support	0	012	Shadow Man
+drill_man	894	normal	support	0	012	Drill Man
+dive_man	895	normal	support	0	012	Dive Man
+skull_man	896	hope	attack	0	012	Skull Man
+gravity_man	897	normal	master	0	0123	Gravity Man
+napalm_man	898	normal	attack	0	012	Napalm Man
+dark_man_4	899	normal	support	0	012	Dark Man 4
+knight_man	900	normal	attack	0	012	Knight Man
+wind_man	901	normal	support	0	012	Wind Man
+slash_man	902	normal	attack	0	012	Slash Man
+sword_man	903	normal	support	0	012	Sword Man
+galaxy_man	904	normal	support	0	012	Galaxy Man
+mega_man_x	905	ace	attack	0	012	X
+mega_man_x_armor	906	legend	attack	0	012	Full Armor X
+zero_mega_man_x	907	hope	attack	0	012	Zero
+zero	908	legend	attack	0	012	Zero
+axl	909	hope	support	0	012	Axl
+sigma	910	ace	attack	0	012	Sigma
+mega_man_volnutt	911	ace	attack	0	012	MegaMan Volnutt
+roll_caskett	912	hope	support	0	012	Roll Caskett
+tron_bonne	913	hope	attack	0	012	Tron Bonne
+megaman_exe	914	legend	attack	0	012	MegaMan.EXE
+protoman_exe	915	ace	attack	0	012	ProtoMan.EXE
+geo_stelar_omega_xis	916	hope	attack	0	012	Geo Stelar & Omega-Xis
+star_force_mega_man	917	ace	attack	0	012	Star Force Mega Man
+mega_man_zero	918	ace	attack	0	012	Mega Man Zero
+mega_man_model_x	919	normal	attack	0	012	Model X
+mega_man_model_zx	920	hope	attack	0	012	Model ZX
+female_trainer	921	normal	fighter	0		Wii Fit Trainer
+male_trainer	922	normal	fighter	0		Wii Fit Trainer
+wii_balance_board	923	normal	master	0	0123	Wii Balance Board
+pet	924	normal	attack	0	012	Pet
+jackknife	925	normal	support	0	012	Jackknife
+deep_breathing	926	ace	support	0	012	Deep Breathing
+sun_salutation	927	ace	support	0	012	Sun Salutation
+tree	928	ace	support	0	012	Tree
+dance	929	normal	support	0	012	Dancer
+warrior	930	hope	support	0	012	Warrior
+arm_and_leg_lift	931	hope	support	0	012	Arm & Leg Lift
+little_mac	932	normal	fighter	0	012	Little Mac
+giga_mac	933	legend	attack	0	012	Giga Mac
+doc_louis	934	normal	master	0	0123	Doc Louis
+glass_joe	935	normal	attack	0	012	Glass Joe
+bald_bull	936	hope	support	0	012	Bald Bull
+mr_sandman	937	ace	attack	0	012	Mr. Sandman
+bear_hugger	938	hope	attack	0	012	Bear Hugger
+great_tiger	939	hope	attack	0	012	Great Tiger
+super_macho_man	940	legend	attack	0	012	Super Macho Man
+von_kaiser	941	normal	attack	0	012	Von Kaiser
+don_flamenco	942	hope	attack	0	012	Don Flamenco
+king_hippo	943	ace	support	0	012	King Hippo
+soda_popinski	944	ace	support	0	012	Soda Popinski
+piston_hondo	945	normal	support	0	012	Piston Hondo
+pac_man	946	normal	fighter	0	012	PAC-MAN
+mother_fairy	947	ace	support	0	012	Mother Fairy
+ghosts	948	hope	attack	0	012	Ghosts
+vulnerable_ghosts	949	normal	support	0	012	TURN-TO-BLUE
+fruits	950	normal	support	0	012	Bonus Fruit
+shulk	951	normal	fighter	0	012	Shulk
+fiora	952	ace	support	0	012	Fiora
+fiora_mechonis_armour	953	legend	attack	0	012	Mecha-Fiora
+reyn	954	hope	attack	0	012	Reyn
+sharla	955	hope	support	0	012	Sharla
+dunban	956	ace	attack	0	012	Dunban
+melia	957	hope	attack	0	012	Melia
+riki	958	normal	master	0	0123	Riki
+mumkhar	959	hope	attack	0	012	Mumkhar
+metal_face	960	legend	attack	0	012	Metal Face
+elma	961	ace	attack	0	012	Elma
+lin_lee_koo	962	normal	support	0	012	Lin
+lao_huang	963	normal	attack	0	012	Lao
+tatsu	964	normal	support	0	012	Tatsu
+formula	965	hope	support	0	012	Formula
+rex	966	ace	attack	0	012	Rex
+homura	967	legend	support	0	012	Pyra
+hikari	968	legend	support	0	012	Mythra
+niyah	969	ace	attack	0	012	Nia
+tora	970	hope	attack	0	012	Tora
+hana_j_s	971	hope	support	0	012	Poppi α
+meleph	972	normal	attack	0	012	Mòrag
+zeke	973	normal	attack	0	012	Zeke
+duck_hunt	974	normal	fighter	0	012	Duck Hunt
+wild_gunman	975	hope	attack	0	012	Wild Gunman
+gangster_lady_police	976	normal	support	0	012	Gangster, Lady, & Policeman
+ryu	977	normal	fighter	0	012	Ryu
+ken_masters	978	normal	fighter	0	012	Ken
+e_honda	979	hope	support	0	012	E. Honda
+chun_li_zero	980	hope	attack	0	012	Chun-Li
+chun_li	981	ace	attack	0	012	Chun-Li
+blanka	982	hope	attack	0	012	Blanka
+zangief	983	normal	master	0	0123	Zangief
+guile	984	legend	attack	0	012	Guile
+dhalsim	985	ace	support	0	012	Dhalsim
+balrog	986	ace	support	0	012	Balrog
+vega	987	ace	attack	0	012	Vega
+sagat	988	ace	attack	0	012	Sagat
+m_bison	989	legend	attack	0	012	M. Bison
+cammy	990	ace	attack	0	012	Cammy
+fei_long	991	normal	support	0	012	Fei Long
+dee_jay	992	normal	attack	0	012	Dee Jay
+t_hawk	993	normal	attack	0	012	T. Hawk
+akuma	994	legend	attack	0	012	Akuma
+nash	995	hope	support	0	012	Nash
+dan_hibiki	996	normal	attack	0	012	Dan
+sakura_kasugano	997	ace	attack	0	012	Sakura
+gen	998	hope	attack	0	012	Gen
+karin	999	hope	attack	0	012	Karin
+cody	1000	normal	attack	0	012	Cody
+ibuki	1001	hope	support	0	012	Ibuki
+yun_and_yang	1002	hope	attack	0	012	Yun & Yang
+juri	1003	hope	support	0	012	Juri
+cloud_ssb	1004	normal	fighter	0	012	Cloud
+cloud_ac_ssb	1005	normal	fighter	0		Cloud
+bayonetta	1006	normal	fighter	0	012	Bayonetta
+bayonetta_first	1007	normal	fighter	0	012	Bayonetta
+gomorrah	1008	hope	attack	0	012	Gomorrah
+madama_butterfly	1009	legend	support	0	012	Madama Butterfly
+jeanne	1010	ace	attack	0	012	Jeanne
+cutie_j	1011	legend	attack	0	012	Cutie J
+rodin	1012	ace	attack	0	012	Rodin
+rodin_demon	1013	legend	attack	0	012	Rodin, the Infinite One
+luka	1014	hope	support	0	012	Luka
+cereza	1015	normal	support	0	012	Cereza
+loki	1016	ace	support	0	012	Loki
+balder	1017	hope	attack	0	012	Balder
+father_balder	1018	ace	attack	0	012	Father Balder
+masked_lumen	1019	hope	attack	0	012	Masked Lumen
+loptr	1020	hope	attack	0	012	Prophet
+affinity	1021	normal	attack	0	012	Affinity
+inspired	1022	normal	attack	0	012	Inspired
+fortitudo	1023	hope	attack	0	012	Fortitudo
+alraune	1024	normal	support	0	012	Alraune
+inkling_girl	1025	normal	fighter	0	012	Inkling
+inkling_boy	1026	normal	fighter	0	012	Inkling
+squid_form	1027	ace	support	0	012	Inkling Squid
+judd	1028	legend	support	0	012	Judd
+judd_jr	1029	ace	support	0	012	Li'l Judd
+squid_sisters	1030	legend	support	0	012	Squid Sisters
+tentacles	1031	ace	support	0	012	Off the Hook
+sheldon	1032	normal	master	0	0123	Sheldon
+annie	1033	hope	support	0	012	Annie
+jelonzo	1034	normal	support	0	012	Jelonzo
+crusty_sean	1035	hope	support	0	012	Crusty Sean
+spyke	1036	hope	attack	0	012	Spyke
+miura	1037	hope	support	0	012	Flow
+bizen	1038	normal	support	0	012	Jelfonzo
+sigourney	1039	normal	support	0	012	Bisk
+spiky	1040	hope	support	0	012	Murch
+capn_cuttlefish	1041	normal	master	0	0123	Cap'n Cuttlefish
+octoling	1042	hope	attack	0	012	Octoling
+dj_octavio	1043	hope	attack	0	012	DJ Octavio
+octobot_king	1044	ace	attack	0	012	Octobot King
+zap_fish	1045	normal	support	0	012	Zapfish
+great_zap_fish	1046	ace	support	0	012	Great Zapfish
+octoling_agent8	1047	ace	attack	0	012	Octoling Girl & Octoling Boy
+octopus_form	1048	hope	support	0	012	Octoling Octopus
+super_sea_snail	1049	normal	support	0	012	Super Sea Snail
+simon_belmont	1050	normal	fighter	0	012	Simon Belmont
+richter_belmont	1051	normal	fighter	0	012	Richter Belmont
+trevor_c_belmont	1052	legend	attack	0	012	Trevor C. Belmont
+maria_renard	1053	hope	attack	0	012	Maria Renard
+maria_renard_sotn	1054	ace	attack	0	012	Maria Renard
+alucard	1055	legend	attack	0	012	Alucard
+reinhardt_schneider	1056	normal	attack	0	012	Reinhardt Schneider
+nathan_graves	1057	hope	attack	0	012	Nathan Graves
+hugh_baldwin	1058	normal	attack	0	012	Hugh Baldwin
+juste_belmont	1059	hope	attack	0	012	Juste Belmont
+yoko_vernandes	1060	hope	support	0	012	Yoko Belnades
+leon_belmont	1061	hope	attack	0	012	Leon Belmont
+julius_belmont	1062	ace	support	0	012	Julius Belmont
+hector_vampire	1063	hope	support	0	012	Hector
+jonathan_morris	1064	ace	attack	0	012	Jonathan Morris
+charlotte_aulin	1065	hope	attack	0	012	Charlotte Aulin
+shanoa	1066	ace	attack	0	012	Shanoa
+gabriel_belmont	1067	hope	attack	0	012	Gabriel Belmont
+medusa_head	1068	hope	support	0	012	Medusa Head
+mummy	1069	hope	attack	0	012	Mummy
+creature_flea_man	1070	hope	support	0	012	The Creature & Flea Man
+death	1071	ace	support	0	012	Death
+carmilla	1072	normal	support	0	012	Carmilla
+werewolf	1073	hope	support	0	012	Werewolf
+shaft	1074	normal	support	0	012	Shaft
+vampire	1075	ace	attack	0	012	Dracula
+soma_cruz	1076	legend	attack	0	012	Soma Cruz
+vampire_seondform	1077	ace	support	0	012	Dracula
+kid_dracula	1078	ace	attack	0	012	Kid Dracula
+tutes	1079	ace	support	0	012	Sebastian Tute
+woopy	1080	ace	support	0	012	Party Phil
+dark_load	1081	legend	attack	0	012	Dark Emperor
+iris_archwell	1082	hope	attack	0	012	Iris Archwell
+gold_bone_gang	1083	hope	attack	0	012	Gold Bone
+coraline	1084	normal	support	0	012	Coraline
+shinobu	1085	normal	attack	0	012	Shinobu
+crispin	1086	normal	support	0	012	Crispin
+nico_fire	1087	normal	support	0	012	Nico Fire
+light_plane	1088	hope	support	0	012	Plane
+monita	1089	hope	support	0	012	Monita
+mii_brawler_ssb	1090	normal	fighter	0		Mii Brawler
+mii_swordfighter_ssb	1091	normal	fighter	0		Mii Swordfighter
+mii_gunner_ssb	1092	normal	fighter	0		Mii Gunner
+sandbag	1093	normal	support	0	012	Sandbag
+smash_ball	1094	ace	support	0	012	Smash Ball
+master_hand	1095	ace	attack	0	012	Master Hand
+crazy_hand	1096	ace	attack	0	012	Crazy Hand
+giga_bawser	1097	hope	attack	0	012	Giga Bowser
+galleom	1098	hope	attack	0	012	Galleom
+duon	1099	hope	attack	0	012	Duon
+tabuu	1100	legend	attack	0	012	Tabuu
+master_giant	1101	ace	attack	0	012	Master Giant
+master_beast	1102	ace	attack	0	012	Master Beast
+master_edges	1103	ace	attack	0	012	Master Edges
+master_core	1104	legend	attack	0	012	Master Core
+kiila	1105	legend	attack	0	012	Galeem
+darz	1106	legend	attack	0	012	Dharkon
+fighting_alloy_team	1107	hope	support	0	012	Fighting Alloy Team
+primid	1108	normal	attack	0	012	Primid
+mite	1109	normal	support	0	012	Mite
+bytans	1110	normal	attack	0	012	Bytans
+roturret	1111	normal	attack	0	012	Roturret
+shadow_bug	1112	hope	support	0	012	Shadow Bug
+subspace_bomb	1113	hope	support	0	012	Subspace Bomb
+ancient_minister	1114	ace	attack	0	012	Ancient Minister
+sheriff	1115	legend	support	0	012	Sheriff
+pitcher_and_batter	1116	normal	support	0	012	Pitcher & Batter
+tennis_player	1117	normal	support	0	012	Tennis Player
+tamagon	1118	normal	attack	0	012	Tamagon
+devil	1119	hope	support	0	012	Devil
+urban_champion_hero	1120	normal	support	0	012	Urban Champion Fighter
+bubbles	1121	normal	support	0	012	Bubbles
+unira	1122	normal	support	0	012	Unira
+motocrosser	1123	hope	support	0	012	Excitebike
+balloon_fighter	1124	hope	support	0	012	Balloon Fighter
+balloon_fish	1125	hope	attack	0	012	Fish
+mach_rider	1126	normal	attack	0	012	Mach Rider
+disk_kun	1127	ace	support	0	012	Diskun
+takamaru	1128	ace	attack	0	012	Takamaru
+volleyball_player	1129	normal	support	0	012	Volleyball Player
+donbe_and_hikari	1130	hope	attack	0	012	Donbe & Hikari
+donbe_hikari_shin_oni	1131	ace	attack	0	012	Donbe & Hikari
+hockey_player	1132	normal	support	0	012	Hockey Players
+monster	1133	normal	support	0	012	MONSTER
+tank_and_infantry	1134	hope	support	0	012	Tank & Infantry
+andy	1135	hope	attack	0	012	Andy
+eagle	1136	normal	attack	0	012	Eagle
+olaf	1137	normal	attack	0	012	Olaf
+ayumi_tachibana	1138	normal	support	0	012	Ayumi Tachibana
+goku_and_chao	1139	normal	attack	0	012	Goku & Chao
+sukapon	1140	legend	attack	0	012	Sukapon
+yakuman	1141	normal	support	0	012	Yakuman Player
+training_academy_coach	1142	normal	support	0	012	Commander
+frog_and_snake	1143	hope	attack	0	012	Frog & Snake
+prince_of_sable	1144	legend	attack	0	012	Prince of Sablé
+prince_richard	1145	ace	attack	0	012	Prince Richard
+muddy_mole	1146	normal	support	0	012	Muddy Mole
+maruo_maruhige	1147	hope	support	0	012	Maruhige Shop Owner
+satoru	1148	normal	attack	0	012	Satoru
+dr_wright	1149	ace	support	0	012	Dr. Wright
+st_falcon	1150	normal	attack	0	012	ST Falcon
+f_type	1151	normal	support	0	012	F-Type
+trailer	1152	normal	support	0	012	Tractor Trailer
+lip	1153	ace	support	0	012	Lip
+dion_max_jack	1154	normal	attack	0	012	Dion, Max, & Jack
+hakkun	1155	normal	support	0	012	Hakkun
+komurasaki	1156	normal	support	0	012	Girl from Hajimari no Mori
+harry	1157	normal	attack	0	012	Harry
+ryota_hayami	1158	normal	support	0	012	Ryota Hayami
+akari_hayama	1159	normal	support	0	012	Akari Hayami
+ray	1160	hope	attack	0	012	Ray Mk II
+rya_mk_3	1161	ace	attack	0	012	Ray Mk III
+flare	1162	normal	attack	0	012	Flare
+bayonette	1163	normal	support	0	012	Bayonette
+saki_amamiya	1164	ace	attack	0	012	Saki Amamiya
+isa_jo	1165	hope	support	0	012	Isa Jo
+helirin	1166	normal	support	0	012	Helirin
+alessandro_inzaghi	1167	normal	support	0	012	Alessandro Inzaghi
+isaac	1168	ace	attack	0	012	Isaac
+isaac_dark_dawn	1169	legend	attack	0	012	Isaac
+garet	1170	normal	attack	0	012	Garet
+ivan	1171	normal	support	0	012	Ivan
+mia	1172	normal	attack	0	012	Mia
+felix	1173	hope	attack	0	012	Felix
+jenna	1174	hope	support	0	012	Jenna
+matthew	1175	hope	attack	0	012	Matthew
+magicalvacation_player	1176	hope	attack	0	012	Magical Vacation Protagonists
+traveling_putty	1177	hope	support	0	012	Putty
+mokka	1178	hope	attack	0	012	Mokka
+demille	1179	normal	attack	0	012	DeMille
+tomatrio	1180	normal	support	0	012	Tomatrio
+starfy	1181	ace	attack	0	012	Starfy
+starly	1182	hope	attack	0	012	Starly
+moe	1183	normal	attack	0	012	Moe
+old_man_lobber	1184	hope	support	0	012	Old Man Lobber
+mermaid	1185	normal	support	0	012	Mermaid
+materu	1186	normal	support	0	012	Mattel
+cupid	1187	normal	support	0	012	Cupid
+lil_blue	1188	normal	support	0	012	Li'l Blue
+owner_yamanouti	1189	normal	support	0	012	Yama
+jill_drill_dozer	1190	hope	support	0	012	Jill & the Drill Dozer
+calciobit_player	1191	hope	support	0	012	Pocket Football Player
+karate_man_kicks	1192	ace	attack	0	012	Karate Joe
+wandering_samurai	1193	hope	attack	0	012	The Wandering Samurai
+wandering_samurai_fever	1194	ace	attack	0	012	Wandering Samurai
+dr_cutlery	1195	normal	support	0	012	Sick Beats Doctor
+the_chorus_kids	1196	ace	attack	0	012	The Chorus Kids
+munchy_monk	1197	normal	attack	0	012	Munchy Monk
+reporter_wrestler	1198	hope	attack	0	012	Reporter & Wrestler
+baxter_forthinton	1199	normal	support	0	012	Baxter & Forthington
+sumo_brothers	1200	normal	attack	0	012	Sumo Brothers
+pig	1201	normal	support	0	012	Pig
+alexandra_roivas	1202	normal	attack	0	012	Alexandra Roivas
+mappo	1203	normal	attack	0	012	Mappo
+sagi	1204	normal	attack	0	012	Sagi
+milly	1205	normal	attack	0	012	Milly
+chibi_robo	1206	hope	attack	0	012	Chibi-Robo
+super_chibi_robo	1207	ace	attack	0	012	Super Chibi-Robo
+telly_vision	1208	hope	support	0	012	Telly
+drake_redcrest	1209	normal	attack	0	012	Drake Redcrest
+chibi_tot	1210	normal	attack	0	012	Chibi-Tot
+barbara_the_bat	1211	ace	attack	0	012	Barbara the Bat
+ashley_ac	1212	hope	support	0	012	Ashley Robbins
+hanenbow	1213	hope	support	0	012	Hanenbow
+dr_kawashima	1214	hope	attack	0	012	Dr. Kawashima
+dr_kawashima_ct	1215	legend	attack	0	012	Dr. Kawashima
+dr_lobe	1216	hope	support	0	012	Dr. Lobe
+yuuhi_town_ouendan	1217	hope	support	0	012	Ouendan
+cheer_girls	1218	hope	support	0	012	Ouendan Cheerleaders
+elite_beat_agents	1219	hope	support	0	012	Elite Beat Agents
+elite_beat_divas	1220	hope	support	0	012	Elite Beat Divas
+satoru_amatsubo	1221	normal	support	0	012	Satoru Amatsubo
+gauss	1222	normal	attack	0	012	Warrior Mech Gauss
+kyle_hyde	1223	hope	attack	0	012	Kyle Hyde
+kurikin	1224	normal	attack	0	012	Kurikin
+hsien	1225	normal	support	0	012	Hsien
+magkid	1226	normal	support	0	012	Magkid
+aisya	1227	normal	attack	0	012	Aisya
+numbers	1228	normal	support	0	012	Num Diddly
+idea	1229	normal	support	0	012	Idea
+welt	1230	hope	attack	0	012	Welt
+t_rex	1231	hope	attack	0	012	T-Rex
+nibbles	1232	normal	attack	0	012	Nibbles
+glory_of_heracles_hero	1233	hope	attack	0	012	Glory of Heracles Hero
+heracles	1234	hope	attack	0	012	Heracles
+chef_ptc	1235	hope	support	0	012	Chef
+shop_assistant	1236	hope	support	0	012	Shop Assistant
+vince	1237	hope	support	0	012	Vince
+looksley	1238	normal	support	0	012	Looksley
+prince_saruno	1239	normal	support	0	012	Prince Saruno
+amakura_mayu_mio	1240	hope	support	0	012	Mio & Mayu Amakura
+yuri_kozukata	1241	ace	support	0	012	Yuri Kozukata
+nick	1242	normal	attack	0	012	Nick
+captain_rainbow	1243	ace	attack	0	012	Captain Rainbow
+raymond_bryce	1244	normal	attack	0	012	Raymond Bryce
+beetle	1245	normal	support	0	012	Beetle
+orville	1246	hope	attack	0	012	Orville
+frey_and_freya	1247	hope	attack	0	012	Frey & Freya
+and_kensaku	1248	normal	support	0	012	Ando Kensaku
+zip	1249	normal	support	0	012	Zip
+zael	1250	hope	attack	0	012	Zael
+calista	1251	hope	attack	0	012	Calista
+aeron	1252	hope	attack	0	012	Aeron
+elena	1253	hope	support	0	012	Elena
+toy_poodle	1254	hope	support	0	012	Toy Poodle
+french_bulldog	1255	hope	support	0	012	French Bulldog
+labrador_retriever	1256	hope	support	0	012	Labrador Retriever
+nd_03_bule_shark	1257	normal	support	0	012	BlueShark
+mallo	1258	ace	attack	0	012	Mallo
+sakura_maru	1259	hope	attack	0	012	Sakura Samurai
+nikki	1260	ace	support	0	012	Nikki
+noise	1261	normal	support	0	012	Noise
+dillon	1262	ace	attack	0	012	Dillon
+russ	1263	normal	support	0	012	Russ
+shovel_knight	1264	ace	attack	0	012	Shovel Knight
+shield_knight	1265	hope	support	0	012	Shield Knight
+plague_knight	1266	normal	support	0	012	Plague Knight
+king_knight	1267	normal	attack	0	012	King Knight
+specter_knight	1268	hope	attack	0	012	Specter Knight
+culdra	1269	ace	support	0	012	Culdra
+goligan	1270	hope	support	0	012	Goligan
+allen	1271	hope	attack	0	012	Allen
+tempo	1272	normal	attack	0	012	Tempo
+splash	1273	normal	support	0	012	Eddy
+kurabe_kagesina	1274	normal	attack	0	012	Kageshina Kurabe
+darumesi_inuzi	1275	normal	support	0	012	Inuji Darumeshi
+rusty	1276	normal	support	0	012	Rusty Slugger
+arcade_bunny	1277	hope	support	0	012	Arcade Bunny
+qbby	1278	ace	support	0	012	Qbby
+henry_fleming	1279	normal	support	0	012	Henry Fleming
+toto	1280	hope	attack	0	012	Tethu
+isna	1281	ace	support	0	012	Esna
+musashi	1282	normal	attack	0	012	Musashi
+wonder_red	1283	hope	attack	0	012	Wonder-Red
+wonder_bule	1284	normal	attack	0	012	Wonder-Blue
+rayman	1285	ace	attack	0	012	Rayman
+clip_snip	1286	hope	support	0	012	Clip & Snip
+springman	1287	ace	attack	0	012	Spring Man
+ribbongirl	1288	hope	attack	0	012	Ribbon Girl
+minmin	1289	ace	attack	0	012	Min Min
+twintelle	1290	hope	support	0	012	Twintelle
+ninjara	1291	hope	support	0	012	Ninjara
+boss_galaga	1292	hope	support	0	012	Boss Galaga
+bomberman	1293	ace	attack	0	012	Bomberman
+akira_yuki	1294	legend	attack	0	012	Akira
+rathian	1295	hope	support	0	012	Rathalos
+shantae	1296	ace	attack	0	012	Shantae
+risky_boots	1297	hope	support	0	012	Risky Boots
+pikachu_partner	1298	ace	support	1	012	Partner Pikachu
+eevee_partner	1299	ace	support	1	012	Partner Eevee
+dice	1300	normal	support	1	012	Dice Block
+river_survival	1301	hope	support	1	012	River Survival
+golden_mushroom	1302	ace	support	1	012	Golden Dash Mushroom
+piranha_plant	1303	normal	fighter	1	012	Piranha Plant
+jack_phantom_thief	1304	normal	fighter	1	012	Joker
+jack_student	1305	normal	fighter	1	012	Joker
+jack_phantom_thieves	1306	legend	support	1	012	Phantom Thieves of Hearts
+jack_igor	1307	ace	support	1	012	Igor
+jack_caroline_justine	1308	ace	support	1	012	Caroline & Justine
+jack_morgana	1309	ace	attack	1	012	Morgana
+jack_ryuji_sakamoto	1310	hope	attack	1	012	Ryuji Sakamoto
+jack_anne_takamaki	1311	hope	attack	1	012	Ann Takamaki
+jack_yusuke_kitagawa	1312	normal	attack	1	012	Yusuke Kitagawa
+jack_makoto_niijima	1313	normal	support	1	012	Makoto Niijima
+jack_futaba_sakura	1314	normal	support	1	012	Futaba Sakura
+jack_haru_okumura	1315	normal	attack	1	012	Haru Okumura
+jack_goro_akechi	1316	hope	support	1	012	Goro Akechi
+labo_1	1317	ace	attack	1	012	Toy-Con Robot
+labo_2	1318	hope	support	1	012	Toy-Con Car
+labo_3	1319	normal	support	1	012	Professor Riggs & Plaise & Lerna
+labo_4	1320	hope	support	1	012	Toy-Con VR Goggles
+peachette	1321	ace	attack	1	012	Peachette
+brave_11	1324	normal	fighter	1	012	Hero
+brave_3	1325	normal	fighter	1	012	Hero
+brave_4	1326	normal	fighter	1	012	Hero
+brave_8	1327	normal	fighter	1	012	Hero
+brave_group	1328	legend	support	1	012	Hero's Comrades
+brave_cetacea	1329	ace	support	1	012	Cetacea
+brave_slime	1330	normal	attack	1	012	Slime
+brave_king_slime	1331	ace	attack	1	012	King Slime
+brave_dracky	1332	normal	support	1	012	Dracky
+brave_golem	1333	hope	attack	1	012	Golem
+brave_baby_panther	1334	normal	attack	1	012	Great Sabrecub
+brave_killer_panther	1335	ace	attack	1	012	Great Sabrecat
+brave_liquid_metal	1336	hope	support	1	012	Liquid Metal Slime
+buddy	1337	normal	fighter	1	012	Banjo & Kazooie
+buddy_tooty	1338	hope	support	1	012	Tooty
+buddy_bottles	1339	hope	attack	1	012	Bottles
+buddy_mumbo_jumbo	1340	ace	attack	1	012	Mumbo Jumbo
+buddy_jinjo	1341	hope	attack	1	012	Jinjos
+buddy_jinjonator	1342	ace	attack	1	012	The Mighty Jinjonator
+buddy_jigsaw_piece	1343	normal	support	1	012	Jiggy
+buddy_gruntilda	1344	legend	support	1	012	Gruntilda
+buddy_buzzbomb	1345	normal	support	1	012	Buzzbomb
+brave_yocchi	1346	ace	support	1	012	Tockles
+dolly	1356	normal	fighter	1	012	Terry Bogard
+dolly_andy_bogard	1357	normal	support	1	012	Andy Bogard
+dolly_joe_higashi	1358	normal	attack	1	012	Joe Higashi
+dolly_kim_kaphwan	1359	normal	support	1	012	Kim Kaphwan
+dolly_geese_howard	1360	legend	support	1	012	Geese Howard
+dolly_ryo_sakazaki	1361	ace	attack	1	012	Ryo Sakazaki
+dolly_kyo_kusanagi	1362	ace	attack	1	012	Kyo Kusanagi
+dolly_iori_yagami	1363	ace	attack	1	012	Iori Yagami
+dolly_haohmaru	1364	ace	attack	1	012	Haohmaru
+dolly_nakoruru	1365	hope	support	1	012	Nakoruru
+dolly_athena_asamiya	1366	ace	support	1	012	Athena Asamiya
+dolly_ralf_and_clark	1367	hope	attack	1	012	Ralf & Clark
+master_1	1380	normal	fighter	1	012	Byleth
+master_2	1381	normal	fighter	1	012	Byleth
+master_edelgard_1	1382	hope	attack	1	012	Edelgard
+master_edelgard_2	1383	ace	attack	1	012	Edelgard - Five Years Later
+master_dimitri_1	1384	hope	attack	1	012	Dimitri
+master_dimitri_2	1385	ace	attack	1	012	Dimitri - Five Years Later
+master_claude_1	1386	hope	attack	1	012	Claude
+master_claude_2	1387	ace	attack	1	012	Claude - Five Years Later
+master_sothis	1388	legend	support	1	012	Sothis
+master_rhea	1389	ace	attack	1	012	Rhea
+master_seteth	1390	hope	support	1	012	Seteth
+master_dorothea	1391	normal	support	1	012	Dorothea
+master_ingrid	1392	normal	support	1	012	Ingrid
+master_hilda	1393	normal	support	1	012	Hilda
+tantan_minmin	1414	normal	fighter	1	012	Min Min
+tantan_mastermummy	1415	hope	attack	1	012	Master Mummy
+tantan_mechanica	1416	hope	support	1	012	Mechanica
+tantan_byte_barq	1417	normal	attack	1	012	Byte & Barq
+tantan_kidcobra	1418	ace	attack	1	012	Kid Cobra
+tantan_helix	1419	normal	support	1	012	Helix
+tantan_maxbrass	1420	legend	support	1	012	Max Brass
+pickel_steve	1428	normal	fighter	1	012	Steve
+pickel_alex	1429	normal	fighter	1	012	Alex
+pickel_zombie	1430	normal	attack	1	012	Zombie
+pickel_creeper	1431	hope	attack	1	012	Creeper
+pickel_skeleton	1432	hope	support	1	012	Skeleton
+pickel_slime	1433	hope	support	1	012	Slime
+pickel_enderman	1434	ace	attack	1	012	Enderman
+pickel_irongolem_villager	1435	ace	attack	1	012	Villager & Iron Golem
+pickel_ghast	1436	hope	support	1	012	Ghast
+pickel_piglin	1437	hope	support	1	012	Piglin
+pickel_enderdragon	1438	legend	support	1	012	Ender Dragon
+edge_sephiroth	1439	normal	fighter	1	012	Sephiroth
+edge_tifa	1440	ace	attack	1	012	Tifa
+edge_barret	1441	hope	attack	1	012	Barret
+edge_aerith	1442	ace	support	1	012	Aerith
+edge_red_xiii	1443	hope	attack	1	012	Red XIII
+edge_cid	1444	normal	attack	1	012	Cid
+edge_cait_sith	1445	normal	support	1	012	Cait Sith
+edge_yuffie	1446	hope	support	1	012	Yuffie
+edge_vincent	1447	hope	attack	1	012	Vincent
+edge_turks_rufus	1448	ace	support	1	012	The Turks & Rufus Shinra
+edge_bahamut_zero	1449	legend	support	1	012	Bahamut ZERO
+edge_chocobo_moogle	1450	normal	attack	1	012	Chocobo & Moogle
+edge_shiva	1451	ace	support	1	012	Shiva
+edge_ifrit	1452	ace	attack	1	012	Ifrit
+element_homura	1458	normal	fighter	1	012	Pyra
+element_hikari	1459	normal	fighter	1	012	Mythra
+element_rex_2	1460	legend	attack	1	012	Rex
+element_lora	1461	hope	support	1	012	Lora
+element_amalthus	1462	ace	support	1	012	Amalthus
+element_shin	1463	ace	attack	1	012	Jin
+element_metsu	1464	legend	attack	1	012	Malos
+element_puneuma	1465	legend	support	1	012	Pneuma
+sophia	1466	ace	attack	1	012	Sophia
+arthur	1467	ace	attack	1	012	Arthur
+demon_kazuya_mishima_00	1474	normal	fighter	1		Kazuya Mishima
+demon_kazuya_mishima	1475	normal	fighter	1	012	Kazuya Mishima
+demon_heihachi_mishima	1476	legend	attack	1	012	Heihachi Mishima
+demon_jin_kazama	1477	ace	attack	1	012	Jin Kazama
+demon_devil_jin	1478	legend	attack	1	012	Devil Jin
+demon_kuma_panda	1479	normal	support	1	012	Kuma & Panda
+demon_nina_williams	1480	hope	support	1	012	Nina Williams
+demon_king_armor_king	1481	hope	attack	1	012	King & Armor King
+demon_ling_xiaoyu	1482	hope	attack	1	012	Ling Xiaoyu
+demon_paul_law	1483	hope	attack	1	012	Paul Phoenix & Marshall Law
+demon_yoshimitsu	1484	hope	attack	1	012	Yoshimitsu
+demon_jack7	1485	normal	attack	1	012	Jack-7
+demon_asuka_kazama	1486	normal	support	1	012	Asuka Kazama
+razewing_ratha	1487	ace	attack	1	012	Razewing Ratha
+event_1093_1	1497	ace	attack	1	012	Samus
+event_1093_2	1498	ace	attack	1	012	E.M.M.I.
+trail_sora	1500	normal	fighter	1	012	Sora
+trail_sora_2	1501	normal	fighter	1	012	Sora
+trail_sora_ddd	1502	normal	fighter	1	012	Sora
+trail_sora_3	1503	normal	fighter	1	012	Sora
+trail_sora_timeless	1504	normal	fighter	1	012	Sora
+trail_riku	1505	ace	attack	1	012	Riku
+trail_kairi	1506	normal	support	1	012	Kairi
+trail_roxas	1507	legend	support	1	012	Roxas
+trail_axel	1508	hope	attack	1	012	Axel
+trail_xion	1509	hope	support	1	012	Xion
+trail_terra	1510	hope	attack	1	012	Terra
+trail_ventus	1511	hope	attack	1	012	Ventus
+trail_aqua	1512	ace	attack	1	012	Aqua

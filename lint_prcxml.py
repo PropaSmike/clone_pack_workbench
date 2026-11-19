@@ -276,7 +276,7 @@ def check_vl(relative, root, own_file=None):
     if own_file is None:
         return [("INFO", "%s: Dionysus leaves out %s" % (relative, listing(left_out)))]
     return [("WARN", "%s: Dionysus leaves out %s. Those reach the game only through your own %s, which "
-             "ARCropolis patches with this file; Save on the Workbench's Param files tab writes it"
+             "ARCropolis patches with this file; Save on the Workbench's Parameters > prcxml files tab writes it"
              % (relative, listing(left_out), own_file))]
 
 

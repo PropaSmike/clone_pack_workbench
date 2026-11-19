@@ -17,7 +17,8 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
-from . import (backups, emit, enemy_code, gimmicks, guide, hands, menu_presets, optimize, packs, prc,
+from . import (backups, board_art, emit, enemy_code, gimmicks, guide, hands, menu_presets, optimize, packs,
+               pictures, prc, spirit_import,
                prcxml_files, stickpad, theme, vtables)
 from .tables import Field, TableEditor
 from .catalog import (Catalog, OWNER_SURFACE, VL_SURFACE, is_float_field,
@@ -29,13 +30,13 @@ RDW_UPDATENOW = 0x100
 UNITS_PER_PAGE = 9
 WHEEL_CLASSES = ("Listbox", "Text", "Treeview")
 DETAIL_WIDTH = 300
-KINDS =(packs.FIGHTER, packs.ITEM, packs.STAGE, packs.MENU, packs.MII, packs.ENEMY)
+KINDS = (packs.FIGHTER, packs.ITEM, packs.STAGE, packs.MENU, packs.MII, packs.ENEMY, packs.SPIRIT)
 PARAM_TABLES = ("fighter_param", "param_motion", "common", "param_thrown", "vl.prc")
 ITEM_PRC_SURFACE = "param.prc"
 ITEM_PARAM_TABLES = ("item_common", "item_owner_param", ITEM_PRC_SURFACE)
 PREFILL_TYPES = ("f32", "float", "i32", "u32", "int", "bool", "i8", "u8", "i16", "u16")
 SURFACES = {packs.FIGHTER: PARAM_TABLES, packs.ITEM: ITEM_PARAM_TABLES, packs.STAGE: (), packs.MENU: (),
-            packs.MII: (), packs.ENEMY: ()}
+            packs.MII: (), packs.ENEMY: (), packs.SPIRIT: ()}
 ENEMY_FOLDERS = ("yellowdevil", "subetenoyaminoou", "flyingman", "metalface", "nabbit")
 ENEMY_STATE_KEYS = ("arrive_frame", "arrive_x", "arrive_y", "stay_seconds", "walk_speed")
 NO_ENEMY_PARAMS = (
@@ -57,9 +58,13 @@ NO_MII_PARAMS = (
     "A Mii pack has no parameters. mii.toml (Identity tab) lists its hats and outfits; each copies "
     "every value of its base row, and the head and per hair type columns change the rest."
 )
+NO_SPIRIT_PARAMS = (
+    "Spirits take no rules: their values are in the spirit/ prcxml files, on the prcxml files sub-tab."
+)
 MII_HEADS = ("", "normal", "hat", "face_only", "term")
 MII_FIGHTERS = ("miifighter", "miiswordsman", "miigunner")
 TRISTATE = ("", "true", "false")
+PRCXML_LABEL = "prcxml files"
 SPAWN_CONTAINERS = ("box", "barrel", "capsule", "carrierbox", "kusudama")
 LEVELS = ("ERROR", "WARN", "INFO")
 
@@ -208,21 +213,34 @@ class Workbench(ttk.Frame):
         self.split.add(self.tabs, weight=4)
         self.identity = IdentityPanel(self.tabs, self)
         self.files = FilesPanel(self.tabs, self)
-        self.params = ParamsPanel(self.tabs, self)
-        self.param_files = ParamFilesPanel(self.tabs, self)
+        self.param_tab = ttk.Frame(self.tabs)
+        self.param_tab.columnconfigure(0, weight=1)
+        self.param_tab.rowconfigure(0, weight=1)
+        self.param_tabs = ttk.Notebook(self.param_tab)
+        self.param_tabs.grid(row=0, column=0, sticky="nsew", padx=4, pady=(6, 4))
+        self.params = ParamsPanel(self.param_tabs, self)
+        self.param_files = ParamFilesPanel(self.param_tabs, self)
+        self.param_tabs.add(self.params, text=self.rules_label(packs.FIGHTER))
+        self.param_tabs.add(self.param_files, text=PRCXML_LABEL)
         self.lint = LintPanel(self.tabs, self)
         self.optimize = OptimizePanel(self.tabs, self)
         self.vtables = VtablePanel(self.tabs, self)
         self.rust = RustPanel(self.tabs, self)
         self.help_tab = ttk.Frame(self.tabs)
         for panel, label in ((self.identity, "Identity"), (self.files, "Files"),
-                             (self.params, "Parameters"), (self.param_files, "Param files"),
-                             (self.lint, "Lint"),
+                             (self.param_tab, "Parameters"), (self.lint, "Lint"),
                              (self.optimize, "Optimize"), (self.vtables, "Vtables"),
                              (self.rust, "Rust"), (self.help_tab, "Help")):
             self.tabs.add(panel, text=label)
         self.last_tab = str(self.identity)
         self.tabs.bind("<<NotebookTabChanged>>", self.tab_changed)
+
+    @staticmethod
+    def rules_label(kind: str) -> str:
+        """The Parameters sub-tab whose values reach the game through the plugin or the manifest."""
+        if kind == packs.SPIRIT:
+            return "Rust"
+        return "Rust / %s" % (packs.manifest_name(kind) or "manifest")
 
     def tab_changed(self, _event=None) -> None:
         """The Help tab is a button: it opens the guide and leaves the tab you were on."""
@@ -352,6 +370,10 @@ class Workbench(ttk.Frame):
                     declared = [packs.read_menu_manifest(folder)]
                 elif kind == packs.MII:
                     declared = [packs.read_mii_manifest(folder)]
+                elif kind == packs.SPIRIT:
+                    declared = [packs.read_spirit_manifest(folder)]
+                    for problem in declared[0].pop("prcxml_problems", []):
+                        self.log("    spirit prcxml: %s" % problem)
                 else:
                     declared = packs.read_manifests(folder / manifest)
                 self.merge_parts(kind, declared)
@@ -486,6 +508,9 @@ class Workbench(ttk.Frame):
         if kind == packs.MII:
             self.log("a pack has one mii.toml: add hats and outfits to it as rows")
             return
+        if kind == packs.SPIRIT:
+            self.log("a pack keeps every spirit and board in its spirit/ prcxml files: add them on the page")
+            return
         self.identity.collect()
         self.sections[kind].append({})
         self.index[kind] = len(self.sections[kind]) - 1
@@ -523,6 +548,7 @@ class Workbench(ttk.Frame):
         self.identity.load()
         self.params.show(self.kind.get())
         self.params.load()
+        self.param_tabs.tab(self.params, text=self.rules_label(self.kind.get()))
         self.param_files.load()
         self.vtables.load()
         self.rust.refresh()
@@ -544,7 +570,7 @@ class Workbench(ttk.Frame):
     def vanilla_names(self, kind: str) -> list[str]:
         return {packs.FIGHTER: self.catalog.fighter_dirs, packs.ITEM: self.catalog.item_dirs,
                 packs.STAGE: self.catalog.stage_places, packs.MENU: list, packs.MII: list,
-                packs.ENEMY: lambda: list(ENEMY_FOLDERS)}[kind]()
+                packs.ENEMY: lambda: list(ENEMY_FOLDERS), packs.SPIRIT: list}[kind]()
 
     def rename_part(self, kind: str, old: str, new: str, confirm=None) -> bool:
         """Rename what the pack ships for one part, then read the pack again.
@@ -677,7 +703,7 @@ class Workbench(ttk.Frame):
         keep = {}
         for kind, parts in self.sections.items():
             for section in parts:
-                if kind == packs.MII:
+                if kind in (packs.MII, packs.SPIRIT):
                     continue
                 if kind == packs.MENU:
                     if section.get("luac") or section.get("lua_folder"):
@@ -1061,6 +1087,7 @@ class IdentityPanel(ttk.Frame):
         self._build_menu()
         self._build_mii()
         self._build_enemy()
+        self._build_spirit()
         for kind, frame in self.frames.items():
             wrap_within(frame, self.fields[kind].hints)
         self.show(packs.FIGHTER)
@@ -2271,6 +2298,423 @@ class IdentityPanel(ttk.Frame):
                                            if written else "already lists every part's folders"))
         self.app.files.refresh()
 
+    def _build_spirit(self) -> None:
+        """The pack's spirits and DLC spirit boards, kept in its spirit/ prcxml files."""
+        fields = self._frame(packs.SPIRIT)
+        frame = self.frames[packs.SPIRIT]
+        self.spirit_vars = {key: tk.StringVar() for key in
+                            ("id", "base", "name", "board", "board_base", "board_name", "board_spirits")}
+        spirits = ttk.LabelFrame(frame, text="Spirits", padding=6)
+        grid = ttk.Frame(spirits)
+        grid.grid(row=0, column=0, sticky="w")
+        self.spirit_base_box = self._spirit_inputs(grid, (("Id", "id", 20, False), ("Base spirit", "base", 22, True),
+                                                          ("Name", "name", 24, False)))
+        self._spirit_buttons(spirits, 1, (("Add a spirit", self.add_spirit), ("Remove", self.remove_spirit),
+                                          ("Set name", self.set_spirit_name),
+                                          ("Copy pictures", self.copy_spirit_pictures),
+                                          ("Import from Spirit Board", self.import_spirit_board)))
+        self.spirit_list = tk.Listbox(spirits, height=5, exportselection=False)
+        self.spirit_list.grid(row=2, column=0, sticky="ew", pady=(6, 0))
+        self.spirit_list.bind("<<ListboxSelect>>", self.spirit_picked)
+        spirit_hint = ttk.Label(
+            spirits, style="Hint.TLabel", justify="left",
+            text="Add a spirit writes a copy of the base's rows (its row, battle and fighters, art placement) "
+                 "into the pack's spirit/ prcxml files under the new id; change any value with Edit their values "
+                 "or in any text editor. The name goes to ui/message/msg_spirits.xmsbt as spi_<id>. Pictures are "
+                 "ui/replace/spirits/spirits_N/spirits_N_<id>.bntx for sizes 0, 1 and 2: Copy pictures puts "
+                 "each .bntx in its place. Import from Spirit Board adds the spirits of its export. Up to 487 "
+                 "added spirits for every pack together")
+        spirit_hint.grid(row=3, column=0, sticky="w", pady=(4, 0))
+        spirits.columnconfigure(0, weight=1)
+        self._place(frame, fields, spirits)
+        boards = ttk.LabelFrame(frame, text="DLC spirit boards", padding=6)
+        grid = ttk.Frame(boards)
+        grid.grid(row=0, column=0, sticky="ew")
+        self.board_base_box = self._spirit_inputs(grid, (("Id", "board", 20, False),
+                                                         ("Base board", "board_base", 14, True),
+                                                         ("Name", "board_name", 24, False)))
+        ttk.Label(grid, text="Spirits").grid(row=1, column=0, sticky="w", pady=2)
+        ttk.Entry(grid, textvariable=self.spirit_vars["board_spirits"], width=60).grid(
+            row=1, column=1, columnspan=5, sticky="ew", padx=(4, 0), pady=2)
+        self._spirit_buttons(boards, 1, (("Add a board", self.add_board), ("Remove", self.remove_board),
+                                         ("Set name and spirits", self.set_board),
+                                         ("Make board art from pictures", self.make_board_art),
+                                         ("Make a background from a picture", self.make_board_background)))
+        self.board_list = tk.Listbox(boards, height=3, exportselection=False)
+        self.board_list.grid(row=2, column=0, sticky="ew", pady=(6, 0))
+        self.board_list.bind("<<ListboxSelect>>", self.board_picked)
+        board_hint = ttk.Label(
+            boards, style="Hint.TLabel", justify="left",
+            text="A board copies its base board's row: prize, music, background number, under the new id. "
+                 "Spirits takes ids, the game's or the pack's, separated by commas. Make board art writes its button "
+                 "banner (462 x 92) and card (460 x 796) from two pictures, shown in place of its name, so put "
+                 "its title in them; Make a background gives it its own, "
+                 "at a number from 11 no installed pack uses. With the Dionysus Modes pack the boards show on "
+                 "pages of the DLC Spirits popup (R and L). Up to 21 boards for every pack together")
+        board_hint.grid(row=3, column=0, sticky="w", pady=(4, 0))
+        boards.columnconfigure(0, weight=1)
+        self._place(frame, fields, boards)
+        fields.hints += [spirit_hint, board_hint]
+        fields.buttons((("Edit their values", self.edit_spirit_values),))
+
+    def _spirit_inputs(self, grid: ttk.Frame, inputs) -> ttk.Combobox | None:
+        box = None
+        for column, (label, key, width, choice) in enumerate(inputs):
+            ttk.Label(grid, text=label).grid(row=0, column=column * 2, sticky="w", pady=2)
+            if choice:
+                box = ttk.Combobox(grid, textvariable=self.spirit_vars[key], width=width)
+                widget = box
+            else:
+                widget = ttk.Entry(grid, textvariable=self.spirit_vars[key], width=width)
+            widget.grid(row=0, column=column * 2 + 1, sticky="w", padx=(4, 10), pady=2)
+        return box
+
+    @staticmethod
+    def _spirit_buttons(parent: ttk.Frame, row: int, pairs) -> None:
+        frame = ttk.Frame(parent)
+        frame.grid(row=row, column=0, sticky="w", pady=(4, 0))
+        for label, command in pairs:
+            ttk.Button(frame, text=label, command=command).pack(side="left", padx=(0, 6))
+
+    def spirit_tables(self) -> dict:
+        """The pack's spirit and board rows as its files hold them now."""
+        if self.app.folder is None:
+            return {}
+        part = packs.read_spirit_manifest(self.app.folder)
+        for problem in part.pop("prcxml_problems", []):
+            self.app.log("spirit prcxml: %s" % problem)
+        state = self.app.part(packs.SPIRIT)
+        if part["tables"]:
+            state["tables"] = part["tables"]
+        else:
+            state.pop("tables", None)
+        return part["tables"]
+
+    def save_spirits(self, tables: dict, done: str) -> None:
+        written, named = packs.write_spirit_prcxml(self.app.folder, {"tables": tables})
+        self.app.log(done)
+        files = [name for name in written if name != packs.SPIRIT_MANIFEST]
+        if files:
+            self.app.log("wrote %s" % ", ".join(files))
+        if packs.SPIRIT_MANIFEST in written:
+            self.app.log("its rows came out of spirit.toml, which now holds none")
+        if named:
+            self.app.log("msg_spirits.xmsbt: %d name(s) written" % named)
+        self.app.present = packs.detect_kinds(self.app.folder)
+        self.app.mark_present()
+        self.app.log_kept()
+        self.app.files.refresh()
+        self.show_spirits()
+
+    def show_spirits(self) -> None:
+        tables = self.spirit_tables()
+        self.spirit_list.delete(0, "end")
+        for row in tables.get("spirit") or []:
+            self.spirit_list.insert("end", self.describe_spirit(row))
+        self.board_list.delete(0, "end")
+        for row in tables.get("board") or []:
+            self.board_list.insert("end", self.describe_board(row))
+        self.refresh_spirit_choices()
+
+    def describe_spirit(self, row: dict) -> str:
+        spirit = gimmicks.display(row.get("id", ""))
+        text = "%s from %s" % (spirit, gimmicks.display(row.get("base", "")))
+        if row.get("name"):
+            text += ', named "%s"' % gimmicks.display(row["name"])
+        if row.get("fighters"):
+            text += ", %s fighter(s)" % gimmicks.display(row["fighters"])
+        if self.app.folder is not None and spirit:
+            sizes = packs.spirit_pictures(self.app.folder, spirit)
+            text += (", pictures %s" % " ".join(sizes)) if sizes else ", no pictures yet"
+        return text
+
+    @staticmethod
+    def describe_board(row: dict) -> str:
+        spirits = [item for item in gimmicks.display(row.get("spirits", "")).split(",") if item.strip()]
+        text = "%s from %s, %d spirit(s)" % (gimmicks.display(row.get("id", "")),
+                                             gimmicks.display(row.get("base", "")), len(spirits))
+        if row.get("name"):
+            text += ', named "%s"' % gimmicks.display(row["name"])
+        number = gimmicks.display(row.get("layout_no", ""))
+        if number.isdigit() and int(number) >= board_art.GAME_BACKGROUNDS:
+            text += ", own background %s" % number
+        if row.get("art"):
+            text += ", own art"
+        return text
+
+    def refresh_spirit_choices(self) -> None:
+        """The game's spirits and the pack's own as bases, the game's boards as board bases."""
+        tool = import_tool("lint_spirit_pack")
+        if tool is None or not getattr(self, "spirit_base_box", None):
+            return
+        own = [gimmicks.display(row["id"]) for row in (self.app.part(packs.SPIRIT).get("tables") or {}).get("spirit")
+               or [] if row.get("id")]
+        self.spirit_base_box.configure(values=sorted(set(tool.game_spirits() or ()) | set(own)))
+        self.board_base_box.configure(values=list(tool.GAME_BOARDS))
+
+    def picked_row(self, listbox: tk.Listbox, table: str) -> dict | None:
+        selection = listbox.curselection()
+        rows = (self.app.part(packs.SPIRIT).get("tables") or {}).get(table) or []
+        return rows[selection[0]] if selection and selection[0] < len(rows) else None
+
+    def spirit_picked(self, _event=None) -> None:
+        row = self.picked_row(self.spirit_list, "spirit")
+        if row is not None:
+            for key in ("id", "base", "name"):
+                self.spirit_vars[key].set(gimmicks.display(row.get(key, "")))
+
+    def board_picked(self, _event=None) -> None:
+        row = self.picked_row(self.board_list, "board")
+        if row is not None:
+            for key, field in (("board", "id"), ("board_base", "base"), ("board_name", "name"),
+                               ("board_spirits", "spirits")):
+                self.spirit_vars[key].set(gimmicks.display(row.get(field, "")))
+
+    def typed_id(self, key: str, what: str) -> str:
+        tool = import_tool("lint_spirit_pack")
+        value = self.spirit_vars[key].get().strip().lower()
+        if tool is None or not tool.ID_RE.match(value):
+            messagebox.showinfo(TITLE, "Type the %s's id: lower case letters, digits and _, up to 48." % what)
+            return ""
+        return value
+
+    def add_spirit(self) -> None:
+        """A copy of the base spirit's rows under the new id."""
+        if not self.app.require_folder():
+            return
+        tool = import_tool("lint_spirit_pack")
+        spirit = self.typed_id("id", "spirit")
+        if not spirit or tool is None:
+            return
+        base = gimmicks.display(self.spirit_vars["base"].get())
+        tables = self.spirit_tables()
+        rows = tables.setdefault("spirit", [])
+        if spirit in (tool.game_spirits() or {}) or any(gimmicks.display(row["id"]) == spirit for row in rows):
+            messagebox.showinfo(TITLE, "A spirit is already called %s." % spirit)
+            return
+        own = next((row for row in rows if gimmicks.display(row.get("id", "")) == base), None)
+        if own is not None:
+            values = {key: value for key, value in own.items() if key not in ("id", "base", "name")}
+        else:
+            values = tool.base_values(base)
+            if values is None:
+                messagebox.showinfo(TITLE, "Pick the base spirit: one of the game's, or one of the pack's.")
+                return
+        row = {"id": gimmicks.toml_string(spirit), "base": gimmicks.toml_string(base)}
+        row.update({key: value for key, value in values.items() if value != ""})
+        name = self.spirit_vars["name"].get().strip()
+        if name:
+            row["name"] = gimmicks.toml_string(name)
+        rows.append(row)
+        self.save_spirits(tables, "added %s, a copy of %s; change its values with Edit their values" % (spirit, base))
+
+    def remove_spirit(self) -> None:
+        if not self.app.require_folder():
+            return
+        spirit = gimmicks.display(self.spirit_vars["id"].get())
+        tables = self.spirit_tables()
+        rows = tables.get("spirit") or []
+        kept = [row for row in rows if gimmicks.display(row.get("id", "")) != spirit]
+        if len(kept) == len(rows):
+            messagebox.showinfo(TITLE, "Click a spirit in the list first.")
+            return
+        tables["spirit"] = kept
+        self.save_spirits(tables, "removed %s; its pictures and name stay in the pack" % spirit)
+
+    def set_spirit_name(self) -> None:
+        if not self.app.require_folder():
+            return
+        spirit = gimmicks.display(self.spirit_vars["id"].get())
+        name = self.spirit_vars["name"].get().strip()
+        if not spirit or not name:
+            messagebox.showinfo(TITLE, "Click a spirit in the list and type its name first.")
+            return
+        changed = packs.write_messages(self.app.folder, packs.SPIRIT_MESSAGES, {"spi_" + spirit: name})
+        self.app.log("msg_spirits.xmsbt: %s" % ("spi_%s is %s" % (spirit, name) if changed else "already says that"))
+        self.app.log_kept()
+        self.show_spirits()
+
+    def edit_spirit_values(self) -> None:
+        self.app.tabs.select(self.app.param_tab)
+        self.app.param_tabs.select(self.app.param_files)
+
+    def import_spirit_board(self, folder=None) -> None:
+        """The new spirits of a Spirit Board export, each a full copy of its closest game spirit with the
+        export's values, with their names and pictures."""
+        if not self.app.require_folder():
+            return
+        folder = folder or filedialog.askdirectory(title="Spirit Board's ArcOutput folder (or the app's own folder)")
+        if not folder:
+            return
+        tool = import_tool("lint_spirit_pack")
+        if tool is None:
+            self.app.log("lint_spirit_pack.py is not beside this window, so nothing can be imported")
+            return
+        try:
+            result = spirit_import.import_export(folder, tool)
+        except (OSError, ValueError) as error:
+            self.app.log("nothing imported: %s" % error)
+            return
+        tables = self.spirit_tables()
+        rows = tables.setdefault("spirit", [])
+        for found in result.rows:
+            spirit, base = gimmicks.display(found["id"]), gimmicks.display(found["base"])
+            row = {"id": found["id"], "base": found["base"]}
+            row.update({key: value for key, value in (tool.base_values(base) or {}).items() if value != ""})
+            row.update({key: value for key, value in found.items() if key not in ("id", "base")})
+            if spirit in result.names:
+                row["name"] = gimmicks.toml_string(result.names[spirit])
+            rows[:] = [known for known in rows if gimmicks.display(known.get("id", "")) != spirit] + [row]
+            self.app.log("imported %s on base %s, %d change(s)" % (spirit, base, len(found) - 2))
+        for path, size, patch_tree, spirit in result.pictures:
+            tree = packs.SPIRIT_TREES[1 if patch_tree else 0]
+            target = self.app.folder.joinpath(*tree.split("/"), "spirits_%s" % size,
+                                              "spirits_%s_%s.bntx" % (size, spirit))
+            target.parent.mkdir(parents=True, exist_ok=True)
+            backups.keep(target)
+            target.write_bytes(Path(path).read_bytes())
+        if result.pictures:
+            self.app.log("copied %d picture(s)" % len(result.pictures))
+        if result.changed:
+            self.app.log("not imported: the export also changes %s, and Dionysus adds spirits without changing "
+                         "the game's" % ", ".join(result.changed))
+        for name, reason in result.skipped:
+            self.app.log("not imported: %s, %s" % (name, reason))
+        if not result.rows:
+            self.app.log("the export adds no spirit")
+            return
+        self.save_spirits(tables, "imported %d spirit(s) from %s" % (len(result.rows), folder))
+
+    def add_board(self) -> None:
+        """A copy of the base board's row under the new id."""
+        if not self.app.require_folder():
+            return
+        tool = import_tool("lint_spirit_pack")
+        board = self.typed_id("board", "board")
+        if not board or tool is None:
+            return
+        base = gimmicks.display(self.spirit_vars["board_base"].get())
+        values = tool.board_values(base)
+        if values is None:
+            messagebox.showinfo(TITLE, "Pick the base board: %s." % ", ".join(tool.GAME_BOARDS))
+            return
+        tables = self.spirit_tables()
+        rows = tables.setdefault("board", [])
+        if board in tool.GAME_BOARDS or any(gimmicks.display(row["id"]) == board for row in rows):
+            messagebox.showinfo(TITLE, "A board is already called %s." % board)
+            return
+        row = {"id": gimmicks.toml_string(board), "base": gimmicks.toml_string(base)}
+        row.update({key: value for key, value in values.items() if value != ""})
+        self.board_texts(row)
+        rows.append(row)
+        self.save_spirits(tables, "added board %s, a copy of %s" % (board, base))
+
+    def board_texts(self, row: dict) -> None:
+        name = self.spirit_vars["board_name"].get().strip()
+        if name:
+            row["name"] = gimmicks.toml_string(name)
+        spirits = [item.strip() for item in self.spirit_vars["board_spirits"].get().split(",") if item.strip()]
+        if spirits:
+            row["spirits"] = "[%s]" % ", ".join('"%s"' % spirit for spirit in spirits)
+
+    def board_row(self, tables: dict) -> dict | None:
+        board = gimmicks.display(self.spirit_vars["board"].get())
+        row = next((row for row in tables.get("board") or [] if gimmicks.display(row.get("id", "")) == board), None)
+        if row is None:
+            messagebox.showinfo(TITLE, "Click a board in the list first.")
+        return row
+
+    def remove_board(self) -> None:
+        if not self.app.require_folder():
+            return
+        tables = self.spirit_tables()
+        row = self.board_row(tables)
+        if row is not None:
+            tables["board"].remove(row)
+            self.save_spirits(tables, "removed board %s" % gimmicks.display(row["id"]))
+
+    def set_board(self) -> None:
+        if not self.app.require_folder():
+            return
+        tables = self.spirit_tables()
+        row = self.board_row(tables)
+        if row is not None:
+            self.board_texts(row)
+            self.save_spirits(tables, "board %s: name and spirits set" % gimmicks.display(row["id"]))
+
+    def pick_picture(self, title: str):
+        return filedialog.askopenfilename(
+            title=title, filetypes=(("Pictures", "*.png *.jpg *.jpeg *.webp *.bmp"), ("All files", "*.*"))) or None
+
+    def make_board_art(self, banner=None, card=None) -> None:
+        """The board's button banner and card, from two pictures, into an art layout its row names."""
+        if not self.app.require_folder():
+            return
+        tables = self.spirit_tables()
+        row = self.board_row(tables)
+        if row is None:
+            return
+        board = gimmicks.display(row["id"])
+        banner = banner or self.pick_picture("Button banner for %s (shown 462 x 92)" % board)
+        card = card or (banner and self.pick_picture("Card for %s (shown 460 x 796)" % board))
+        if not banner or not card:
+            return
+        try:
+            relative = board_art.make_art(self.app.folder, board, banner, card)
+        except (OSError, pictures.PictureError) as error:
+            self.app.log("board art not written: %s" % error)
+            return
+        row["art"] = gimmicks.toml_string(relative)
+        self.save_spirits(tables, "board %s: art in %s" % (board, relative))
+
+    def make_board_background(self, picture=None) -> None:
+        """The board's own background, from one picture, at a number no installed pack uses."""
+        if not self.app.require_folder():
+            return
+        tables = self.spirit_tables()
+        row = self.board_row(tables)
+        if row is None:
+            return
+        board = gimmicks.display(row["id"])
+        picture = picture or self.pick_picture("Background for %s (shown over the whole screen)" % board)
+        if not picture:
+            return
+        typed = gimmicks.display(row.get("layout_no", ""))
+        try:
+            number = board_art.make_background(self.app.folder, picture, int(typed) if typed.isdigit() else None)
+        except (OSError, pictures.PictureError) as error:
+            self.app.log("board background not written: %s" % error)
+            return
+        row["layout_no"] = str(number)
+        self.save_spirits(tables, "board %s: background %d in %s" % (board, number, board_art.background_path(number)))
+
+    def copy_spirit_pictures(self, files=None) -> None:
+        """Copy .bntx pictures to the names the spirit in the form takes, each to its size."""
+        if not self.app.require_folder():
+            return
+        spirit = gimmicks.display(self.spirit_vars["id"].get())
+        if not spirit:
+            messagebox.showinfo(TITLE, "Click a spirit in the list, or type its id, first.")
+            return
+        if files is None:
+            files = filedialog.askopenfilenames(
+                title="Pictures for %s (.bntx: spirits_0, spirits_1, spirits_2)" % spirit,
+                filetypes=(("Spirit pictures", "*.bntx"), ("All files", "*.*")))
+        if not files:
+            return
+        row = next((row for row in (self.app.part(packs.SPIRIT).get("tables") or {}).get("spirit") or []
+                    if gimmicks.display(row.get("id", "")) == spirit), {})
+        patch_tree = gimmicks.display(row.get("is_dlc", "")) == "true"
+        written, unknown = packs.copy_spirit_pictures(self.app.folder, spirit, files, patch_tree)
+        for path in written:
+            self.app.log("copied %s" % path.relative_to(self.app.folder).as_posix())
+        for path in unknown:
+            self.app.log("%s: neither its name nor its texture says its size (spirits_0_ to spirits_3_); "
+                         "not copied" % Path(path).name)
+        self.app.log_kept()
+        self.app.files.refresh()
+        self.show_spirits()
+
     def _build_menu_presets(self, frame: ttk.Frame, fields: Fields) -> None:
         """A ready-made mode: its [[mode]] row and its Lua, written in one go."""
         box = ttk.LabelFrame(frame, text="Ready-made mode", padding=6)
@@ -2422,6 +2866,10 @@ class IdentityPanel(ttk.Frame):
             return
         if kind == packs.MII:
             self.app.log("a hat's or outfit's id is its folder name; rename the folders and the row")
+            return
+        if kind == packs.SPIRIT:
+            self.app.log("a spirit's id is its pictures' and name's; change the row, then copy its pictures "
+                         "and write spirit.toml again")
             return
         if kind == packs.ENEMY:
             self.app.log("an enemy's name is its folder name under enemy/ and effect/enemy/; rename them "
@@ -2635,6 +3083,7 @@ class IdentityPanel(ttk.Frame):
         for table, editor in self.mii_editors.items():
             editor.set_rows((mii.get("tables") or {}).get(table) or [])
         self.refresh_mii_choices()
+        self.show_spirits()
         self.item_hand.load()
 
     def collect(self, quiet: bool = False) -> dict:
@@ -3360,7 +3809,7 @@ class ParamsPanel(ttk.Frame):
             self.field_list.clear()
             self.rule_list.clear()
             self.note.configure(text={packs.MENU: NO_MENU_PARAMS, packs.MII: NO_MII_PARAMS,
-                                      packs.ENEMY: NO_ENEMY_PARAMS}.get(
+                                      packs.ENEMY: NO_ENEMY_PARAMS, packs.SPIRIT: NO_SPIRIT_PARAMS}.get(
                 kind, NO_STAGE_PARAMS))
             self.enable(False)
             return
@@ -3965,7 +4414,7 @@ class ParamFilesPanel(ttk.Frame):
     def source_of(self, target, names):
         """(the pack's own prc a file starts from or None, how the list shows where it starts)."""
         if not target.source:
-            return None, "nothing: keys of your own"
+            return None, "nothing: keys of your own" if target.own_keys else "your pack's rows"
         if names is None:
             return None, "name the part first"
         if self.app.folder is not None:
@@ -4087,7 +4536,10 @@ class ParamFilesPanel(ttk.Frame):
         pack_file = None
         if path is not None and path.is_file():
             try:
-                pack_file = prcxml_files.parse_prcxml(path.read_text(encoding="utf-8-sig"))
+                text = path.read_text(encoding="utf-8-sig")
+                pack_file = prcxml_files.parse_prcxml(text)
+                for hashed, name in prcxml_files.text_names(text).items():
+                    self.labels().setdefault(hashed, name)
             except (OSError, ValueError) as error:
                 notes.append("Your %s cannot be read (%s); fix it by hand, the editor leaves it alone."
                              % (path.name, error))
@@ -4594,6 +5046,8 @@ class LintPanel(ttk.Frame):
             wanted.append(("lint_mii_pack", False))
         if packs.ENEMY in present:
             wanted.append(("lint_enemy_pack", False))
+        if packs.SPIRIT in present or (self.app.folder / packs.SPIRIT_MANIFEST).is_file():
+            wanted.append(("lint_spirit_pack", False))
         index = str(self.app.catalog.arc_index)
         self.findings = []
         for module_name, is_stage in wanted:
@@ -5026,6 +5480,10 @@ class RustPanel(ttk.Frame):
         if packs.MII in parts:
             return ("Mii hats and outfits need no code: mii.toml and config.json are enough. The engine "
                     "adds their rows when the game loads its Mii tables.\n")
+        if packs.SPIRIT in parts:
+            return ("Spirits and spirit boards need no code: the spirit/ prcxml files, the pictures and "
+                    "msg_spirits.xmsbt are enough. The engine adds their rows when the game loads its "
+                    "spirit tables.\n")
         return "Nothing to emit yet.\n"
 
     def refresh(self) -> None:

@@ -17,7 +17,7 @@ README_NAMES = ("README.md", "clone_pack_tools_README.md")
 INLINE = re.compile(r"(`[^`]+`|\*\*[^*]+?\*\*|\[[^\]]+\]\([^)\s]+\))")
 LINK = re.compile(r"^\[([^\]]+)\]\(([^)\s]+)\)$")
 BULLET = re.compile(r"^[*-] ")
-HEADING = re.compile(r"^(#{1,3}) +(.*?)\s*#*$")
+HEADING = re.compile(r"^(#{1,4}) +(.*?)\s*#*$")
 TABLE_RULE = re.compile(r"^\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?$")
 
 

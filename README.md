@@ -1,7 +1,7 @@
 # Clone Pack Tools
 
 Tools for building a Dionysus pack: fighters, items, stages, menus, Mii
-hats and outfits, and enemies.
+hats and outfits, enemies, and spirits with their DLC spirit boards.
 
 * **Clone Pack Workbench**, a window that does all of it.
 * `make_clone_pack.py` writes the `config.json` for a fighter or item clone.
@@ -10,6 +10,7 @@ hats and outfits, and enemies.
 * `lint_menu_pack.py` checks a menu pack against every pack installed beside it.
 * `lint_mii_pack.py` checks a Mii parts pack and writes its `config.json`.
 * `lint_enemy_pack.py` checks an enemy pack and writes its `config.json`.
+* `lint_spirit_pack.py` checks a spirit pack's `spirit/` prcxml files (spirits and boards), pictures and names.
 
 Needs Python 3.8 or newer. Works from wherever you unzip it.
 
@@ -21,7 +22,7 @@ is written until you press a button, and every button prints the command it
 ran. The **Help** tab (or F1) opens this guide.
 
 - **Working on** picks the kind you are editing: fighter, item, stage, menu,
-  Mii or enemy.
+  Mii, enemy or spirit.
   A `*` marks the kinds already on disk.
 - **Part** picks which one, since a pack may hold several of a kind. **New
   part** starts another; **Remove part** forgets one without touching its
@@ -51,7 +52,8 @@ calls `register`. A pack with no plugin registers from `fighter.toml`,
 same keys; if a pack has both, the engine reads the file first and the
 manifest returns that kind. A menu pack registers from `menu.toml` alone; its
 plugin, when it has one, answers its Lua and sets battles up. A Mii pack is
-`mii.toml` and its files, with no plugin.
+`mii.toml` and its files, with no plugin; so is a spirit pack, with its
+`spirit/` prcxml files.
 
 A pack made from a one-slot mod keeps its plugin: tick **Plugin keeps its CSK
 and ParamConfig code**. Then:
@@ -210,6 +212,47 @@ For Mii hats and outfits:
 - **Write mii.toml** rewrites them. **Write folders to config.json** lists
   each part's folders and files from what the pack ships.
 
+For spirits and DLC spirit boards, kept in the pack's four `spirit/` prcxml
+files:
+
+- **Spirits** lists the pack's spirits. Type an **Id**, pick a **Base
+  spirit** (the game's or one of the pack's) and a **Name**, then **Add a
+  spirit**: every row of the base (its row, its battle and fighters, its art
+  placement) is copied into the files under the new id, ready to change.
+  **Remove** takes the clicked spirit out; its pictures and name stay.
+  **Set name** writes the name to `ui/message/msg_spirits.xmsbt` as
+  `spi_<id>`, beside the entries already there.
+- **Copy pictures** copies `.bntx` files to
+  `ui/replace/spirits/spirits_N/spirits_N_<id>.bntx`, each by the size its
+  file or texture name says (`spirits_0_` to `spirits_3_`). The list shows the
+  sizes each spirit has.
+- **Import from Spirit Board** reads the export of
+  [Spirit Board](https://gamebanana.com/tools/9621), made by Tougon and redistributed by Hinata (its
+  `ArcOutput` folder, or the app's own folder). Every spirit the game does not
+  have becomes a copy of the game spirit it is closest to with the export's
+  values on top, with its name and pictures. The pack then works beside every
+  other spirit pack, where the export's own tables replace the game's whole.
+  Changes the export makes to the game's own spirits are listed, not
+  imported: Dionysus adds spirits and changes none of the game's.
+- **DLC spirit boards** lists the pack's boards. **Add a board** copies the
+  base board's row (prize, music, background number) under the new id, with
+  the **Name** and **Spirits** typed (ids, the game's or this pack's,
+  separated by commas); **Set name and spirits** changes the clicked board's.
+- **Make board art from pictures** asks for a button banner and a card picture
+  and writes `ui/layout/menu/dionysus_boards/spb_<id>/layout.arc` (banner 462 x
+  92, card 460 x 796, each cropped to its shape), then sets the board's `art`.
+  The pictures show in place of the board's name, so put its title in them.
+- **Make a background from a picture** writes the board's own background
+  layout at a number from 11 that neither this pack nor a pack beside it
+  ships, then sets its `layout_no`.
+- Pictures are PNG; with Pillow installed (`pip install pillow`) any picture
+  it reads, and faster.
+- **Edit their values** opens **Parameters > prcxml files**, where every value
+  of the four files is changed.
+- A pack made with an older Workbench keeps its `spirit.toml` rows until the
+  page first saves: they then move into the prcxml files, and `spirit.toml`
+  keeps its comments only.
+
 **Rename files** changes a part's name everywhere the pack carries it: type
 the new name, click the button, check the two names.
 
@@ -252,6 +295,12 @@ What the folder ships against what `config.json` declares.
 
 ### Parameters
 
+Two sub-tabs: **Rust / fighter.toml** (`item.toml` for an item) writes rules
+the engine applies; **prcxml files** writes the files ARCropolis patches, and
+a spirit pack's `spirit/` files.
+
+#### Rust / fighter.toml
+
 Pick a table, click a field, type a value, Add. Which syntax each table takes:
 
 | Table | Syntax |
@@ -264,7 +313,7 @@ Pick a table, click a field, type a value, Add. Which syntax each table takes:
 Lists inside `vl.prc` (`hit_data`, ...) are not rules: ship your own
 `vl.prc` under every costume.
 
-### Param files
+#### prcxml files
 
 The prcxml files the part can ship, each starting as a copy of the game's own
 values (13.0.5). Those come with the Workbench, in `clone_pack_gui/data/params/`.
@@ -287,10 +336,13 @@ values (13.0.5). Those come with the Workbench, in `clone_pack_gui/data/params/`
   ARCropolis patches that copy with your prcxml. The base keeps its own file.
 - `vl.prc` and the item, enemy and stage params of their own take keys of your
   own: name one (`field` or `group.field`), pick its type, **Add**.
+- A spirit pack lists its four `spirit/` files, holding the rows the Identity
+  tab added. Every value can be changed; **Save** writes the whole file.
 
 ### Lint
 
-Runs the checker and lists what it found.
+Runs the checker and lists what it found. A spirit pack is also checked by
+`lint_spirit_pack.py`.
 
 ### Optimize
 
@@ -543,6 +595,26 @@ Every key is in the engine's `docs/wiki/MII_PARTS.md`.
 | `face_only` | face only, no hair |
 | `term` | none: the hat is the whole head |
 
+## Spirit packs
+
+A spirit pack adds spirits and DLC spirit boards; it replaces none. Every key
+is in the engine's `docs/wiki/SPIRITS.md`.
+
+| part | files |
+| --- | --- |
+| spirit | a row in `spirit/ui_spirit_db.prcxml`, its battle and fighters in `spirit/ui_spirits_battle_db.prcxml`, its art placement in `spirit/ui_spirit_layout_db.prcxml` |
+| pictures | `ui/replace/spirits/spirits_0/spirits_0_<id>.bntx`, `spirits_1`, `spirits_2` (and `spirits_3` when the base has one) |
+| name | `spi_<id>` in `ui/message/msg_spirits.xmsbt` |
+| board | a row in `spirit/spirits_board_special_param.prcxml` |
+| board art | `ui/layout/menu/<folder>/spb_<id>/layout.arc`, named in `art` |
+| own background | `ui/layout/patch/spirits_board_special_bg_NN/spirits_board_special_bg_NN/layout.arc`, `NN` the board's `layout_no` (11 and up) |
+
+- No `config.json`: the pictures go in folders the game has.
+- A copy of the base's pictures, renamed, shows as it is: start from those.
+- `clone_pack_gui/data/spirit_db.tsv`, `spirit_battles.tsv`,
+  `spirit_fighters.tsv`, `spirit_layouts.tsv` and `spirit_boards.tsv` hold
+  every row of the game's tables (13.0.5), for the bases' values.
+
 ## make_clone_pack.py
 
 ```
@@ -786,6 +858,31 @@ python lint_mii_pack.py "path/to/your/mod folder"
 - An id the game already has, or a base it does not have, is an error.
 - A missing colour folder, motion file, icon or name is reported.
 
+## lint_spirit_pack.py
+
+```
+python lint_spirit_pack.py "path/to/your/mod folder"
+```
+
+- The `spirit/` prcxml files, and an older `spirit.toml`, are read with the
+  engine's rules: an error means the engine skips them. A spirit or board in
+  both is an error.
+- An id the game already has, or a base it does not have, is an error.
+- A field the base's table does not have, or a value of the wrong kind, is a
+  warning: the engine leaves it out.
+- Missing pictures (`ui/replace/spirits/spirits_N/spirits_N_<id>.bntx`, the
+  sizes the base has) and a missing `spi_<id>` in
+  `ui/message/msg_spirits.xmsbt` are reported.
+- A board whose base is not one of the game's eleven boards, or whose id is
+  one of theirs, is an error. A background that is not a board's, spirits that
+  are neither the game's nor this pack's, a field the board row lacks or a
+  value of the wrong type are warnings.
+- An `art` layout the pack does not ship, or one without its `banner` and
+  `card` panes, is a warning; so is a `layout_no` from 11 whose background the
+  pack does not ship, or that another installed pack ships too.
+- `clone_pack_gui/data/spirits.tsv` lists the game's spirits by id, number,
+  rank, type and English name, for picking a `base`.
+
 ## lint_enemy_pack.py
 
 ```
@@ -811,7 +908,7 @@ python lint_enemy_pack.py "path/to/your/mod folder"
   [`smash-vtables`](https://github.com/theincredibleplayer/smash-vtables)
   (13.0.4); the item, enemy and common tables and the signatures were read off
   the game's code.
-- `clone_pack_gui/data/params/`: the game's param values (13.0.5) the Param
+- `clone_pack_gui/data/params/`: the game's param values (13.0.5) the prcxml
   files tab starts from. A row table has one line per fighter, item or stage
   and one column per field, with the types on the second line; `vl.tsv`,
   `item_param.tsv` and `fighter_common.tsv` hold one value per line. They open

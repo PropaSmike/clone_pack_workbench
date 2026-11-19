@@ -385,7 +385,7 @@ def _write(node: Node, labels: dict, depth: int, lines: list, top: bool = False)
     lines.append("%s<%s%s>%s</%s>" % (pad, node.tag, attributes, escape(value_text(node, labels)), node.tag))
 
 
-FIGHTER, ITEM, STAGE, ENEMY = "fighter", "item", "stage", "enemy"
+FIGHTER, ITEM, STAGE, ENEMY, SPIRIT = "fighter", "item", "stage", "enemy", "spirit"
 ENEMY_KINDS = {"yellow_devil": "yellowdevil", "dark_emperor": "subetenoyaminoou",
                "flying_man": "flyingman", "metal_face": "metalface", "nabbit": "nabbit"}
 COMMON_FILES = ("common", "item", "etc", "power_up", "effect", "sound")
@@ -464,6 +464,15 @@ TARGETS = (
            note="The Normal form's box: x0, y0, x1, y1, all four."),
     Target("stage_param", STAGE, "params of its own", "stage/{name}/{tree}/param/param.prcxml", own_keys=True,
            note="Keys your code reads with dionysus_api::stage::param_float."),
+    Target("spirits", SPIRIT, "spirits", "spirit/ui_spirit_db.prcxml",
+           note="A row per spirit, copied from its base: change any value. The engine sets save_no, "
+                "directory_id and fixed_no itself."),
+    Target("spirit_battles", SPIRIT, "battles and fighters", "spirit/ui_spirits_battle_db.prcxml",
+           note="Each spirit's battle row and its fighter rows, in order: the rows are its fighters."),
+    Target("spirit_layouts", SPIRIT, "art placement", "spirit/ui_spirit_layout_db.prcxml",
+           note="Where each spirit's art sits on each screen."),
+    Target("spirit_boards", SPIRIT, "DLC spirit boards", "spirit/spirits_board_special_param.prcxml",
+           note="A row per board: its prize, music, background number, art layout and spirit_list."),
 )
 
 
@@ -506,6 +515,8 @@ def names_for(family: str, part: dict, item_root=None, item_name=None) -> "Names
         name = part.get("place")
         tree = "battle" if part.get("normal_tree") == "battle" else "normal"
         return Names(name, part.get("donor") or "", tree=tree) if name else None
+    if family == SPIRIT:
+        return Names("spirit")
     return None
 
 
@@ -908,6 +919,16 @@ def twin_of(current_root: Node, original_root: "Node | None", node: Node) -> "No
         if at is None:
             return None
     return at
+
+
+def text_names(text: str) -> dict:
+    """hash to name for every hash attribute and hash40 value a prcxml spells out."""
+    names = {}
+    for name in re.findall(r'hash\s*=\s*"([^"]+)"', text) + re.findall(r"<hash40[^>/]*>([^<]+)</hash40>", text):
+        name = name.strip()
+        if name and not name.lower().startswith("0x"):
+            names[hash40(name)] = name
+    return names
 
 
 def set_value(node: Node, text: str, labels: dict) -> None:

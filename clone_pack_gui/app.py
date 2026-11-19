@@ -723,6 +723,15 @@ class Workbench(ttk.Frame):
         self.log_kept()
 
 
+def inside(widget, parent) -> bool:
+    """Whether the widget sits somewhere inside the parent."""
+    while widget is not None:
+        if widget is parent:
+            return True
+        widget = widget.master
+    return False
+
+
 def wrap_within(container: tk.Misc, labels, margin: int = 12) -> None:
     """Wrap each label to the width left of it inside the container, again on
     every resize, so a hint or a note never runs past the window's edge."""
@@ -1071,10 +1080,10 @@ class IdentityPanel(ttk.Frame):
         self.app = app
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
-        self.scroll = Scrolled(self)
-        self.scroll.grid(row=0, column=0, sticky="nsew")
-        self.scroll.body.columnconfigure(0, weight=1)
         self.frames: dict[str, ttk.Frame] = {}
+        self.notebooks: dict[str, ttk.Notebook] = {}
+        self.sections: dict[str, dict[str, ttk.Frame]] = {}
+        self.scrolls: dict[str, list[Scrolled]] = {}
         self.fields: dict[str, Fields] = {}
         self.articles: list[dict] = []
         self.article_picked: int | None = None
@@ -1088,8 +1097,9 @@ class IdentityPanel(ttk.Frame):
         self._build_mii()
         self._build_enemy()
         self._build_spirit()
-        for kind, frame in self.frames.items():
-            wrap_within(frame, self.fields[kind].hints)
+        for kind, sections in self.sections.items():
+            for body in sections.values():
+                wrap_within(body, [label for label in self.fields[kind].hints if inside(label, body)])
         self.show(packs.FIGHTER)
         for fields in self.fields.values():
             fields.watch(self.changed)
@@ -1119,17 +1129,59 @@ class IdentityPanel(ttk.Frame):
         self.app.rust.refresh()
 
     def _frame(self, kind: str) -> Fields:
-        frame = ttk.Frame(self.scroll.body)
+        frame = ttk.Frame(self)
         frame.grid(row=0, column=0, sticky="nsew")
-        frame.columnconfigure(2, weight=1)
+        frame.columnconfigure(0, weight=1)
+        frame.rowconfigure(0, weight=1)
         self.frames[kind] = frame
+        self.sections[kind] = {}
+        self.scrolls[kind] = []
         fields = Fields(frame)
         self.fields[kind] = fields
         return fields
 
+    def _section(self, kind: str, title: str | None = None) -> ttk.Frame:
+        """A sub-tab of the kind's page that scrolls on its own, or without a title the
+        whole page; the kind's fields go on it from here on."""
+        frame = self.frames[kind]
+        holder = frame
+        if title is not None:
+            if kind not in self.notebooks:
+                notebook = ttk.Notebook(frame)
+                notebook.grid(row=0, column=0, sticky="nsew")
+                notebook.bind("<<NotebookTabChanged>>", lambda _: self.fit_kind(kind))
+                self.notebooks[kind] = notebook
+            holder = self.notebooks[kind]
+        scroll = Scrolled(holder)
+        scroll.body.columnconfigure(0, weight=1)
+        body = ttk.Frame(scroll.body, padding=(8, 6))
+        body.grid(row=0, column=0, sticky="nsew")
+        body.columnconfigure(2, weight=1)
+        if title is None:
+            scroll.grid(row=0, column=0, sticky="nsew")
+        else:
+            holder.add(scroll, text=title)
+        self.sections[kind][title or kind] = body
+        self.scrolls[kind].append(scroll)
+        fields = self.fields[kind]
+        fields.parent, fields.row = body, 0
+        return body
+
+    def _actions(self, kind: str, pairs) -> None:
+        """The kind's write buttons, under its sub-tabs so every one of them shows them."""
+        bar = ttk.Frame(self.frames[kind])
+        bar.grid(row=1, column=0, sticky="ew", pady=(8, 0))
+        for label, command in pairs:
+            ttk.Button(bar, text=label, command=command).pack(side="left", padx=(0, 6))
+
+    def fit_kind(self, kind: str) -> None:
+        for scroll in self.scrolls.get(kind, ()):
+            scroll.after_idle(scroll.fit)
+
     def _build_fighter(self) -> None:
         fields = self._frame(packs.FIGHTER)
         catalog = self.app.catalog
+        self._section(packs.FIGHTER, "Fighter")
         fields.choice("base_fighter", "Base fighter",
                       named_choice(catalog.fighter_bases()),
                       hint="what your clone is built on")
@@ -1150,26 +1202,16 @@ class IdentityPanel(ttk.Frame):
                     hint="fighter.toml: standard/staffroll/texture/standard_staffroll_<name>.nutexb")
         fields.flag("own_css", "Plugin keeps its CSK and ParamConfig code",
                     hint="a one-slot mod's plugin: its add_chara_db_entry_info publishes the row (Manifest: own_css(), fighter.toml: css = false) and its param_config::update_* set the vl.prc values; the Rust tab shows both with the clone's names")
-        fields.entry("kirby_statuses", "Kirby copy statuses", width=6,
-                     hint="fighter.toml: how many status kinds Kirby's copy needs; the engine picks the numbers")
         fields.flag("owns_param_resources", "Ships its own vl.prc and params")
-        fields.entry("switch_with", "Switches with",
-                     hint="fighter.toml switch: one or two other clones sharing this player slot, comma separated, on any base but the Ice Climbers. Pyra/Mythra and Pokemon Trainer sets switch with down special; other bases switch when a plugin calls dionysus_api::switch::next. Blank plays alone")
-        fields.entry("partner", "Partner",
-                     hint="fighter.toml partner: blank = the base's default (an Ice Climbers clone gets a Nana-style partner), none = no partner, copy = a copy of this fighter follows it like Nana, or another clone's name (picked on its own, that clone then leads with this one following unless its Partner is none). Tune the follow in a [partner_params] table: off popo only nana_delay (frames behind, 15 at most) and nana_opt_dst (distance kept) change it")
-        fields.flag("kirby_copy_full_model", "Kirby wears the whole body, not a cap")
-        fields.entry("kirby_model", "Extra copy model",
-                     hint="fighter.toml [kirby] model: one more model folder under fighter/kirby/model/, for a copy "
-                          "that shows two models at once; blank for none")
-        fields.choice("kirby_copy_donor", "Kirby copy donor",
-                      [""] + [name for _, name in catalog.fighter_bases()],
-                      hint="whose copy model your clone borrows; blank takes the base's own hat")
-        fields.entry("kirby_copy_suffix", "Copy suffix", hint="default fitkirby")
-        fields.choice("kirby_copy_motion_donor", "Copy motion donor",
-                      [""] + [name for _, name in catalog.fighter_bases()])
         fields.flag("declare_shipped", "Declare the files this pack ships (--pack-dir)")
+        fields.entry("move_list_pages", "Move list pages", width=6,
+                     hint="extra pages below the specials, up to 32; the game alone stops at four. "
+                          "Labels nam_peculiar_NN_<name> and nam_peculiar_help_NN_<name>, NN from 00")
+        fields.entry("move_list_images", "Picture pages", width=20,
+                     hint="the pages that show ui/replace/skill/skill_1/skill_1_<name>_extra_page_<N>.bntx, "
+                          "counted from 0, comma separated")
 
-        frame = self.frames[packs.FIGHTER]
+        frame = self._section(packs.FIGHTER, "Articles")
         articles = ttk.LabelFrame(frame, text="Articles", padding=6)
         articles.grid(row=fields.row, column=0, columnspan=3, sticky="ew", pady=(10, 4))
         fields.row += 1
@@ -1224,22 +1266,44 @@ class IdentityPanel(ttk.Frame):
         self.article_list.bind("<<ListboxSelect>>", self.article_chosen)
         articles.columnconfigure(3, weight=1)
         self._build_article_gimmicks(frame, fields)
+
+        frame = self._section(packs.FIGHTER, "Moves")
         self._build_commands(frame, fields)
+        self._build_move_tables(frame, fields)
+
+        frame = self._section(packs.FIGHTER, "Movement")
         self._build_float(frame, fields)
         self._build_glide(frame, fields)
+        self._build_tether(frame, fields)
+
+        frame = self._section(packs.FIGHTER, "Switch and partner")
+        fields.entry("switch_with", "Switches with",
+                     hint="fighter.toml switch: one or two other clones sharing this player slot, comma separated, on any base but the Ice Climbers. Pyra/Mythra and Pokemon Trainer sets switch with down special; other bases switch when a plugin calls dionysus_api::switch::next. Blank plays alone")
+        fields.entry("partner", "Partner",
+                     hint="fighter.toml partner: blank = the base's default (an Ice Climbers clone gets a Nana-style partner), none = no partner, copy = a copy of this fighter follows it like Nana, or another clone's name (picked on its own, that clone then leads with this one following unless its Partner is none). Tune the follow in a [partner_params] table: off popo only nana_delay (frames behind, 15 at most) and nana_opt_dst (distance kept) change it")
+        self._build_partner_table(frame, fields)
+
+        frame = self._section(packs.FIGHTER, "Kirby")
+        fields.entry("kirby_statuses", "Kirby copy statuses", width=6,
+                     hint="fighter.toml: how many status kinds Kirby's copy needs; the engine picks the numbers")
+        fields.flag("kirby_copy_full_model", "Kirby wears the whole body, not a cap")
+        fields.entry("kirby_model", "Extra copy model",
+                     hint="fighter.toml [kirby] model: one more model folder under fighter/kirby/model/, for a copy "
+                          "that shows two models at once; blank for none")
+        fields.choice("kirby_copy_donor", "Kirby copy donor",
+                      [""] + [name for _, name in catalog.fighter_bases()],
+                      hint="whose copy model your clone borrows; blank takes the base's own hat")
+        fields.entry("kirby_copy_suffix", "Copy suffix", hint="default fitkirby")
+        fields.choice("kirby_copy_motion_donor", "Copy motion donor",
+                      [""] + [name for _, name in catalog.fighter_bases()])
+        self._build_kirby_tables(frame, fields)
+
+        frame = self._section(packs.FIGHTER, "Items and HUD")
         self.item_hand = ItemHandBox(frame, self.app)
         self._place(frame, fields, self.item_hand)
-        self._build_tether(frame, fields)
         self._build_hud(frame, fields)
-        fields.entry("move_list_pages", "Move list pages", width=6,
-                     hint="extra pages below the specials, up to 32; the game alone stops at four. "
-                          "Labels nam_peculiar_NN_<name> and nam_peculiar_help_NN_<name>, NN from 00")
-        fields.entry("move_list_images", "Picture pages", width=20,
-                     hint="the pages that show ui/replace/skill/skill_1/skill_1_<name>_extra_page_<N>.bntx, "
-                          "counted from 0, comma separated")
-        self._build_fighter_tables(frame, fields)
 
-        fields.buttons((
+        self._actions(packs.FIGHTER, (
             ("Write fighter.toml", self.write_fighter_toml),
             ("Write config.json", self.write_fighter_config),
             ("Save descriptor", self.save_descriptor),
@@ -1393,8 +1457,8 @@ class IdentityPanel(ttk.Frame):
         for variable in (self.hud_from, self.hud_layout):
             variable.trace_add("write", lambda *_: self.changed())
 
-    def _build_fighter_tables(self, frame: ttk.Frame, fields: Fields) -> None:
-        """[[grab]], [[global_motion]] and [partner_params]."""
+    def _build_move_tables(self, frame: ttk.Frame, fields: Fields) -> None:
+        """[[grab]] and [[global_motion]]."""
         self.grab_editor = TableEditor(
             frame, "Grab rules", "grab",
             [Field("status", "Grabber status", 16, "choice", gimmicks.GRAB_STATUSES + gimmicks.OWN_STATUSES),
@@ -1419,6 +1483,9 @@ class IdentityPanel(ttk.Frame):
                  "has, animation plays your file for fighters that ship it; victim = the opponent's half of a throw, "
                  "playing your file on them")
         self._place(frame, fields, self.motion_editor)
+
+    def _build_kirby_tables(self, frame: ttk.Frame, fields: Fields) -> None:
+        """[[kirby.motion]] and [[kirby.mesh]]."""
         self.kirby_motion_editor = TableEditor(
             frame, "Kirby copy motions", "kirby_motion",
             [Field("name", "Name", 22), Field("animation", "Animation file", 26), Field("template", "Template", 18),
@@ -1438,6 +1505,9 @@ class IdentityPanel(ttk.Frame):
             identity=lambda row: row.get("name"), on_change=self.changed,
             hint="[[kirby.mesh]]: whether a mesh of the copy hat shows before any animation sets it")
         self._place(frame, fields, self.kirby_mesh_editor)
+
+    def _build_partner_table(self, frame: ttk.Frame, fields: Fields) -> None:
+        """[partner_params]."""
         self.partner_editor = TableEditor(
             frame, "Partner follow params", "partner",
             [Field("key", "Param", 36, "choice", gimmicks.partner_param_names()), Field("value", "Value", 8)],
@@ -1856,6 +1926,7 @@ class IdentityPanel(ttk.Frame):
 
     def _build_item(self) -> None:
         fields = self._frame(packs.ITEM)
+        frame = self._section(packs.ITEM)
         catalog = self.app.catalog
         fields.choice("base_item", "Base item", named_choice(catalog.item_bases()),
                       hint="what your item is built on")
@@ -1875,7 +1946,6 @@ class IdentityPanel(ttk.Frame):
                      hint="an Assist Trophy, Poke Ball Pokemon or boss cloned with its members: their "
                           "resource names in the base family's order, this item first (item.toml "
                           "members). Fill family writes them from the base; blank for a plain item")
-        frame = self.frames[packs.ITEM]
         sources = ttk.LabelFrame(frame, text="Also comes out of these containers",
                                  padding=6)
         sources.grid(row=fields.row, column=0, columnspan=3, sticky="w", pady=(8, 2))
@@ -1892,7 +1962,7 @@ class IdentityPanel(ttk.Frame):
         note.grid(row=1, column=0, columnspan=5, sticky="w", pady=(4, 0))
         fields.hints.append(note)
         fields.flag("declare_shipped", "Declare the files this pack ships (--pack-dir)")
-        fields.buttons((
+        self._actions(packs.ITEM, (
             ("Write item.toml", self.write_item_toml),
             ("Fill family", self.fill_family),
             ("Write config.json", self.write_item_config),
@@ -1903,6 +1973,7 @@ class IdentityPanel(ttk.Frame):
         fields = self._frame(packs.STAGE)
         catalog = self.app.catalog
         places = catalog.stage_places()
+        frame = self._section(packs.STAGE, "Stage")
         fields.entry("place", "Place", hint="lowercase folder name under stage/")
         fields.entry("display_name", "Display name")
         fields.entry("id_name", "StageID name", hint="blank means CamelCase of the place")
@@ -1916,6 +1987,26 @@ class IdentityPanel(ttk.Frame):
         fields.flag("ships_battle_tree", "Ships a stage/<place>/battle tree")
         fields.choice("normal_tree", "Normal form loads", ["", "normal", "battle"],
                       hint="battle: a stage made only as a battle form plays it in every form")
+        forms = ttk.LabelFrame(frame, text="Forms", padding=6)
+        forms.grid(row=fields.row, column=0, columnspan=3, sticky="w", pady=(8, 2))
+        fields.row += 1
+        self.form_vars = {}
+        for index, form in enumerate(("normal", "omega", "battlefield")):
+            variable = tk.BooleanVar(value=form == "normal")
+            self.form_vars[form] = variable
+            ttk.Checkbutton(forms, text=form, variable=variable).grid(
+                row=0, column=index, padx=4)
+        self._build_stage_secret(frame, fields, places)
+        fields.choice("content_donor", "Content donor", [""] + places,
+                      hint="tools only: the stage whose files fill gaps, if not the "
+                           "behaviour donor")
+        fields.choice("content_donor_tree", "Content donor tree", ["", "normal", "battle"],
+                      hint="tools only: when the files came from a different tree")
+        fields.flag("carry_donor_scenery", "Inherit the donor's scenery directories",
+                    hint="tools only: off drops the donor's scenery, which its "
+                         "behaviour may still look for")
+
+        frame = self._section(packs.STAGE, "Items and hazards")
         fields.choice("hazards", "Hazards", ["", "off", "on"],
                       hint="off or on whatever the Stage Hazards rule says; blank follows the rule")
         fields.choice("items_start", "Items start from", ["", "donor", "all"],
@@ -1927,39 +2018,24 @@ class IdentityPanel(ttk.Frame):
         fields.entry("items_on", "Items let back in", width=40,
                      hint="ones the start leaves out that this stage allows (items_on)")
         fields.buttons((("Pick items", self.pick_stage_items),))
+
+        frame = self._section(packs.STAGE, "Music")
         fields.choice("bgm", "Music playlist",
                       [""] + [name for name, _ in catalog.bgm_sets()],
                       hint="blank borrows the donor's music")
         fields.entry("bgm_setting_no", "Playlist column", width=6,
                      hint="which column of that playlist, counted from 0")
         fields.flag("bgm_selector", "Gets the album selector")
+
+        frame = self._section(packs.STAGE, "Gimmicks")
         fields.entry("dynamic_collisions", "Moving platform sets", width=40,
                      hint="model sets whose collision follows a bone; each plays "
                           "motion/<set>/<set>_00.nuanmb by itself (dynamic_collisions)")
         fields.entry("paused_motions", "Paused motions", width=40,
                      hint="model sets whose motion holds its first frame until the plugin starts it "
                           "(paused_motions)")
-        fields.choice("content_donor", "Content donor", [""] + places,
-                      hint="tools only: the stage whose files fill gaps, if not the "
-                           "behaviour donor")
-        fields.choice("content_donor_tree", "Content donor tree", ["", "normal", "battle"],
-                      hint="tools only: when the files came from a different tree")
-        fields.flag("carry_donor_scenery", "Inherit the donor's scenery directories",
-                    hint="tools only: off drops the donor's scenery, which its "
-                         "behaviour may still look for")
-        frame = self.frames[packs.STAGE]
-        forms = ttk.LabelFrame(frame, text="Forms", padding=6)
-        forms.grid(row=fields.row, column=0, columnspan=3, sticky="w", pady=(8, 2))
-        fields.row += 1
-        self.form_vars = {}
-        for index, form in enumerate(("normal", "omega", "battlefield")):
-            variable = tk.BooleanVar(value=form == "normal")
-            self.form_vars[form] = variable
-            ttk.Checkbutton(forms, text=form, variable=variable).grid(
-                row=0, column=index, padx=4)
-        self._build_stage_secret(frame, fields, places)
         self._build_stage_gimmicks(frame, fields)
-        fields.buttons((
+        self._actions(packs.STAGE, (
             ("Write stage.toml", self.write_stage_toml),
             ("Write config.json", self.write_stage_config),
             ("Stamp sound bank id", self.stamp_bank),
@@ -2039,16 +2115,6 @@ class IdentityPanel(ttk.Frame):
     def _build_menu(self) -> None:
         """menu.toml: the pack's modes, codes, layouts, preloads and script patches."""
         fields = self._frame(packs.MENU)
-        fields.entry("namespace", "Script folder", width=20,
-                     hint="ui/script/menu/<this>/ holds the pack's compiled Lua; its modules are "
-                          "menu/<this>/<name>")
-        fields.entry("lua_folder", "Lua sources", width=40,
-                     hint="the .lua files Compile Lua builds; keep them outside the pack, the game "
-                          "runs only .lc")
-        fields.entry("luac", "SSBU luac", width=40,
-                     hint="Lua 5.3 built with LUA_FLOAT_TYPE = LUA_FLOAT_FLOAT (MENUS.md, \"Lua\"); "
-                          "blank uses SSBU_LUAC")
-        frame = self.frames[packs.MENU]
         tool = import_tool("lint_menu_pack")
         scenes = ("",) + (tool.SCENES if tool is not None else ("IngameCallSequenceScene",))
         runs_as = ("",) + (tool.COMMON_MODES if tool is not None else ("melee_normal", "other_training"))
@@ -2085,7 +2151,7 @@ class IdentityPanel(ttk.Frame):
              None, lambda row: row.get("file"), 2,
              "main_menu: the main menu builds this layout too; Lua finds it in LayoutRootList, named "
              "after its main .bflyt. Up to 16 installed in all. gallery: a grid skin for the galleries "
-             "(Galleries below; MENUS.md, Skins)"),
+             "(the Galleries tab; MENUS.md, Skins)"),
             ("preload", "Preloads", [Field("after", "After", 48), Field("files", "Files", 48)],
              None, None, 2, "whenever the game requests After, it requests Files too (paths under ui/)"),
             ("patch", "Script patches", [
@@ -2096,17 +2162,39 @@ class IdentityPanel(ttk.Frame):
              "requiring Module inside it gives the module as it was. Root script_patch for the stage "
              "select's and the stage builder's"),
         )
-        for table, title, row_fields, describe, identity, per_row, hint in specs:
-            editor = TableEditor(frame, title, table, row_fields, describe=describe, identity=identity,
-                                 on_change=self.changed, per_row=per_row, hint=hint)
-            self._place(frame, fields, editor)
-            self.menu_editors[table] = editor
+
+        def editor(frame: ttk.Frame, table: str) -> None:
+            _, title, row_fields, describe, identity, per_row, hint = next(
+                spec for spec in specs if spec[0] == table)
+            made = TableEditor(frame, title, table, row_fields, describe=describe, identity=identity,
+                               on_change=self.changed, per_row=per_row, hint=hint)
+            self._place(frame, fields, made)
+            self.menu_editors[table] = made
+
+        frame = self._section(packs.MENU, "Modes")
+        editor(frame, "mode")
+        self._build_menu_presets(frame, fields)
+        editor(self._section(packs.MENU, "Sequences"), "sequence")
+        frame = self._section(packs.MENU, "Layouts")
+        editor(frame, "layout")
+        editor(frame, "preload")
+        frame = self._section(packs.MENU, "Scripts")
+        fields.entry("namespace", "Script folder", width=20,
+                     hint="ui/script/menu/<this>/ holds the pack's compiled Lua; its modules are "
+                          "menu/<this>/<name>")
+        fields.entry("lua_folder", "Lua sources", width=40,
+                     hint="the .lua files Compile Lua builds; keep them outside the pack, the game "
+                          "runs only .lc")
+        fields.entry("luac", "SSBU luac", width=40,
+                     hint="Lua 5.3 built with LUA_FLOAT_TYPE = LUA_FLOAT_FLOAT (MENUS.md, \"Lua\"); "
+                          "blank uses SSBU_LUAC")
+        editor(frame, "patch")
+        frame = self._section(packs.MENU, "Galleries")
         self.gallery = GallerySection(frame, self.app, self.changed)
         self._place(frame, fields, self.gallery)
         self.menu_editors["gallery"] = self.gallery.galleries
         self.menu_editors["gallery_item"] = self.gallery.items
-        self._build_menu_presets(frame, fields)
-        fields.buttons((
+        self._actions(packs.MENU, (
             ("Write menu.toml", self.write_menu_toml),
             ("Compile Lua", self.compile_lua),
             ("Show Rust", lambda: self.app.tabs.select(self.app.rust)),
@@ -2132,6 +2220,7 @@ class IdentityPanel(ttk.Frame):
     def _build_enemy(self) -> None:
         """enemy.toml: an enemy of its own on one of the game's, and when the plugin brings it out."""
         fields = self._frame(packs.ENEMY)
+        self._section(packs.ENEMY)
         fields.entry("name", "Name", hint="enemy.toml name: its folders enemy/<name>/ and effect/enemy/<name>/, "
                                           "lower case letters, digits and _")
         fields.choice("base", "Base enemy", list(enemy_code.BASES),
@@ -2142,7 +2231,7 @@ class IdentityPanel(ttk.Frame):
         fields.entry("arrive_y", "At y", width=8)
         fields.entry("stay_seconds", "Stays (seconds)", width=8)
         fields.entry("walk_speed", "Walk speed", width=8, hint="Nabbit: units per frame of the Rust tab's walk")
-        fields.buttons((
+        self._actions(packs.ENEMY, (
             ("Write enemy.toml", self.write_enemy_toml),
             ("Write config.json", self.write_enemy_config),
             ("Fix motion list", self.fix_enemy_motion_list),
@@ -2196,7 +2285,6 @@ class IdentityPanel(ttk.Frame):
     def _build_mii(self) -> None:
         """mii.toml: the hats and outfits the pack adds to the Mii Fighter menus."""
         fields = self._frame(packs.MII)
-        frame = self.frames[packs.MII]
         self.mii_editors = {}
         specs = (
             ("mii_hat", "Hats", [
@@ -2224,12 +2312,13 @@ class IdentityPanel(ttk.Frame):
              "without _m or _f unless set"),
         )
         for table, title, row_fields, describe, per_row, hint in specs:
+            frame = self._section(packs.MII, title)
             editor = TableEditor(frame, title, table, row_fields, describe=describe,
                                  identity=lambda row: row.get("id"), on_change=self.changed,
                                  per_row=per_row, hint=hint)
             self._place(frame, fields, editor)
             self.mii_editors[table] = editor
-        fields.buttons((
+        self._actions(packs.MII, (
             ("Write mii.toml", self.write_mii_toml),
             ("Write folders to config.json", self.write_mii_config),
         ))
@@ -2301,10 +2390,10 @@ class IdentityPanel(ttk.Frame):
     def _build_spirit(self) -> None:
         """The pack's spirits and DLC spirit boards, kept in its spirit/ prcxml files."""
         fields = self._frame(packs.SPIRIT)
-        frame = self.frames[packs.SPIRIT]
+        frame = self._section(packs.SPIRIT, "Spirits")
         self.spirit_vars = {key: tk.StringVar() for key in
                             ("id", "base", "name", "board", "board_base", "board_name", "board_spirits")}
-        spirits = ttk.LabelFrame(frame, text="Spirits", padding=6)
+        spirits = ttk.Frame(frame)
         grid = ttk.Frame(spirits)
         grid.grid(row=0, column=0, sticky="w")
         self.spirit_base_box = self._spirit_inputs(grid, (("Id", "id", 20, False), ("Base spirit", "base", 22, True),
@@ -2327,7 +2416,8 @@ class IdentityPanel(ttk.Frame):
         spirit_hint.grid(row=3, column=0, sticky="w", pady=(4, 0))
         spirits.columnconfigure(0, weight=1)
         self._place(frame, fields, spirits)
-        boards = ttk.LabelFrame(frame, text="DLC spirit boards", padding=6)
+        frame = self._section(packs.SPIRIT, "DLC spirit boards")
+        boards = ttk.Frame(frame)
         grid = ttk.Frame(boards)
         grid.grid(row=0, column=0, sticky="ew")
         self.board_base_box = self._spirit_inputs(grid, (("Id", "board", 20, False),
@@ -2355,7 +2445,7 @@ class IdentityPanel(ttk.Frame):
         boards.columnconfigure(0, weight=1)
         self._place(frame, fields, boards)
         fields.hints += [spirit_hint, board_hint]
-        fields.buttons((("Edit their values", self.edit_spirit_values),))
+        self._actions(packs.SPIRIT, (("Edit their values", self.edit_spirit_values),))
 
     def _spirit_inputs(self, grid: ttk.Frame, inputs) -> ttk.Combobox | None:
         box = None
@@ -3011,7 +3101,7 @@ class IdentityPanel(ttk.Frame):
                 frame.grid()
             else:
                 frame.grid_remove()
-        self.scroll.after_idle(self.scroll.fit)
+        self.fit_kind(kind)
 
     def load(self) -> None:
         """Fill every form from its own section, so the parts cannot cross."""

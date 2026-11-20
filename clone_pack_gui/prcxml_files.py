@@ -474,13 +474,14 @@ TARGETS = (
            note="The Normal form's box: x0, y0, x1, y1, all four."),
     Target("stage_stprm", STAGE, "stage params, Normal form", "stage/{name}/{tree}/param/stageparam_{name}.stprmxml",
            "stage/{base}/{tree}/param/stageparam_{base}.stprm", row="{base}/{tree}", values="stage_stprm.tsv",
-           note="Camera, blast lines, star and screen KOs (can_futtobi_back, can_futtobi_front). Dionysus "
+           note="Camera, star and screen KOs (can_futtobi_back, can_futtobi_front). Blast zones are in the "
+                "stage's .lvd. Dionysus "
                 "patches the clone's stageparam file when the game reads it, so keep its share in config.json "
                 "(an engine newer than 0.7.0-beta.1)."),
     Target("stage_stprm_battle", STAGE, "stage params, Battlefield and Omega forms",
            "stage/{name}/battle/param/stageparam_{name}.stprmxml",
            "stage/{base}/battle/param/stageparam_{base}.stprm", row="{base}/battle", values="stage_stprm.tsv",
-           note="The battle tree's camera and blast lines, for a pack that ships its own battle tree "
+           note="The battle tree's camera and star KOs, for a pack that ships its own battle tree "
                 "(ships_battle_tree)."),
     Target("stage_stdat", STAGE, "stage data (.stdat)", "stage/{name}/{tree}/param/{base}.stdatxml",
            "stage/{base}/{tree}/param/{base}.stdat", row="{base}/{tree}", values="stage_stdat.tsv",

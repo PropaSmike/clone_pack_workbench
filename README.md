@@ -349,8 +349,8 @@ values (13.0.5). Those come with the Workbench, in `clone_pack_gui/data/params/`
   ship and lists both in every costume group. Attack list rows show their
   slot and move (`[7] neutral special: special_n_start`, `[12] unused`,
   `[22] set 1 neutral special`); attack data rows show their move.
-- A stage also lists its `stageparam_<place>.stprmxml` (camera, blast lines,
-  star KOs; Normal and Battlefield/Omega forms), the donor-named `.stdatxml`
+- A stage also lists its `stageparam_<place>.stprmxml` (camera, star KOs;
+  Normal and Battlefield/Omega forms), the donor-named `.stdatxml`
   and `render/render_param.prcxml`, each starting from the donor's file.
   Dionysus patches the clone's borrowed file when the game reads it, so the
   share in `config.json` stays.

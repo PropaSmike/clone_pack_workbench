@@ -1245,7 +1245,7 @@ def lint(mod_dir, arc_index, write_config=False):
                      for level, message in found]
         findings.extend(found)
     if lint_prcxml is not None:
-        findings.extend(lint_prcxml.lint_pack(mod_dir, ("stage",)))
+        findings.extend(lint_prcxml.lint_pack(mod_dir, ("stage",), arc_index))
     return findings
 
 

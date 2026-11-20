@@ -9,7 +9,7 @@ FIGHTER_KEYS = {
     "series": "str", "disp_order": "int", "save_no": "int", "exhibit_year": "int",
     "narration": "str", "staffroll": "bool", "css": "bool", "jingle": "str",
     "owns_param_resources": "bool", "effect_namespace": "int", "article_namespace": "int",
-    "partner": "partner", "switch": "list", "item_hand": "hand",
+    "partner": "partner", "switch": "list", "item_hand": "hand", "cpu_ai": "ai",
 }
 PARTNER_PARAMS = {
     "jostle_data_nana.speed_x_gg": "float", "jostle_data_nana.speed_x_ga": "float",
@@ -36,6 +36,18 @@ PARTNER_PARAMS = {
 PARTNER_BASES = ("popo",)
 ITEM_HANDS = ("left", "right")
 NO_HAND_BONES = ("pfushigisou",)
+CPU_AI_OWNERS = ("bayonetta", "brave", "buddy", "captain", "chrom", "cloud", "daisy", "dedede",
+    "demon", "diddy", "dolly", "donkey", "duckhunt", "edge", "eflame", "elight", "falco", "fox",
+    "gamewatch", "ganon", "gaogaen", "gekkouga", "ike", "inkling", "jack", "kamui", "ken", "kirby",
+    "koopa", "koopag", "koopajr", "krool", "link", "littlemac", "lucario", "lucas", "lucina",
+    "luigi", "mario", "mariod", "marth", "master", "metaknight", "mewtwo", "miienemyf",
+    "miienemyg", "miienemys", "miifighter", "miigunner", "miiswordsman", "murabito", "nana",
+    "ness", "packun", "pacman", "palutena", "peach", "pfushigisou", "pichu", "pickel", "pikachu",
+    "pikmin", "pit", "pitb", "plizardon", "popo", "purin", "pzenigame", "reflet", "richter",
+    "ridley", "robot", "rockman", "rosetta", "roy", "ryu", "samus", "samusd", "sheik", "shizue",
+    "shulk", "simon", "snake", "sonic", "szerosuit", "tantan", "toonlink", "trail", "wario",
+    "wiifit", "wolf", "yoshi", "younglink", "zelda",)
+CPU_AI_OWN_LOGIC = ("bayonetta", "donkey", "ken", "pickel", "rosetta", "ryu", "szerosuit")
 NO_SWITCH_BASES = ("popo", "nana")
 MAX_SWITCH_MEMBERS = 2
 ARTICLE_KEYS = {"name": "str", "from": "str", "base_article": "str", "kirby": "bool",
@@ -60,8 +72,6 @@ HUD_LAYOUT_BYTES = set("abcdefghijklmnopqrstuvwxyz0123456789_-./")
 HUD_DONORS = ("jack", "cloud", "inkling", "brave", "littlemac", "shulk", "reflet", "pickel",
               "trail", "dolly", "demon")
 FINAL_KEYS = {"from": "str"}
-FINAL_DONORS = ("donkey", "pikachu", "purin", "peach", "daisy", "pichu", "marth", "lucina",
-                "younglink", "roy", "chrom", "pikmin", "toonlink", "wiifit")
 TETHER_KEYS = {"from": "str"}
 TETHER_BOX_KEYS = {"p1": "vec2", "p2": "vec2"}
 TETHER_DONORS = ("samus", "samusd", "luigi", "younglink", "szerosuit", "lucas", "toonlink")
@@ -160,6 +170,11 @@ def parse_scalar(text, kind, line, key):
         if hand in ITEM_HANDS:
             return hand
         raise ManifestError(line, '%s must be "left" or "right"' % key)
+    if kind == "ai":
+        fighter = parse_scalar(text, "str", line, key)
+        if fighter in CPU_AI_OWNERS:
+            return fighter
+        raise ManifestError(line, '%s must name a fighter with CPU AI, such as "ryu"' % key)
     if kind == "int":
         try:
             return int(text, 0)
@@ -432,9 +447,6 @@ def parse_lines(lines, first_line=1):
                 and set(parsed) <= HUD_LAYOUT_BYTES):
             raise ManifestError(number, 'hud layout "%s" must be a lowercase arc path ending in .arc, '
                                         'such as "ui/layout/hud/my_fighter/layout.arc"' % parsed)
-        if kind == "final" and key == "from" and parsed not in FINAL_DONORS:
-            raise ManifestError(number, 'final from "%s" is not a Final Smash a clone can borrow; use %s'
-                                % (parsed, ", ".join('"%s"' % name for name in FINAL_DONORS)))
         if kind == "move_list" and key == "image_pages":
             try:
                 parsed = [int(page, 0) for page in parsed]
@@ -553,7 +565,7 @@ def check(fighter):
         if "input" not in command:
             problems.append("command %s needs an input" % command["name"])
         if command.get("cpu", 0) > 0 and command.get("button") == "none":
-            problems.append("command %s: cpu needs a button, a computer player gets the command when it presses it"
+            problems.append("command %s: cpu needs a button, a CPU gets the command when it presses it"
                             % command["name"])
         if command["name"] in seen:
             problems.append("command %s is declared twice" % command["name"])

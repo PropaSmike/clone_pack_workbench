@@ -1276,6 +1276,15 @@ class IdentityPanel(ttk.Frame):
         self._build_glide(frame, fields)
         self._build_tether(frame, fields)
 
+        frame = self._section(packs.FIGHTER, "CPU")
+        manifest = import_tool("fighter_manifest")
+        fields.choice("cpu_ai", "CPU AI", [""] + list(getattr(manifest, "CPU_AI_OWNERS", ())),
+                      hint="fighter.toml cpu_ai: whose CPU AI yours uses; blank uses the base's. "
+                           "Pick one that moves like yours")
+        note = ttk.Label(frame, text=CPU_AI_NOTE, style="Hint.TLabel", justify="left")
+        self._place(frame, fields, note)
+        fields.hints.append(note)
+
         frame = self._section(packs.FIGHTER, "Switch and partner")
         fields.entry("switch_with", "Switches with",
                      hint="fighter.toml switch: one or two other clones sharing this player slot, comma separated, on any base but the Ice Climbers. Pyra/Mythra and Pokemon Trainer sets switch with down special; other bases switch when a plugin calls dionysus_api::switch::next. Blank plays alone")
@@ -1640,7 +1649,7 @@ class IdentityPanel(ttk.Frame):
         editor = ttk.Frame(box)
         editor.grid(row=4, column=0, columnspan=8, sticky="nw", pady=(8, 0))
         for column, (key, label, width) in enumerate((("name", "Name", 14), ("input", "Input", 12),
-                                                      ("life", "Life", 5), ("cpu", "Computer chance", 5))):
+                                                      ("life", "Life", 5), ("cpu", "CPU chance", 5))):
             ttk.Label(editor, text=label).grid(row=0, column=column * 2, sticky="w")
             ttk.Entry(editor, textvariable=self.command_vars[key], width=width).grid(
                 row=0, column=column * 2 + 1, sticky="w", padx=(4, 10))
@@ -1676,8 +1685,8 @@ class IdentityPanel(ttk.Frame):
                                            "forward). Click the stick to add a direction, right click takes the "
                                            "last one off; its zones follow the stick ranges and the neutral "
                                            "threshold above. Life blank waits the frames above; super waits the super "
-                                           "frames; also mirrored reads the input backwards too. Computer chance "
-                                           "(0 to 1) gives a computer player the command when it presses the "
+                                           "frames; also mirrored reads the input backwards too. CPU chance "
+                                           "(0 to 1) gives a CPU the command when it presses the "
                                            "button. Code reads it with dionysus_api::fight::command(fighter, "
                                            "\"name\"); the Rust tab adds a blank reader for each. Faces the "
                                            "opponent: on the ground in a 1-on-1, the fighter turns toward the "
@@ -1873,7 +1882,7 @@ class IdentityPanel(ttk.Frame):
         if not manifest.NAME_RE.match(command["name"]):
             return "a command name is lowercase letters, digits and underscores"
         if command.get("cpu") and command.get("button") == "none":
-            return "computer chance needs a button: a computer player gets the command when it presses it"
+            return "computer chance needs a button: a CPU gets the command when it presses it"
         return ""
 
     def remove_command(self) -> None:
@@ -1920,7 +1929,7 @@ class IdentityPanel(ttk.Frame):
             if command.get("reverse"):
                 notes.append("also mirrored")
             if command.get("cpu"):
-                notes.append("computer %.0f%%" % (float(command["cpu"]) * 100))
+                notes.append("CPU %.0f%%" % (float(command["cpu"]) * 100))
             self.command_list.insert("end", "%s: %s, %s" % (command.get("name"), command.get("input"),
                                                            ", ".join(notes)))
 
@@ -4378,6 +4387,13 @@ class ParamsPanel(ttk.Frame):
         self.app.rust.refresh()
 
 
+CPU_AI_NOTE = (
+    "The chosen fighter's AI code and its two AI files load with yours (an engine newer than 0.7.0-beta.1). "
+    "The AI of Donkey Kong, Zero Suit Samus, Rosalina, Bayonetta, Steve, Ryu and Ken also has code for their "
+    "own gauges, partners or inputs, which finds nothing to use on another fighter. Files under "
+    "fighter/<name>/ai/ are not read with cpu_ai. The CPU's row (recovery reach, attack ranges) "
+    "is under Parameters, prcxml files, CPU row.")
+
 ITEM_HAND_NOTE = (
     "The engine moves this fighter's held and thrown items, and the hitboxes of swung items, to the "
     "hand picked; the base keeps its own, in the same match too. The base's animations still close "
@@ -4810,7 +4826,7 @@ class ParamFilesPanel(ttk.Frame):
             return None
         if not prcxml_files.own_file_values(tree):
             return None
-        return self.pack_path(target, self.names).with_suffix(".prc")
+        return prcxml_files.base_file(self.pack_path(target, self.names))
 
     def save(self) -> None:
         if self.target is None or self.current is None or not self.app.require_folder():

@@ -184,6 +184,22 @@ def check_fighter_manifest(mod_dir, shipped, vanilla):
         if fighter.get("item_hand") and fighter.get("base") in fighter_manifest.NO_HAND_BONES:
             findings.append(("ERROR", "fighter.toml: item_hand on %s: it has no HaveL or HaveR "
                                       "bone, so the engine refuses the key" % fighter.get("base")))
+        if "final" in fighter:
+            findings.append(("WARN", "fighter.toml: [final] is no longer read (borrowed Final Smashes were "
+                                     "removed); the Workbench drops it when it writes fighter.toml"))
+        cpu_ai = fighter.get("cpu_ai")
+        if cpu_ai and cpu_ai != fighter.get("base"):
+            resource = fighter.get("resource_name") or name
+            own_ai = [p for p in shipped if p.startswith("fighter/%s/ai/" % resource)]
+            if own_ai:
+                findings.append(("WARN", "fighter.toml: cpu_ai = \"%s\": the CPU loads %s's AI "
+                                         "files, so the %d file(s) under fighter/%s/ai/ are not read"
+                                 % (cpu_ai, cpu_ai, len(own_ai), resource)))
+            if cpu_ai in fighter_manifest.CPU_AI_OWN_LOGIC:
+                findings.append(("INFO", "fighter.toml: cpu_ai = \"%s\": parts of %s's AI are made for its "
+                                         "own gauges, partners or inputs and find nothing to use on this "
+                                         "fighter" % (cpu_ai, cpu_ai)))
+            findings.append(("INFO", "fighter.toml: cpu_ai needs an engine newer than 0.7.0-beta.1"))
         if fighter.get("jingle"):
             findings.append(("WARN", "fighter.toml: jingle is accepted by the engine but not "
                                      "served yet; the base's victory theme plays"))
@@ -593,7 +609,7 @@ def lint(mod_dir, arc_index, cross_color_resources=()):
     findings.extend(check_fighter_manifest(mod_dir, shipped, vanilla))
     findings.extend(check_work_ids(mod_dir))
     if lint_prcxml is not None:
-        findings.extend(lint_prcxml.lint_pack(mod_dir, ("fighter", "item", "enemy")))
+        findings.extend(lint_prcxml.lint_pack(mod_dir, ("fighter", "item", "enemy"), arc_index))
     return findings
 
 

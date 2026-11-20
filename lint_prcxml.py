@@ -7,6 +7,7 @@ and stage_param.prcxml, and the keys of their own an item, enemy or stage takes
 from param.prcxml. Also warns about a prcxml for the shared file itself, which
 changes the vanilla rows."""
 
+import json
 import os
 import sys
 import xml.etree.ElementTree as ElementTree
@@ -41,8 +42,13 @@ AREA_FIELDS = ("x0", "y0", "x1", "y1")
 SHARED_STAGE_FILES = {
     "item/common/param/item_switch_param.prcxml": "item lists",
     "param/sound/stage_sound_settings.prcxml": "reverb and sound settings",
-    "fighter/common/ai/param/stage_param.prcxml": "computer player areas",
+    "fighter/common/ai/param/stage_param.prcxml": "CPU areas",
 }
+PATCH_BASES = ((".prcxml", ".prc"), (".prcx", ".prc"), (".stprmxml", ".stprm"), (".stprmx", ".stprm"),
+               (".stdatxml", ".stdat"), (".stdatx", ".stdat"))
+SHARE_KEYS = ("share-to-vanilla", "share_to_vanilla", "share-to-added", "share_to_added")
+FAMILY_TOPS = {"fighter": ("fighter",), "item": ITEM_TOPS, "enemy": ("enemy",), "stage": ("stage",)}
+ENGINE_SERVES = "0.7.0-beta.1"
 IDENTITY = ("fighter_kind", "name", "name_hash", "kind")
 SCALARS = ("bool", "sbyte", "byte", "short", "ushort", "int", "uint", "float", "hash40", "string")
 SHOWN = 6
@@ -389,7 +395,126 @@ def shipped_prcxml(mod_dir):
                 yield os.path.relpath(full, mod_dir).replace(os.sep, "/"), full
 
 
-def lint_pack(mod_dir, families=("fighter", "item", "enemy", "stage")):
+def patch_base(relative):
+    """The file a patch file is applied to, or None for a regional or other file."""
+    lower = relative.lower()
+    for patch, base in PATCH_BASES:
+        if lower.endswith(patch):
+            stem = lower[:-len(patch)]
+            if "+" in stem.rsplit("/", 1)[-1]:
+                return None
+            return stem + base
+    return None
+
+
+def read_by_dionysus(relative):
+    """Whether Dionysus reads this prcxml itself instead of patching a file."""
+    parts = relative.lower().split("/")
+    name = parts[-1]
+    if not name.endswith(".prcxml"):
+        return False
+    stem = name[:-len(".prcxml")]
+    if len(parts) == 4 and parts[0] == "fighter" and parts[2] == "param":
+        return stem == "vl" or stem in FIGHTER_FILES
+    if len(parts) == 5 and parts[0] == "fighter" and parts[2:4] == ["ai", "param"]:
+        return name == CPU_FILE
+    if len(parts) == 4 and parts[0] in ITEM_TOPS and parts[2] == "param":
+        return name in (ITEM_FILE, ASSET_FILE)
+    if len(parts) == 3 and parts[0] == "enemy":
+        return name == ENEMY_FILE
+    if len(parts) == 4 and parts[0] == "enemy" and parts[2] == "param":
+        return name == ASSET_FILE
+    if len(parts) == 5 and parts[0] == "stage" and parts[3] == "param":
+        return name in STAGE_FILES + (ASSET_FILE,)
+    return len(parts) == 2 and parts[0] == "spirit"
+
+
+def config_shares(mod_dir):
+    """Every share target in the pack's config.json, lowercased, with its source."""
+    try:
+        with open(os.path.join(mod_dir, "config.json"), encoding="utf-8-sig") as handle:
+            config = json.load(handle)
+    except (OSError, ValueError):
+        return {}
+    shares = {}
+    for name in SHARE_KEYS:
+        table = config.get(name) if isinstance(config, dict) else None
+        if not isinstance(table, dict):
+            continue
+        for source, targets in table.items():
+            for target in targets if isinstance(targets, list) else [targets]:
+                if isinstance(target, str) and target.strip():
+                    shares.setdefault(target.strip().lower(), source.strip().lower())
+    return shares
+
+
+def vanilla_files(arc_index):
+    path = os.path.join(arc_index or "", "arc_files.tsv")
+    if not arc_index or not os.path.isfile(path):
+        return None
+    with open(path, encoding="utf8", errors="replace") as handle:
+        return {line.split("\t", 1)[0].strip() for line in handle}
+
+
+def shipped_patches(mod_dir, families):
+    tops = {top for family in families for top in FAMILY_TOPS.get(family, ())}
+    for folder, _, names in os.walk(mod_dir):
+        for name in names:
+            relative = os.path.relpath(os.path.join(folder, name), mod_dir).replace(os.sep, "/")
+            if relative.split("/", 1)[0].lower() in tops and patch_base(relative) and not read_by_dionysus(relative):
+                yield relative
+
+
+def served_folder(base):
+    """Whether Dionysus looks for patches of a borrowed file in this file's folder."""
+    parts = base.split("/")
+    if len(parts) == 5 and parts[0] == "stage":
+        return parts[2] in ("normal", "battle") and parts[3] in ("param", "render")
+    if len(parts) == 4 and parts[0] in ("fighter", "enemy") + ITEM_TOPS:
+        return parts[2] == "param"
+    return len(parts) == 5 and parts[0] == "fighter" and parts[2:4] == ["ai", "param"]
+
+
+def check_patch_bases(mod_dir, families, arc_index=None):
+    """A patch file whose base is shared to the pack is served by Dionysus; one
+    whose base is nowhere is read by nothing."""
+    patches = sorted(shipped_patches(mod_dir, families))
+    if not patches:
+        return []
+    shares = config_shares(mod_dir)
+    vanilla = vanilla_files(arc_index)
+    findings = []
+    for relative in patches:
+        base = patch_base(relative)
+        if os.path.isfile(os.path.join(mod_dir, os.path.dirname(relative), base.rsplit("/", 1)[-1])):
+            continue
+        if base in shares and served_folder(base):
+            findings.append(("INFO", "%s patches %s, which this pack shares from %s; Dionysus patches it "
+                                     "when the game reads %s (an engine newer than %s)"
+                             % (relative, base.rsplit("/", 1)[-1], shares[base], base, ENGINE_SERVES)))
+            continue
+        if base in shares:
+            findings.append(("WARN", "%s patches %s, which this pack shares from %s; Dionysus patches borrowed "
+                                     "files only in a clone's param folders and a stage's render folders, so "
+                                     "nothing reads it. Ship the whole file instead" % (relative, base, shares[base])))
+            continue
+        parts = base.split("/")
+        fighter_param = len(parts) == 4 and parts[0] == "fighter" and parts[2] == "param"
+        if vanilla is not None and base in vanilla:
+            continue
+        if vanilla is None and not fighter_param:
+            continue
+        text = ("%s patches %s, which is not in the game or in this pack and is not shared to it in "
+                "this pack's config.json, so nothing reads it unless another pack shares it. Ship the "
+                "file, or share it from the base's in config.json" % (relative, base))
+        if fighter_param and relative.lower().endswith(".prcxml"):
+            text += " (in fighter/<clone>/param/ Dionysus itself reads only %s)" % ", ".join(
+                name + ".prcxml" for name in list(FIGHTER_FILES) + ["vl"])
+        findings.append(("WARN", text))
+    return findings
+
+
+def lint_pack(mod_dir, families=("fighter", "item", "enemy", "stage"), arc_index=None):
     findings = []
     for relative, full in sorted(shipped_prcxml(mod_dir)):
         parts = relative.split("/")
@@ -400,7 +525,7 @@ def lint_pack(mod_dir, families=("fighter", "item", "enemy", "stage")):
                              "put it in fighter/<clone>/param/" % (relative, stem + ".prc")))
             continue
         if lower == "fighter/common/ai/param/fighter_param.prcxml" and "fighter" in families:
-            findings.append(("WARN", "%s changes the computer players of every fighter. For a clone, "
+            findings.append(("WARN", "%s changes the CPUs of every fighter. For a clone, "
                              "put it in fighter/<clone>/ai/param/" % relative))
             continue
         if lower == "enemy/common/common.prcxml" and "enemy" in families:
@@ -429,9 +554,6 @@ def lint_pack(mod_dir, families=("fighter", "item", "enemy", "stage")):
                 role = "fighter"
             elif stem == "vl":
                 role = "vl"
-            else:
-                findings.append(("WARN", "%s is not a file Dionysus reads for a clone (it reads %s)"
-                                 % (relative, ", ".join(name + ".prcxml" for name in list(FIGHTER_FILES) + ["vl"]))))
         elif "item" in families and len(parts) == 4 and parts[0] in ITEM_TOPS and parts[2] == "param":
             if parts[3] == ITEM_FILE:
                 role = "item"
@@ -465,7 +587,7 @@ def lint_pack(mod_dir, families=("fighter", "item", "enemy", "stage")):
             findings += check_stage_area(relative, root)
         else:
             findings += check_stage(relative, root)
-    return findings
+    return findings + check_patch_bases(mod_dir, families, arc_index)
 
 
 def main(argv):

@@ -99,9 +99,9 @@ STAGE_LIST_KEYS = ("dynamic_collisions", "paused_motions", "items_off", "items_o
 ITEM_GROUPS = (("item", "Items"), ("assist", "Assist Trophies"), ("pokemon", "Poké Ball Pokémon"))
 FIGHTER_KEYS = ("name", "base", "display_name", "costumes", "color_start", "series",
                 "disp_order", "narration", "staffroll", "css", "ui_chara", "fighter_kind_name",
-                "owns_param_resources", "partner", "switch", "item_hand")
+                "owns_param_resources", "partner", "switch", "item_hand", "cpu_ai")
 FIGHTER_MANIFEST = "fighter.toml"
-FIGHTER_KEYS_CLEARED_WHEN_BLANK = ("item_hand",)
+FIGHTER_KEYS_CLEARED_WHEN_BLANK = ("item_hand", "cpu_ai")
 COMMANDS_KEYS = ("vanilla", "special_command_life_max", "super_special_command_life_max",
                  "special_command_ab_button_life", "special_command_neutral_threshold",
                  "special_command_stick_range")
@@ -197,6 +197,8 @@ def fighter_manifest_values(state: dict) -> dict:
         values["staffroll"] = True
     if str(state.get("item_hand") or "").strip() in ("left", "right"):
         values["item_hand"] = str(state["item_hand"]).strip()
+    if str(state.get("cpu_ai") or "").strip():
+        values["cpu_ai"] = str(state["cpu_ai"]).strip()
     if state.get("own_css"):
         values["css"] = False
     if state.get("owns_param_resources"):
@@ -463,6 +465,8 @@ def write_fighter_manifest(path: Path, state: dict) -> list[str]:
             continue
         elif header == "[kirby]":
             kirby_existing = body
+        elif header == "[final]":
+            continue
         elif header in ("[params]", "[params.mul]") and param_lines:
             continue
         elif header in COMMAND_TABLES and ("commands" in state or "command_settings" in state):
@@ -548,7 +552,6 @@ def fighter_manifest_from_lines(lines: list[str]) -> dict:
     base_articles = []
     kirby_motions = []
     kirby_meshes = []
-    final_tables = []
     global_motions = []
     grabs = []
     hud: dict = {}
@@ -603,8 +606,6 @@ def fighter_manifest_from_lines(lines: list[str]) -> dict:
             grabs.append(table_texts(body))
         elif header == "[hud]":
             hud.update({key: gimmicks.display(text) for key, text in table_texts(body).items()})
-        elif header == "[final]":
-            final_tables.append("\n".join([header] + [line.rstrip() for line in body if line.strip()]))
         elif header == "[tether]":
             tether["from"] = gimmicks.display(table_texts(body).get("from", ""))
         elif header == "[[tether.box]]":
@@ -634,7 +635,7 @@ def fighter_manifest_from_lines(lines: list[str]) -> dict:
         state["color_start"] = values["color_start"]
     for key in ("display_name", "series", "narration", "ui_chara", "fighter_kind_name",
                 "disp_order", "staffroll", "owns_param_resources", "kirby_statuses",
-                "kirby_copy_full_model", "save_no", "exhibit_year", "jingle", "item_hand"):
+                "kirby_copy_full_model", "save_no", "exhibit_year", "jingle", "item_hand", "cpu_ai"):
         if key in values:
             state[key] = values[key]
     if "css" in values:
@@ -652,7 +653,6 @@ def fighter_manifest_from_lines(lines: list[str]) -> dict:
     state["kirby_tables"] = ""
     state["kirby_motions"] = kirby_motions
     state["kirby_meshes"] = kirby_meshes
-    state["final_tables"] = "\n\n".join(final_tables)
     state["global_motions"] = global_motions
     state["grabs"] = grabs
     state["hud"] = hud

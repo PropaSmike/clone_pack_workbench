@@ -120,6 +120,9 @@ For a fighter:
   refused.
 - **Tether**: a donor's air tether and ledge grab (`[tether]`) and ledge
   boxes of your own (`[[tether.box]]`). It names the donor articles to mint.
+- **CPU**: **CPU AI** (`cpu_ai`) gives the CPU
+  another fighter's AI; blank keeps the base's. That fighter's AI code and AI
+  files load with yours.
 - **HUD**: a borrowed HUD or the pack's own layout (`[hud]`).
 - **Move list pages** and **Picture pages**: `[move_list]`, extra move list
   pages past the game's four, and the ones that show a picture.
@@ -318,11 +321,11 @@ Lists inside `vl.prc` (`hit_data`, ...) are not rules: ship your own
 The prcxml files the part can ship, each starting as a copy of the game's own
 values (13.0.5). Those come with the Workbench, in `clone_pack_gui/data/params/`.
 
-- Pick a file. The list says whether the pack has it and where it starts
-  from. A row file (`fighter_param`, `fighter_param_motion`, the computer
-  player row, an item's or enemy's common row, a stage's sound, box and item
-  switches) starts from the base's or donor's row; `vl.prc` and an item's own
-  `param.prc` start from the pack's own file when it ships one.
+- Pick a file. The list says whether the pack has it and where it starts from.
+  A row file (`fighter_param`, `fighter_param_motion`, the CPU row, an item's
+  or enemy's common row, a stage's sound, box and item switches) starts from
+  the base's or donor's row; `vl.prc` and an item's own `param.prc` start from
+  the pack's own file when it ships one.
 - Click a value, type the new one, **Set** (or Enter). Changed values are
   green; **Back to the game's value** undoes one, and takes out a key of your
   own.
@@ -336,6 +339,11 @@ values (13.0.5). Those come with the Workbench, in `clone_pack_gui/data/params/`
   ARCropolis patches that copy with your prcxml. The base keeps its own file.
 - `vl.prc` and the item, enemy and stage params of their own take keys of your
   own: name one (`field` or `group.field`), pick its type, **Add**.
+- A stage also lists its `stageparam_<place>.stprmxml` (camera, blast lines,
+  star KOs; Normal and Battlefield/Omega forms), the donor-named `.stdatxml`
+  and `render/render_param.prcxml`, each starting from the donor's file.
+  Dionysus patches the clone's borrowed file when the game reads it, so the
+  share in `config.json` stays.
 - A spirit pack lists its four `spirit/` files, holding the rows the Identity
   tab added. Every value can be changed; **Save** writes the whole file.
 
@@ -733,6 +741,9 @@ error with its line) and checked against the folders:
   above 15 a warning;
 - a Lucas tether gets a note about its `air_catch_pose`;
 - `item_hand` on Ivysaur is an error: it has no hand bones;
+- `cpu_ai` must name a fighter with CPU AI; with files under
+  `fighter/<name>/ai/` it is a warning (they are not read), and a fighter whose
+  AI has code for its own gauges, partners or inputs gets a note;
 - an article with `original_code = false` and no model or `motion_list.bin` of its
   own is a warning, and so is `original_kind = false` on a source whose scripts
   check their own weapon kind (Toon Link's arrow, Samus's charge shot, ...);
@@ -768,6 +779,10 @@ prcxml files (`lint_prcxml.py`, also run by the stage linter):
   `param/sound/stage_sound_settings.prcxml`) is a warning: it changes the
   vanilla rows for every player. So is an item `param.prcxml` written for the
   shared row (ARCropolis applies it to the item's own `param.prc`).
+- any other `.prcxml`, `.stprmxml` or `.stdatxml` in a clone's `param` folders
+  or a stage's `render` folders: a note when Dionysus patches its borrowed
+  file, a warning when nothing reads it (not in the game, not shipped, not
+  shared).
 
 ## lint_stage_pack.py
 

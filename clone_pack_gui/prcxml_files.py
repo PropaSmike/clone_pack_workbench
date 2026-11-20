@@ -408,6 +408,7 @@ class Target:
     by_index: bool = False
     own_keys: bool = False
     values: str = ""
+    row: str = ""
     note: str = ""
 
 
@@ -432,7 +433,7 @@ TARGETS = (
            note="Top-level values only; lists and the match-level fields stay everyone's.")
     for name in COMMON_FILES
 ) + (
-    Target("cpu", FIGHTER, "computer player row", "fighter/{name}/ai/param/fighter_param.prcxml",
+    Target("cpu", FIGHTER, "CPU row", "fighter/{name}/ai/param/fighter_param.prcxml",
            "fighter/common/ai/param/fighter_param.prc", "base", "name_hash", "fighter_kind_{base}",
            values="cpu.tsv",
            note="Recovery reach, attack ranges, Final Smash range. final_type is a label and stays the base's."),
@@ -458,10 +459,27 @@ TARGETS = (
            "param/sound/stage_sound_settings.prc", "info_", "place_id_", "{base}",
            values="stage_sound.tsv",
            note="reverb_type_: 0 none, 1 outdoors, 2 to 4 small, medium and large rooms, 10 Hanenbow's delay."),
-    Target("stage_area", STAGE, "computer player box", "stage/{name}/{tree}/param/stage_param.prcxml",
+    Target("stage_area", STAGE, "CPU box", "stage/{name}/{tree}/param/stage_param.prcxml",
            "fighter/common/ai/param/stage_param.prc", "area", "stage_name", "{base}", whole_row=True,
            values="stage_area.tsv",
            note="The Normal form's box: x0, y0, x1, y1, all four."),
+    Target("stage_stprm", STAGE, "stage params, Normal form", "stage/{name}/{tree}/param/stageparam_{name}.stprmxml",
+           "stage/{base}/{tree}/param/stageparam_{base}.stprm", row="{base}/{tree}", values="stage_stprm.tsv",
+           note="Camera, blast lines, star and screen KOs (can_futtobi_back, can_futtobi_front). Dionysus "
+                "patches the clone's stageparam file when the game reads it, so keep its share in config.json "
+                "(an engine newer than 0.7.0-beta.1)."),
+    Target("stage_stprm_battle", STAGE, "stage params, Battlefield and Omega forms",
+           "stage/{name}/battle/param/stageparam_{name}.stprmxml",
+           "stage/{base}/battle/param/stageparam_{base}.stprm", row="{base}/battle", values="stage_stprm.tsv",
+           note="The battle tree's camera and blast lines, for a pack that ships its own battle tree "
+                "(ships_battle_tree)."),
+    Target("stage_stdat", STAGE, "stage data (.stdat)", "stage/{name}/{tree}/param/{base}.stdatxml",
+           "stage/{base}/{tree}/param/{base}.stdat", row="{base}/{tree}", values="stage_stdat.tsv",
+           note="The donor's stage code reads it by the donor's name: hazards, moving parts, their timings. "
+                "Patched when the game reads it."),
+    Target("stage_render", STAGE, "lighting and post effects", "stage/{name}/{tree}/render/render_param.prcxml",
+           "stage/{base}/{tree}/render/render_param.prc", row="{base}/{tree}", values="stage_render.tsv",
+           note="Light colours and directions, fog, bloom. Patched when the game reads it."),
     Target("stage_param", STAGE, "params of its own", "stage/{name}/{tree}/param/param.prcxml", own_keys=True,
            note="Keys your code reads with dionysus_api::stage::param_float."),
     Target("spirits", SPIRIT, "spirits", "spirit/ui_spirit_db.prcxml",
@@ -524,11 +542,19 @@ def fill(template: str, names: Names) -> str:
     return template.format(name=names.name, base=names.base, top=names.top, tree=names.tree)
 
 
+PATCH_SUFFIXES = {".prcxml": ".prc", ".stprmxml": ".stprm", ".stdatxml": ".stdat"}
+
+
+def base_file(path: Path) -> Path:
+    """The game file a patch file is applied to."""
+    return path.with_suffix(PATCH_SUFFIXES.get(path.suffix.lower(), ".prc"))
+
+
 def own_prc(target: Target, names: Names, pack):
     """The pack's own prc a whole-file prcxml patches, when it ships one."""
     if target.table or target.top_only or not pack:
         return None
-    candidate = (Path(pack) / fill(target.path, names)).with_suffix(".prc")
+    candidate = base_file(Path(pack) / fill(target.path, names))
     return candidate if candidate.is_file() else None
 
 
@@ -704,6 +730,8 @@ def game_values(target: Target, names: Names) -> "Node | None":
             return None
         row.index = 0
         return Node("struct", children=[Node("list", target.table, children=[row])])
+    if target.row:
+        return tree_rows(target.values, fill(target.row, names))
     return tree_rows(target.values, target.key if target.top_only else names.base)
 
 

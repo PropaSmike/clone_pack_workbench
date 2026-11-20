@@ -328,6 +328,8 @@ def fighter_manifest_lines(state: dict, constant: str) -> list[str]:
         lines.append("    .staffroll() // the pack's credits picture")
     if str(state.get("item_hand") or "").strip() in ("left", "right"):
         lines.append("    .item_hand(%s%s%s) // the hand that holds items" % (q, str(state["item_hand"]).strip(), q))
+    if str(state.get("cpu_ai") or "").strip():
+        lines.append("    .cpu_ai(%s%s%s) // the CPU uses this fighter's AI" % (q, str(state["cpu_ai"]).strip(), q))
     if state.get("jingle"):
         lines.append("    .jingle(%s%s%s) // victory theme; accepted, not served yet" % (q, state["jingle"], q))
     if state.get("owns_param_resources"):
@@ -393,8 +395,6 @@ def fighter_manifest_lines(state: dict, constant: str) -> list[str]:
     else:
         lines += guarded_tables(state.get("hud_tables"), "CAP_HUD",
                                 "the fighter's HUD, borrowed or its own layout")
-    lines += guarded_tables(state.get("final_tables"), "CAP_FINAL_SMASH",
-                            "the Final Smash borrowed from another fighter")
     if "tether" in state:
         lines += tether_manifest_lines(state)
     else:

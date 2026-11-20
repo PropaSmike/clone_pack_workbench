@@ -794,6 +794,40 @@ def add_kirby_copy_motions(config: dict, base: str, clone: str, donor: str,
             config["new-dir-infos-base"].pop(key, None)
 
 
+AI_FILES = ("attack_list_param.prc", "attack_data_param.prc")
+AI_PATCH_SUFFIXES = (".prcxml", ".prcx")
+
+
+def add_own_ai(config: dict, clone: str, shipped, source: str) -> list[str]:
+    """When the clone ships its attack list or attack data, or a patch of either,
+    it gets both under its own name: a file it lacks is shared from the source
+    fighter's (its cpu_ai, else its base), and both go in every costume group,
+    which loads them with the fighter. Returns the paths shared in."""
+    folder = f"fighter/{clone}/ai/param/"
+    paths = set(shipped)
+
+    def mentioned(name: str) -> bool:
+        stem = folder + name[:-len(".prc")]
+        return folder + name in paths or any(stem + suffix in paths for suffix in AI_PATCH_SUFFIXES)
+
+    if not any(mentioned(name) for name in AI_FILES):
+        return []
+    groups = config["new-dir-files"]
+    costume = re.compile(rf"fighter/{re.escape(clone)}/c\d{{2,3}}")
+    shared = []
+    for name in AI_FILES:
+        target = folder + name
+        if target not in paths:
+            targets = config["share-to-vanilla"].setdefault(f"fighter/{source}/ai/param/{name}", [])
+            if target not in targets:
+                targets.append(target)
+            shared.append(target)
+        for key in groups:
+            if costume.fullmatch(key):
+                groups[key] = sorted(set(groups[key]) | {target})
+    return shared
+
+
 def add_own_scenes(config: dict, clone: str, shipped) -> tuple[int, int]:
     """Declare the clone's own Final Smash background (`finalsmash/<clone>/...`) and
     movies (`prebuilt:/movie/fighter/<clone>/cNN/...`) in the directories the game
@@ -1044,6 +1078,7 @@ def defaults_from_manifest(args) -> str | None:
     args.base = base
     args.color_count = costumes
     args.color_start = start
+    args.cpu_ai = fighter.get("cpu_ai")
     print(f"fighter.toml: {name} on {base}, costumes c{start:02} to c{start + costumes - 1:02}")
     return None
 
@@ -1124,6 +1159,9 @@ def main() -> int:
     for tree_name, count in sorted(owned_trees(args.base).items()):
         print(f"{args.base} owns {count} file(s) under '{tree_name}/'; the engine loads "
               f"that tree for the clone, nothing to declare")
+    ai_source = getattr(args, "cpu_ai", None) or args.base
+    for target in add_own_ai(config, args.clone, shipped, ai_source):
+        print(f"shared {target} from {ai_source}'s; the pack patches or keeps it as the clone's own AI data")
     scenes, movies = add_own_scenes(config, args.clone, shipped)
     if scenes:
         print(f"declared {scenes} Final Smash background file(s) under finalsmash/{args.clone}/")

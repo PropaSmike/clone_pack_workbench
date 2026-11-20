@@ -886,6 +886,43 @@ def fight_code(state: dict, resource: str, suffix: str) -> tuple[list[str], list
     return main, ["\n" + blank(name, False, body) + "\n"], uses
 
 
+def cpu_set_code(state: dict, resource: str, suffix: str) -> tuple[list[str], list[str], set]:
+    """The CPU's special sets: each condition's sets written to the CUSTOMIZE_SPECIAL ints
+    every frame, the checks left for the modder."""
+    rows = [row for row in state.get("cpu_sets") or [] if not gimmicks.cpu_set_problem(row)]
+    if not rows:
+        return [], [], set()
+    name = "cpu_sets%s" % suffix
+    base = state.get("base_resource_name") or state.get("base_fighter") or ""
+    ai = state.get("cpu_ai") or base
+    body = ["let boma = fighter.module_accessor;"]
+    if ai in gimmicks.CPU_SET_RULE_BASES:
+        body.append("// %s's CPU has rules of its own for rows 22 to 45, so it may not follow these sets" % ai)
+    if base in gimmicks.MII_BASES:
+        body.append("// a Mii base: these ints also pick the Mii's own custom specials, so the last branch "
+                    "should give back the player's picks")
+    names = [gimmicks.display(row["name"]) for row in rows]
+    body.append("let %s = false; // your check, as WorkModule::is_flag(boma, YOUR_FLAG)" % names[0])
+    body += ["let %s = false;" % condition for condition in names[1:]]
+    for index, (row, condition) in enumerate(zip(rows, names)):
+        body += ["%s %s {" % ("let sets: [i32; 4] = if" if index == 0 else "} else if", condition),
+                 "    [%s] // neutral, side, up, down special" % ", ".join(
+                     str(number) for number in gimmicks.cpu_sets(row))]
+    body += ["} else {", "    [0, 0, 0, 0] // the standard rows", "};"]
+    for index, (_, _, short) in enumerate(gimmicks.CPU_SET_KEYS):
+        body.append("WorkModule::set_int(boma, sets[%d], *FIGHTER_INSTANCE_WORK_ID_INT_CUSTOMIZE_SPECIAL_%s_NO);"
+                    % (index, short))
+    note = ("\n/// The CPU's special sets. Each condition is false until you write its check; the first true one\n"
+            "/// picks the sets, and none picks the standard rows. Set 1 is attack list rows 22 to 29, set 2\n"
+            "/// rows 30 to 37, set 3 rows 38 to 45 (Parameters, prcxml files). The game reads the ints every\n"
+            "/// frame. The CPU still presses the special button, and your status script decides what comes out.\n")
+    main = ['    Agent::new("%s").on_line(Main, %s).install(); // the CPU\'s special sets, by your conditions'
+            % (resource, name)]
+    uses = {"use smashline::skyline_smash::app::lua_bind::*;", "use smashline::skyline_smash::lib::lua_const::*;",
+            "use smashline::skyline_smash::lua2cpp::L2CFighterCommon;"}
+    return main, [note + blank(name, False, body) + "\n"], uses
+
+
 def raw_fence(text: str) -> str:
     """The #s a raw string needs so the text cannot close it early."""
     fence = "#"
@@ -1033,7 +1070,8 @@ def fighter_part(state: dict, suffix: str = "", first: bool = True,
     for code_main, code_tail, code_uses in (glide_code(state, resource, suffix),
                                             tether_code(state, constant, resource, suffix),
                                             hud_code(state, constant, resource, suffix),
-                                            fight_code(state, resource, suffix)):
+                                            fight_code(state, resource, suffix),
+                                            cpu_set_code(state, resource, suffix)):
         main += code_main
         gimmick_tail += code_tail
         uses |= code_uses

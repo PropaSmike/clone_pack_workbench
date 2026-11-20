@@ -188,13 +188,9 @@ def check_fighter_manifest(mod_dir, shipped, vanilla):
             findings.append(("WARN", "fighter.toml: [final] is no longer read (borrowed Final Smashes were "
                                      "removed); the Workbench drops it when it writes fighter.toml"))
         cpu_ai = fighter.get("cpu_ai")
+        findings += check_own_ai(mod_dir, fighter.get("resource_name") or name,
+                                 cpu_ai or fighter.get("base_resource_name") or base, shipped)
         if cpu_ai and cpu_ai != fighter.get("base"):
-            resource = fighter.get("resource_name") or name
-            own_ai = [p for p in shipped if p.startswith("fighter/%s/ai/" % resource)]
-            if own_ai:
-                findings.append(("WARN", "fighter.toml: cpu_ai = \"%s\": the CPU loads %s's AI "
-                                         "files, so the %d file(s) under fighter/%s/ai/ are not read"
-                                 % (cpu_ai, cpu_ai, len(own_ai), resource)))
             if cpu_ai in fighter_manifest.CPU_AI_OWN_LOGIC:
                 findings.append(("INFO", "fighter.toml: cpu_ai = \"%s\": parts of %s's AI are made for its "
                                          "own gauges, partners or inputs and find nothing to use on this "
@@ -224,6 +220,55 @@ def check_fighter_manifest(mod_dir, shipped, vanilla):
                                      "numbering still take them"))
     findings += check_switch_groups(mod_dir, fighters)
     findings += check_partners(mod_dir, fighters)
+    return findings
+
+
+AI_FILES = ("attack_list_param.prc", "attack_data_param.prc")
+AI_PATCH_SUFFIXES = (".prcxml", ".prcx")
+
+
+def check_own_ai(mod_dir, resource, source, shipped):
+    """A clone that ships its attack list or attack data, or a patch of either,
+    needs both under its own name and both in its costume groups."""
+    folder = "fighter/%s/ai/param/" % resource
+    lowered = {path.lower() for path in shipped}
+
+    def mentioned(name):
+        stem = folder + name[:-len(".prc")]
+        return folder + name in lowered or any(stem + suffix in lowered for suffix in AI_PATCH_SUFFIXES)
+
+    if not any(mentioned(name) for name in AI_FILES):
+        return []
+    try:
+        with open(os.path.join(mod_dir, "config.json"), encoding="utf-8-sig") as handle:
+            config = json.load(handle)
+    except (OSError, ValueError):
+        config = {}
+    groups = config.get("new-dir-files") if isinstance(config, dict) else None
+    groups = groups if isinstance(groups, dict) else {}
+    costume = re.compile(r"fighter/%s/c\d{2,3}" % re.escape(resource))
+    listed = set()
+    for key, files in groups.items():
+        if costume.fullmatch(key) and isinstance(files, list):
+            listed.update(str(path).lower() for path in files)
+    shared = set()
+    table = config.get("share-to-vanilla") if isinstance(config, dict) else None
+    for targets in (table or {}).values():
+        for target in targets if isinstance(targets, list) else [targets]:
+            shared.add(str(target).lower())
+    findings = [("INFO", "%s: the CPU plays from the clone's own attack list and data, with %s's AI code and "
+                         "%s's files for any it does not ship (an engine newer than 0.7.0-beta.1)"
+                 % (folder.rstrip("/"), source, source))]
+    for name in AI_FILES:
+        path = folder + name
+        if path not in lowered and path not in shared:
+            findings.append(("WARN", "%s is neither shipped nor shared in config.json, so the clone has no "
+                                      "own AI data and its CPU keeps %s's. Build config.json again "
+                                      "(Workbench Save or make_clone_pack.py)" % (path, source)))
+        elif path not in listed:
+            findings.append(("WARN", "%s is in no costume group of config.json, so it does not load with the "
+                                      "fighter and its CPU keeps %s's AI data. Build config.json again "
+                                      "(Workbench Save or make_clone_pack.py)" % (path, source)))
     return findings
 
 

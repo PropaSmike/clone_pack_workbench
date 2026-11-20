@@ -122,7 +122,11 @@ For a fighter:
   boxes of your own (`[[tether.box]]`). It names the donor articles to mint.
 - **CPU**: **CPU AI** (`cpu_ai`) gives the CPU
   another fighter's AI; blank keeps the base's. That fighter's AI code and AI
-  files load with yours.
+  files load with yours. The clone's own attack list and data are under
+  **Parameters > prcxml files**. **CPU special sets** pair a condition (a
+  lowercase Rust name, as `sword_drawn`) with the set (rows 22 to 45) each
+  special comes from while it is true. The Rust tab declares each condition
+  `false` for your check; the first true one picks the sets.
 - **HUD**: a borrowed HUD or the pack's own layout (`[hud]`).
 - **Move list pages** and **Picture pages**: `[move_list]`, extra move list
   pages past the game's four, and the ones that show a picture.
@@ -339,6 +343,12 @@ values (13.0.5). Those come with the Workbench, in `clone_pack_gui/data/params/`
   ARCropolis patches that copy with your prcxml. The base keeps its own file.
 - `vl.prc` and the item, enemy and stage params of their own take keys of your
   own: name one (`field` or `group.field`), pick its type, **Add**.
+- A fighter also lists **CPU attack list** and **CPU attack data**
+  (`fighter/<name>/ai/param/`), starting from the `cpu_ai` fighter's files,
+  else the base's. Building `config.json` shares the one the pack does not
+  ship and lists both in every costume group. Attack list rows show their
+  slot and move (`[7] neutral special: special_n_start`, `[12] unused`,
+  `[22] set 1 neutral special`); attack data rows show their move.
 - A stage also lists its `stageparam_<place>.stprmxml` (camera, blast lines,
   star KOs; Normal and Battlefield/Omega forms), the donor-named `.stdatxml`
   and `render/render_param.prcxml`, each starting from the donor's file.
@@ -741,9 +751,11 @@ error with its line) and checked against the folders:
   above 15 a warning;
 - a Lucas tether gets a note about its `air_catch_pose`;
 - `item_hand` on Ivysaur is an error: it has no hand bones;
-- `cpu_ai` must name a fighter with CPU AI; with files under
-  `fighter/<name>/ai/` it is a warning (they are not read), and a fighter whose
-  AI has code for its own gauges, partners or inputs gets a note;
+- `cpu_ai` must name a fighter with CPU AI, and a fighter whose AI has code
+  for its own gauges, partners or inputs gets a note;
+- an attack list or attack data under `fighter/<name>/ai/param/` (file or
+  prcxml) gets a note; one of the two neither shipped nor shared, or in no
+  costume group, is a warning (the CPU keeps the AI fighter's);
 - an article with `original_code = false` and no model or `motion_list.bin` of its
   own is a warning, and so is `original_kind = false` on a source whose scripts
   check their own weapon kind (Toon Link's arrow, Samus's charge shot, ...);

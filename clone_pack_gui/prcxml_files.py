@@ -437,6 +437,15 @@ TARGETS = (
            "fighter/common/ai/param/fighter_param.prc", "base", "name_hash", "fighter_kind_{base}",
            values="cpu.tsv",
            note="Recovery reach, attack ranges, Final Smash range. final_type is a label and stays the base's."),
+    Target("ai_attack_list", FIGHTER, "CPU attack list", "fighter/{name}/ai/param/attack_list_param.prcxml",
+           "fighter/{ai}/ai/param/attack_list_param.prc", row="{ai}", values="ai_attack_list.tsv",
+           note="Which attacks the CPU picks and when: a row per attack, starting from the AI fighter's "
+                "(cpu_ai, else the base). The clone keeps its own copy, so its base and the AI fighter "
+                "keep theirs in the same match (an engine newer than 0.7.0-beta.1)."),
+    Target("ai_attack_data", FIGHTER, "CPU attack data", "fighter/{name}/ai/param/attack_data_param.prcxml",
+           "fighter/{ai}/ai/param/attack_data_param.prc", row="{ai}", values="ai_attack_data.tsv",
+           note="Each attack's reach box (x0, y0, x1, y1) and frames, by motion. The CPU aims with these, "
+                "so match them to the clone's own moves."),
     Target("item_common", ITEM, "item/common/param/param.prc row", "{top}/{name}/param/common_param.prcxml",
            "item/common/param/param.prc", "params", "name_hash", "{base}", values="item_common.tsv",
            note="The item's row: throw speeds, kinds, nodes. group cannot be set."),
@@ -507,6 +516,7 @@ class Names:
     base: str = ""
     top: str = "item"
     tree: str = "normal"
+    ai: str = ""
 
 
 def plain(text) -> str:
@@ -519,7 +529,7 @@ def names_for(family: str, part: dict, item_root=None, item_name=None) -> "Names
     if family == FIGHTER:
         name = part.get("resource_name")
         base = plain(part.get("base_resource_name") or part.get("base_fighter"))
-        return Names(name, base) if name else None
+        return Names(name, base, ai=plain(part.get("cpu_ai")) or base) if name else None
     if family == ITEM:
         name, base = part.get("resource_name"), plain(part.get("base_item"))
         if not base and item_name is not None and isinstance(part.get("base_kind"), int):
@@ -539,7 +549,8 @@ def names_for(family: str, part: dict, item_root=None, item_name=None) -> "Names
 
 
 def fill(template: str, names: Names) -> str:
-    return template.format(name=names.name, base=names.base, top=names.top, tree=names.tree)
+    return template.format(name=names.name, base=names.base, top=names.top, tree=names.tree,
+                           ai=names.ai or names.base)
 
 
 PATCH_SUFFIXES = {".prcxml": ".prc", ".stprmxml": ".stprm", ".stdatxml": ".stdat"}
@@ -717,6 +728,60 @@ def tree_rows(name: str, wanted: str) -> "Node | None":
     if any(len(entry) != 3 for entry in found):
         raise ValueError("%s has a line without path, type and value" % name)
     return rebuild(found)
+
+
+SLOT_PATH = re.compile(r"attack_list\[(\d+)\]\.motion_kind_hash")
+NO_MOTION = ("invalid", "none")
+FIRST_SET_ROW = 22
+SET_SPECIALS = ("neutral special", "side special", "up special", "down special")
+SLOT_WORDS = {
+    "attack_11": "jab", "attack_s3_s": "forward tilt", "attack_hi3": "up tilt", "attack_lw3": "down tilt",
+    "attack_s4_s": "forward smash", "attack_hi4": "up smash", "attack_lw4": "down smash",
+    "special_n": "neutral special", "special_s": "side special", "special_hi": "up special",
+    "special_lw": "down special", "catch": "grab", "attack_air_n": "neutral air", "attack_air_f": "forward air",
+    "attack_air_b": "back air", "attack_air_hi": "up air", "attack_air_lw": "down air",
+    "special_air_n": "air neutral special", "special_air_s": "air side special",
+    "special_air_hi": "air up special", "special_air_lw": "air down special",
+}
+
+
+def ai_slots() -> list:
+    """Each CPU attack list slot's default move, as the game's common file names it."""
+    found = {}
+    for line in _loaded("ai_attack_list.tsv"):
+        if line[0] == "common" and len(line) == 4:
+            match = SLOT_PATH.fullmatch(line[1])
+            if match:
+                found[int(match.group(1))] = line[3]
+    return [found.get(index, "none") for index in range(max(found) + 1)] if found else []
+
+
+def row_name(target: Target, parent: Node, node: Node, labels: dict) -> str:
+    """What a row of a CPU attack file stands for: an attack list row by its slot
+    and move, an attack data row by its move. Empty for any other row."""
+    if node.index is None or target is None:
+        return ""
+    if target.key == "ai_attack_data" and parent.hash == key("attack_data"):
+        motion = node.member("motion_kind")
+        return value_text(motion, labels) if motion is not None and motion.tag == "hash40" else ""
+    if target.key != "ai_attack_list" or parent.hash != key("attack_list"):
+        return ""
+    member = node.member("motion_kind_hash")
+    named = member is not None and member.tag == "hash40" and \
+        int(member.value) not in {key(name) for name in NO_MOTION}
+    own = value_text(member, labels) if named else ""
+    slots = ai_slots()
+    slot = slots[node.index] if node.index < len(slots) else "none"
+    if slot == "invalid":
+        return "unused"
+    if slot == "none":
+        place = node.index - FIRST_SET_ROW
+        if place < 0:
+            return "extra: %s" % own if own else "extra"
+        word = SET_SPECIALS[place % 4]
+        set_name = "set %d %s%s" % (place // 8 + 1, "air " if place % 8 >= 4 else "", word)
+        return "%s: %s" % (set_name, own) if own else set_name
+    return "%s: %s" % (SLOT_WORDS.get(slot, slot), own or slot)
 
 
 def game_values(target: Target, names: Names) -> "Node | None":

@@ -1284,6 +1284,13 @@ class IdentityPanel(ttk.Frame):
         note = ttk.Label(frame, text=CPU_AI_NOTE, style="Hint.TLabel", justify="left")
         self._place(frame, fields, note)
         fields.hints.append(note)
+        self.cpu_set_editor = TableEditor(
+            frame, "CPU special sets", "cpu_set",
+            [Field("name", "Condition", 16)] + [Field(key, label, 9, "choice", gimmicks.CPU_SET_CHOICES)
+                                             for key, label, _ in gimmicks.CPU_SET_KEYS],
+            describe=gimmicks.describe_cpu_set, identity=lambda row: row.get("name"), on_change=self.changed,
+            per_row=3, hint=CPU_SET_NOTE)
+        self._place(frame, fields, self.cpu_set_editor)
 
         frame = self._section(packs.FIGHTER, "Switch and partner")
         fields.entry("switch_with", "Switches with",
@@ -1791,6 +1798,7 @@ class IdentityPanel(ttk.Frame):
         state["kirby_meshes"] = self.kirby_mesh_editor.rows
         state["kirby_tables"] = ""
         state["partner_params"] = self.partner_editor.rows
+        state["cpu_sets"] = self.cpu_set_editor.rows
         state["article_hurtboxes"] = self.hurtbox_editor.rows
         state["article_lvd_vertices"] = self.platform_editor.rows
         if not quiet:
@@ -1818,6 +1826,7 @@ class IdentityPanel(ttk.Frame):
         self.kirby_motion_editor.set_rows(part.get("kirby_motions") or packs.legacy_kirby_rows(part, "[[kirby.motion]]"))
         self.kirby_mesh_editor.set_rows(part.get("kirby_meshes") or packs.legacy_kirby_rows(part, "[[kirby.mesh]]"))
         self.partner_editor.set_rows(part.get("partner_params"))
+        self.cpu_set_editor.set_rows(part.get("cpu_sets"))
         self.hurtbox_editor.set_rows(part.get("article_hurtboxes"))
         self.platform_editor.set_rows(part.get("article_lvd_vertices"))
 
@@ -4390,9 +4399,20 @@ class ParamsPanel(ttk.Frame):
 CPU_AI_NOTE = (
     "The chosen fighter's AI code and its two AI files load with yours (an engine newer than 0.7.0-beta.1). "
     "The AI of Donkey Kong, Zero Suit Samus, Rosalina, Bayonetta, Steve, Ryu and Ken also has code for their "
-    "own gauges, partners or inputs, which finds nothing to use on another fighter. Files under "
-    "fighter/<name>/ai/ are not read with cpu_ai. The CPU's row (recovery reach, attack ranges) "
-    "is under Parameters, prcxml files, CPU row.")
+    "own gauges, partners or inputs, which finds nothing to use on another fighter. The clone's own "
+    "attack list and attack data (Parameters, prcxml files) start from the chosen fighter's and work with "
+    "it. The CPU's row (recovery reach, attack ranges) is under Parameters, prcxml files, CPU row.")
+
+CPU_SET_NOTE = (
+    "condition: a lowercase Rust name (sword_drawn) for a mode of your fighter, as a drawn sword or a full "
+    "meter. The Rust tab declares it false in a line function, for you to replace with your check; each "
+    "frame the first true condition picks its sets, and none picks the standard rows. Set 1 is attack list "
+    "rows 22 to 29, set 2 rows 30 to 37, set 3 rows 38 to 45 (neutral, side, up, down, then the same in the "
+    "air). Fill the set's rows in the clone's own attack list (Parameters, prcxml files); an empty row "
+    "leaves that special out while the set is on. The CPU still presses the special button; your status "
+    "script decides what comes out. On a Mii base the sets also pick the Mii's custom specials; Villager, "
+    "Little Mac, Isabelle, Ryu, Ken, Hero, Mr. Game & Watch, Wario, Terry, Kazuya, Byleth, Steve and Min "
+    "Min have rules of their own")
 
 ITEM_HAND_NOTE = (
     "The engine moves this fighter's held and thrown items, and the hitboxes of swung items, to the "
@@ -4702,7 +4722,8 @@ class ParamFilesPanel(ttk.Frame):
             switch = self.app.catalog.item_switch()
             if node.index < len(switch):
                 return "[%d] %s" % (node.index, switch[node.index][2] or switch[node.index][0])
-        return "[%d]" % node.index
+        named = prcxml_files.row_name(self.target, parent, node, self.labels()) if parent is not None else ""
+        return "[%d] %s" % (node.index, named) if named else "[%d]" % node.index
 
     def row_values(self, node) -> tuple:
         if node.tag in prcxml_files.CONTAINERS:
@@ -4754,11 +4775,15 @@ class ParamFilesPanel(ttk.Frame):
     def refresh_item(self, item) -> None:
         """One row and the containers above it, after a change."""
         self.mark_changed()
+        searching = bool(self.search.get().strip())
         while item:
             node = self.nodes.get(item)
             if node is not None:
                 self.tree.item(item, values=self.row_values(node),
                                tags=("changed",) if id(node) in self.changed else ())
+                above = self.nodes.get(self.tree.parent(item))
+                if not searching and above is not None and node.index is not None:
+                    self.tree.item(item, text=self.label_of(node, above))
             item = self.tree.parent(item)
 
     def apply_value(self) -> None:

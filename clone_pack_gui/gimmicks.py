@@ -16,6 +16,19 @@ GRAB_STATUSES = ("SPECIAL_N", "SPECIAL_S", "SPECIAL_HI", "SPECIAL_LW", "ATTACK",
                  "ATTACK_AIR", "CATCH", "CATCH_PULL", "CATCH_DASH", "CATCH_DASH_PULL", "CATCH_TURN",
                  "CATCH_WAIT", "THROW")
 OWN_STATUSES = ("own 0", "own 1", "own 2", "own 3")
+CPU_SET_CHOICES = ("standard", "set 1", "set 2", "set 3")
+CPU_SET_KEYS = (("n", "Neutral special", "N"), ("s", "Side special", "S"), ("hi", "Up special", "HI"),
+                ("lw", "Down special", "LW"))
+CPU_SET_RULE_BASES = ("murabito", "littlemac", "shizue", "ryu", "ken", "brave", "gamewatch", "wario",
+                      "dolly", "demon", "master", "pickel", "tantan")
+MII_BASES = ("miifighter", "miiswordsman", "miigunner")
+CPU_SET_TAKEN = ("boma", "sets", "fighter")
+RUST_KEYWORDS = frozenset((
+    "abstract", "as", "async", "await", "become", "box", "break", "const", "continue", "crate", "do", "dyn",
+    "else", "enum", "extern", "false", "final", "fn", "for", "gen", "if", "impl", "in", "let", "loop", "macro",
+    "match", "mod", "move", "mut", "override", "priv", "pub", "ref", "return", "self", "static", "struct",
+    "super", "trait", "true", "try", "type", "typeof", "unsafe", "unsized", "use", "virtual", "where", "while",
+    "yield"))
 VICTIM_STATUSES = ("CAPTURE_PULLED", "CAPTURE_WAIT", "CATCHED_GANON", "CATCHED_AIR_GANON",
                    "CLUNG_GANON", "CLUNG_CAPTAIN", "KOOPA_DIVED", "SHOULDERED_DONKEY_START", "SWALLOWED",
                    "BITTEN_WARIO_START", "CLUNG_DIDDY", "CAPTURE_YOSHI", "CATCHED_REFLET",
@@ -228,6 +241,8 @@ def row_problem(table: str, row: dict) -> str:
     if table in MII_TABLES:
         mii = _tool("lint_mii_pack")
         return mii.block_problem(table, row) if mii is not None else ""
+    if table == "cpu_set":
+        return cpu_set_problem(row)
     manifest = _manifest()
     if manifest is None:
         return ""
@@ -330,3 +345,34 @@ def tether_articles(donor: str) -> tuple[str, ...]:
 def partner_param_names() -> list[str]:
     manifest = _manifest()
     return sorted(manifest.PARTNER_PARAMS) if manifest is not None else ["nana_delay", "nana_opt_dst"]
+
+
+def cpu_sets(row: dict) -> list[int]:
+    """A CPU special set row's four set numbers, neutral to down: 0 for standard or blank, -1 for
+    text that is none of the choices."""
+    picks = [display(row.get(key, "")) or "standard" for key, _, _ in CPU_SET_KEYS]
+    return [CPU_SET_CHOICES.index(pick) if pick in CPU_SET_CHOICES else -1 for pick in picks]
+
+
+def cpu_set_problem(row: dict) -> str:
+    """What the Rust tab could not write for a CPU special set row: its condition must be a
+    lowercase Rust name free in the function."""
+    name = display(row.get("name", ""))
+    if not name:
+        return "A CPU special set needs a condition: a lowercase Rust name, as sword_drawn"
+    if not re.fullmatch(r"[a-z_][a-z0-9_]*", name) or name == "_":
+        return 'Condition "%s" is not a lowercase Rust name (letters, digits and _), as sword_drawn' % name
+    if name in RUST_KEYWORDS or name in CPU_SET_TAKEN:
+        return 'Condition "%s" is a Rust keyword or a name the function uses; pick another' % name
+    for (key, label, _), number in zip(CPU_SET_KEYS, cpu_sets(row)):
+        if number < 0:
+            return '%s "%s" is not standard or set 1 to 3' % (label, display(row[key]))
+    if not any(cpu_sets(row)):
+        return "%s changes no special: pick a set for one" % name
+    return ""
+
+
+def describe_cpu_set(row: dict) -> str:
+    picked = ["%s %s" % (label.lower(), CPU_SET_CHOICES[number])
+              for (_, label, _), number in zip(CPU_SET_KEYS, cpu_sets(row)) if number > 0]
+    return "if %s: %s" % (display(row.get("name", "")), ", ".join(picked) or "standard")

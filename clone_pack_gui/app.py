@@ -2309,10 +2309,11 @@ class IdentityPanel(ttk.Frame):
                 Field("id", "Id", 18), Field("base", "Base hat", 18, "choice"),
                 Field("model_type", "Head", 10, "choice", MII_HEADS),
                 Field("hair_model_types", "Per hair type", 28), Field("disp_order", "Order", 6),
-                Field("swing", "Swing bones", 6, "choice", TRISTATE),
+                Field("swing", "Swing flag", 6, "choice", TRISTATE),
                 Field("is_patch", "Patch look", 6, "choice", TRISTATE)],
              self.describe_hat, 4,
-             "files go in miihat/<id>/model/body/c00 to c11, one folder per favourite colour. The base is "
+             "files go in miihat/<id>/model/body/c00 to c11, one folder per favourite colour, and swing "
+             "bones (motion_list.bin, swing.prc) in miihat/<id>/motion/body/c00. The base is "
              "the game's hat whose row it copies: camera, placement per hair type, everything not set "
              "here. Head: normal keeps the hair, hat trims it, face_only hides it, term hides the whole "
              "Mii head (masks). Per hair type: 12=face_only, 40=hat"),
@@ -2321,14 +2322,15 @@ class IdentityPanel(ttk.Frame):
                 Field("base", "Base outfit", 18, "choice"),
                 Field("gender", "Gender", 8, "choice", ("", "male", "female", "both")),
                 Field("name", "Icon name", 14), Field("disp_order", "Order", 6),
-                Field("swing", "Swing bones", 6, "choice", TRISTATE),
+                Field("swing", "Swing flag", 6, "choice", TRISTATE),
                 Field("is_patch", "Patch look", 6, "choice", TRISTATE)],
              self.describe_outfit, 4,
              "ids start with b_ and end in _m or _f like the game's. Files go in "
              "fighter/<fighter>/model/<id>/c00 to c11 and fighter/<fighter>/motion/<id>/c00, each with "
-             "every file the base's folder has (model.xmb, dark_model.numatb, motion_list.bin, ...): a new "
-             "outfit has no game files to fall back on. The icon is mii_body_0_<icon name>, the id "
-             "without _m or _f unless set"),
+             "every file the base's folder has (model.xmb, dark_model.numatb, motion_list.bin, swing.prc, ...): "
+             "a new outfit has no game files to fall back on. The icon is mii_body_0_<icon name>, the id "
+             "without _m or _f unless set. A Swordfighter outfit gets its base's sword trail. Swing flag "
+             "is the row's swing_enabled, not the swing bones"),
         )
         for table, title, row_fields, describe, per_row, hint in specs:
             frame = self._section(packs.MII, title)

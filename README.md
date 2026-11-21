@@ -601,6 +601,10 @@ Every key is in the engine's `docs/wiki/MII_PARTS.md`.
 - An outfit's motion folder holds the base's `update.prc`, `ik.prc`,
   `flip.prc` and `scharge.prc`, plus `motion_list.bin` and `swing.prc` when
   the base has them.
+- A Swordfighter outfit gets its base's sword trail; Dionysus copies the
+  base's rows of the Mii fighters' `vl.prc`.
+- **Swing flag** is the row's `swing_enabled`, not the swing bones, which
+  come from `swing.prc`.
 - `config.json` lists each part's folder and colour folders; the window and
   `lint_mii_pack.py --fix-config` write it.
 

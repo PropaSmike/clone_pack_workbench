@@ -200,9 +200,9 @@ def check_fighter_manifest(mod_dir, shipped, vanilla):
             findings.append(("WARN", "fighter.toml: jingle is accepted by the engine but not "
                                      "served yet; the base's victory theme plays"))
         if fighter.get("css") is False and not os.path.isfile(os.path.join(mod_dir, "plugin.nro")):
-            findings.append(("ERROR", "fighter.toml: css = false says the plugin publishes the CSS "
-                                      "row through CSK, but there is no plugin.nro; the fighter "
-                                      "would have no row"))
+            findings.append(("WARN", "fighter.toml: css = false says a plugin publishes the CSS row "
+                                     "through CSK, but this folder has no plugin.nro; fine when a plugin "
+                                     "in another mod folder publishes it, else the fighter has no row"))
         if (fighter.get("tether") or {}).get("from") == "lucas":
             findings.append(("INFO", "fighter.toml: tether from \"lucas\": the rope leaves HaveR "
                                      "the way air_catch_pose aims it and hangs only within 6 of "
@@ -1130,9 +1130,9 @@ def lint_item_pack(mod_dir, added_dirs, bases, dir_files, shipped, resolved_shar
     if tomls is None:
         if not plugin:
             findings.append((
-                "ERROR",
-                f"{roots[namespaces[0]]}/{namespaces[0]} is added but there is no item.toml and no plugin.nro - "
-                "nothing registers this pack",
+                "WARN",
+                f"{roots[namespaces[0]]}/{namespaces[0]} is added but this folder has no item.toml and no "
+                "plugin.nro - fine when a plugin in another mod folder registers it, else nothing does",
             ))
     else:
         for toml in tomls:
@@ -1199,9 +1199,10 @@ def lint_item_pack(mod_dir, added_dirs, bases, dir_files, shipped, resolved_shar
         for name in namespaces:
             if name not in by_resource and not plugin:
                 findings.append((
-                    "ERROR",
-                    f"{roots[name]}/{name} is added but no item.toml entry declares it and there is "
-                    "no plugin.nro - nothing registers it",
+                    "WARN",
+                    f"{roots[name]}/{name} is added but no item.toml entry declares it and this folder "
+                    "has no plugin.nro - fine when a plugin in another mod folder registers it, else "
+                    "nothing does",
                 ))
 
     for name in namespaces:

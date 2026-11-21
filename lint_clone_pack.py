@@ -199,6 +199,11 @@ def check_fighter_manifest(mod_dir, shipped, vanilla):
         if fighter.get("jingle"):
             findings.append(("WARN", "fighter.toml: jingle is accepted by the engine but not "
                                      "served yet; the base's victory theme plays"))
+        if base in ("miifighter", "miiswordsman", "miigunner"):
+            findings.append(("WARN", f"fighter.toml: base {base!r} is a Mii Fighter; clones of the Mii "
+                                     "Fighters do not load yet: the game builds a Mii's head, hat and "
+                                     "outfit only for the three Mii Fighters, and the clone crashes while "
+                                     "it is built"))
         if fighter.get("css") is False and not os.path.isfile(os.path.join(mod_dir, "plugin.nro")):
             findings.append(("WARN", "fighter.toml: css = false says a plugin publishes the CSS row "
                                      "through CSK, but this folder has no plugin.nro; fine when a plugin "

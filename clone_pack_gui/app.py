@@ -2876,6 +2876,13 @@ class IdentityPanel(ttk.Frame):
                                                  and len(values["movie"]) <= 62):
             messagebox.showinfo(TITLE, "The movie is a stream:/movie/<folder>/<name>.webm path of up to 62 bytes.")
             return
+        miis = menu_presets.mii_players(values["preset"], values)
+        if miis:
+            messagebox.showinfo(TITLE, "%s: a Mii Fighter can't be in a battle a mode starts, since only the "
+                                       "select screen gives it a Mii; Dionysus leaves that player out. Use the "
+                                       "pick kind, where the players pick on the select screen."
+                                % ", ".join(miis))
+            return
         name = values["name"] or values["id"].replace("_", " ").title()
         source = Path(part["lua_folder"]) if part.get("lua_folder") else self.app.folder.parent / "lua"
         path = source / ("%s.lua" % values["id"])

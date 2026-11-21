@@ -199,7 +199,9 @@ For a menu:
   into **Modes**, with no plugin: `duel` (your fighter against a CPU,
   straight into the battle), `pick` (the players pick fighters, then fight on
   **Stage**), `boss` (the game's boss battle against **Boss**, a boss clone's
-  name included) or `movie` (a `stream:/movie/...` WebM full screen).
+  name included) or `movie` (a `stream:/movie/...` WebM full screen). A
+  Mii Fighter is refused in `duel` and `boss`: only the select screen gives
+  it a Mii, so use `pick`.
 
 For an enemy:
 
@@ -737,6 +739,8 @@ Costumes and effects:
 `fighter.toml` is read with the engine's rules (an unknown key or table is an
 error with its line) and checked against the folders:
 
+- a Mii Fighter base is a warning: clones of the Mii Fighters do not load
+  yet;
 - the base is a fighter, every `[[article]]` has its files, the costume count
   covers the body model, a `[kirby]` table has a copy model, and
   `staffroll = true` has its texture;
@@ -892,6 +896,9 @@ python lint_mii_pack.py "path/to/your/mod folder"
   own folders have (`model.xmb`, `dark_model.numatb`, `motion_list.bin`, ...),
   not only the ones a replacement mod changes: a new part has no game copy to
   fall back on, and loading it can hang. A missing one is an error.
+- A Swordfighter outfit whose base is not a Swordfighter outfit is a
+  warning: it gets its base's sword trail, and only Swordfighter outfits
+  have one.
 
 ## lint_spirit_pack.py
 

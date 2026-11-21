@@ -250,11 +250,12 @@ def shipped_files(mod_dir):
 
 
 def load_vanilla(arc_index):
-    """{"mii_hat": ids, "mii_outfit": ids} from the arc index's folders, or None without one."""
+    """{"mii_hat": ids, "mii_outfit": ids, "outfit_fighters": {id: Mii fighters}} from the arc index's
+    folders, or None without one."""
     path = os.path.join(arc_index, "arc_dirs.tsv")
     if not os.path.isfile(path):
         return None
-    found = {"mii_hat": set(), "mii_outfit": set()}
+    found = {"mii_hat": set(), "mii_outfit": set(), "outfit_fighters": {}}
     with open(path, encoding="utf8", errors="replace") as handle:
         for line in handle:
             parts = line.split("\t", 1)[0].strip().split("/")
@@ -262,7 +263,21 @@ def load_vanilla(arc_index):
                 found["mii_hat"].add(parts[1])
             elif len(parts) == 3 and parts[0] == "miibody":
                 found["mii_outfit"].add(parts[2])
+                found["outfit_fighters"].setdefault(parts[2], set()).add(parts[1])
     return found if found["mii_hat"] else None
+
+
+def trail_problems(part, label, vanilla, declared):
+    """A Swordfighter outfit takes its base outfit's sword trail, and only Swordfighter outfits have one."""
+    if part["table"] != "mii_outfit" or FIGHTERS.get(part.get("fighter")) != "miiswordsman":
+        return []
+    if vanilla is None or part["base"] in declared:
+        return []
+    fighters = vanilla.get("outfit_fighters", {}).get(part["base"])
+    if not fighters or "miiswordsman" in fighters:
+        return []
+    return [("WARN", "%s: base %s is not a Swordfighter outfit, so this outfit swings with no sword trail; "
+                     "a Swordfighter outfit as base gives it that outfit's trail" % (label, part["base"]))]
 
 
 def load_game_files(arc_index):
@@ -422,6 +437,7 @@ def check_part(part, mod_dir, shipped, config, vanilla, names, declared, game_fi
     if part["base"] in declared:
         findings.append(("INFO", "%s: its base %s is another part of this pack, declared above it"
                          % (label, part["base"])))
+    findings += trail_problems(part, label, vanilla, declared)
     colours = colour_files(part, shipped)
     missing = [colour for colour, paths in colours.items()
                if not any(path.lower().endswith("/model.numdlb") for path in paths)]

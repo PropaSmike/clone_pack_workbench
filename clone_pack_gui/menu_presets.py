@@ -16,6 +16,16 @@ DEFAULTS = {"fighter": "ui_chara_mario", "cpu": "ui_chara_luigi", "stage": "ui_s
             "boss": "galleom"}
 
 
+MII_FIGHTERS = ("ui_chara_miifighter", "ui_chara_miiswordsman", "ui_chara_miigunner")
+
+
+def mii_players(preset: str, values: dict) -> list[str]:
+    """The fighters of a preset battle that are Mii Fighters, which Dionysus leaves out: only the
+    select screen gives them a Mii."""
+    keys = {"duel": ("fighter", "cpu"), "boss": ("fighter",)}.get(preset, ())
+    return [values[key] for key in keys if values.get(key, "").strip() in MII_FIGHTERS]
+
+
 def mode_row(preset: str, mode_id: str, name: str, namespace: str) -> dict:
     """The [[mode]] row, as the Modes table holds rows: key to TOML text."""
     text = DESCRIPTIONS[preset]
